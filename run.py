@@ -28,9 +28,7 @@ def runbenchmark():
     z = 0
     master_dns = ""
     for i in instances:
-        ssh_client = sshclient_from_instance(i,
-                                             "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem",
-                                             user_name='ubuntu')
+        ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
 
         ssh_client.run('sudo killall java')
         ssh_client.run('sudo killall java')
@@ -42,17 +40,24 @@ def runbenchmark():
             status, stdout, stderr = ssh_client.run('/usr/local/spark/sbin/start-master.sh -h ' + i.public_dns_name)
 
             # DEADLINE LINE 35
-            ssh_client.run("sed -i '35s{.*{spark.control.deadline 70000{' /usr/local/spark/conf/spark-defaults.conf")
+            ssh_client.run("sed -i '35s{.*{spark.control.deadline " + str(
+                DEADLINE) + "{' /usr/local/spark/conf/spark-defaults.conf")
             # SED "sed -i 's/^\(spark\.control\.deadline*\).*$/\1 140000/' /usr/local/spark/conf/spark-defaults.conf"
             # MAX EXECUTOR LINE 39
-            ssh_client.run("sed -i '39s{.*{spark.control.maxexecutor 4{' /usr/local/spark/conf/spark-defaults.conf")
+            ssh_client.run("sed -i '39s{.*{spark.control.maxexecutor " + str(
+                MAXEXECUTOR) + "{' /usr/local/spark/conf/spark-defaults.conf")
             # SED "sed -i 's/^\(spark\.control\.maxexecutor*\).*$/\1 4/' /usr/local/spark/conf/spark-defaults.conf"
             # CORE FOR VM LINE 40
-            ssh_client.run("sed -i '40s{.*{spark.control.coreforvm 8{' /usr/local/spark/conf/spark-defaults.conf")
+            ssh_client.run("sed -i '40s{.*{spark.control.coreforvm " + str(
+                COREVM) + "{' /usr/local/spark/conf/spark-defaults.conf")
             # SED "sed -i 's/^\(spark\.control\.coreforvm*\).*$/\1 8/' /usr/local/spark/conf/spark-defaults.conf"
 
-            #  ALPHA LINE 36
+            # ALPHA LINE 36
+            ssh_client.run("sed -i '36s{.*{spark.control.alpha " + str(
+                ALPHA) + "{' /usr/local/spark/conf/spark-defaults.conf")
             # OVERSCALE LINE 38
+            ssh_client.run("sed -i '38s{.*{spark.control.overscale " + str(
+                OVERSCALE) + "{' /usr/local/spark/conf/spark-defaults.conf")
 
             # CHANGE MASTER ADDRESS IN BENCHMARK
             ssh_client.run("""sed -i '31s{.*{SPARK_CLUSTER_URL = "spark://""" + i.public_dns_name +
@@ -61,18 +66,21 @@ def runbenchmark():
             ssh_client.run("sed -i '127s{.*{SCALE_FACTOR =" + str(SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
 
             # DISABLE AGG-BY-KEY-NAIVE BENCHMARK
-            #ssh_client.run("sed -i '233 s/^/#/' ./spark-perf/config/config.py")
-            #ssh_client.run("sed -i '234 s/^/#/' ./spark-perf/config/config.py")
+            # ssh_client.run("sed -i '233 s/^/#/' ./spark-perf/config/config.py")
+            # ssh_client.run("sed -i '234 s/^/#/' ./spark-perf/config/config.py")
 
 
         else:
-            #ssh_client.put_file("./disable-ht-v2.sh", "./disable-ht-v2.sh")
-            #ssh_client.run("chmod +x disable-ht-v2.sh")
-            #status, stdout, stderr = ssh_client.run('sudo ./disable-ht-v2.sh')
-            status, stdout, stderr = ssh_client.run('sudo ./disable-ht.sh')
-            print(status, stdout, stderr)
+            # DISABLE HT
+            # ssh_client.put_file("./disable-ht-v2.sh", "./disable-ht-v2.sh")
+            # ssh_client.run("chmod +x disable-ht-v2.sh")
+            # status, stdout, stderr = ssh_client.run('sudo ./disable-ht-v2.sh')
+            # status, stdout, stderr = ssh_client.run('sudo ./disable-ht.sh')
+            # print(status, stdout, stderr)
+
             # SAMPLING RATE LINE 43
-            ssh_client.run("sed -i '40s{.*{spark.control.tsample "+ str(TSAMPLE)+"{' /usr/local/spark/conf/spark-defaults.conf")
+            ssh_client.run(
+                "sed -i '40s{.*{spark.control.tsample " + str(TSAMPLE) + "{' /usr/local/spark/conf/spark-defaults.conf")
             # SED "sed -i 's/^\(spark\.control\.tsample*\).*$/\1 2000/' /usr/local/spark/conf/spark-defaults.conf"
             ssh_client.run(
                 '/usr/local/spark/sbin/start-slave.sh ' + master_dns + ':7077 -h ' + i.public_dns_name + ' --port 9999')
@@ -86,9 +94,8 @@ def runbenchmark():
     time.sleep(20)
 
     print(master_dns)
-    ssh_client = sshclient_from_instance(master_instance,
-                                         "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem",
-                                         user_name='ubuntu')
+    ssh_client = sshclient_from_instance(master_instance, KEYPAIR_PATH, user_name='ubuntu')
+
     # LANCIARE BENCHMARK
     runstatus, runout, runerr = ssh_client.run('./spark-perf/bin/run')
 
@@ -100,9 +107,8 @@ def runbenchmark():
     os.makedirs(logfolder)
     # WORKER LOGS AND SAR LOG
     for i in instances:
-        ssh_client = sshclient_from_instance(i,
-                                             "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem",
-                                             user_name='ubuntu')
+        ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
+
         if i.public_dns_name != master_dns:
             worker_log = "/usr/local/spark/logs/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-" + i.private_ip_address.replace(
                 ".", "-") + ".out"
@@ -118,4 +124,4 @@ def runbenchmark():
                 ssh_client.get_file(logfolder + "/" + file, logfolder + "/" + file)
 
     # PLOT
-    plot.plot(logfolder+"/")
+    plot.plot(logfolder + "/")

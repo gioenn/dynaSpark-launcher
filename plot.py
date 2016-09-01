@@ -79,7 +79,7 @@ def plot(folder):
                         0] != "Average:":
                         plotDICT[w]["time_cpu"].append(
                             datetime.strptime(l[0], '%I:%M:%S %p').replace(year=2016))
-                        cpuint = '{0:.2f}'.format(float(l[2]) * COREVM / 100)
+                        cpuint = '{0:.2f}'.format(float(l[2]) * COREHTVM / 100)
                         plotDICT[w]["cpu_real"].append(cpuint)
 
     print(plotDICT)
