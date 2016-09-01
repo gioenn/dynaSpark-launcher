@@ -1,13 +1,13 @@
 # AWS
-dataAMI = {"eu-west-1": {"ami": 'ami-a03d4fd3', "az": 'eu-west-1c', "keypair": "gazzettaEU"},
-           "us-west-2": {"ami": 'ami-52598f32', "az": 'us-west-2c', "keypair": "gazzetta"}}
+dataAMI = {"eu-west-1": {"ami": 'ami-a03d4fd3', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
+           "us-west-2": {"ami": 'ami-0bb5646b', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.6"}}
 
 REGION = "eu-west-1"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
 SECURITY_GROUP = "spark-cluster"
 
-PRICE = "0.3"
-INSTANCE_TYPE = "m4.4xlarge"
+PRICE = dataAMI[REGION]["price"]
+INSTANCE_TYPE = "r3.4xlarge"
 NUMINSTANCE = 5
 
 # Core
