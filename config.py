@@ -9,6 +9,7 @@ SECURITY_GROUP = "spark-cluster"
 PRICE = dataAMI[REGION]["price"]
 INSTANCE_TYPE = "r3.4xlarge"
 NUMINSTANCE = 5
+EBS_OPTIMIZED = True if not "r3" in INSTANCE_TYPE else False
 
 # Core
 COREVM = 8

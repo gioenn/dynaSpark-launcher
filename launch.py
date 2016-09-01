@@ -68,7 +68,7 @@ requests = client.request_spot_instances(SpotPrice=PRICE,
                                                  SECURITY_GROUP,
                                              ],
                                              "InstanceType": INSTANCE_TYPE,
-                                             "EbsOptimized": True
+                                             "EbsOptimized": EBS_OPTIMIZED
                                          })
 
 print([req["SpotInstanceRequestId"] for req in requests["SpotInstanceRequests"]])
