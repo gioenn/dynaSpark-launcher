@@ -57,36 +57,37 @@ def wait_for_fulfillment(conn, request_ids, pending_request_ids):
 
 client = boto3.client('ec2', region_name=REGION)
 
-requests = client.request_spot_instances(SpotPrice=PRICE,
-                                         InstanceCount=NUMINSTANCE,
-                                         Type='one-time',
-                                         AvailabilityZoneGroup=dataAMI[REGION]["az"],
-                                         LaunchSpecification={
-                                             "ImageId": dataAMI[REGION]["ami"],
-                                             "KeyName": dataAMI[REGION]["keypair"],
-                                             "SecurityGroups": [
-                                                 SECURITY_GROUP,
-                                             ],
-                                             "InstanceType": INSTANCE_TYPE,
-                                             "EbsOptimized": EBS_OPTIMIZED
-                                         })
+if NUMINSTANCE > 0:
+    requests = client.request_spot_instances(SpotPrice=PRICE,
+                                             InstanceCount=NUMINSTANCE,
+                                             Type='one-time',
+                                             AvailabilityZoneGroup=dataAMI[REGION]["az"],
+                                             LaunchSpecification={
+                                                 "ImageId": dataAMI[REGION]["ami"],
+                                                 "KeyName": dataAMI[REGION]["keypair"],
+                                                 "SecurityGroups": [
+                                                     SECURITY_GROUP,
+                                                 ],
+                                                 "InstanceType": INSTANCE_TYPE,
+                                                 "EbsOptimized": EBS_OPTIMIZED
+                                             })
 
-print([req["SpotInstanceRequestId"] for req in requests["SpotInstanceRequests"]])
+    print([req["SpotInstanceRequestId"] for req in requests["SpotInstanceRequests"]])
 
-request_ids = [req["SpotInstanceRequestId"] for req in requests["SpotInstanceRequests"]]
+    request_ids = [req["SpotInstanceRequestId"] for req in requests["SpotInstanceRequests"]]
 
-print("CHECK SECURITY GROUP ALLOWED IP SETTINGS!!!")
+    print("CHECK SECURITY GROUP ALLOWED IP SETTINGS!!!")
 
-# Wait for our spots to fulfill
-wait_for_fulfillment(client, request_ids, copy.deepcopy(request_ids))
+    # Wait for our spots to fulfill
+    wait_for_fulfillment(client, request_ids, copy.deepcopy(request_ids))
 
-results = client.describe_spot_instance_requests(SpotInstanceRequestIds=request_ids)
-instance_ids = [result["InstanceId"] for result in results["SpotInstanceRequests"]]
+    results = client.describe_spot_instance_requests(SpotInstanceRequestIds=request_ids)
+    instance_ids = [result["InstanceId"] for result in results["SpotInstanceRequests"]]
 
-# Wait Running
-wait_for_running(client, instance_ids, copy.deepcopy(instance_ids))
+    # Wait Running
+    wait_for_running(client, instance_ids, copy.deepcopy(instance_ids))
 
-time.sleep(15)
+    time.sleep(15)
 
 run.runbenchmark()
 
