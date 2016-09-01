@@ -131,5 +131,5 @@ def plot(folder):
                     factor = 0.1
                     new_xlim = (xlim[0] + xlim[1]) / 2 + np.array((-0.5, 0.5)) * (xlim[1] - xlim[0]) * (1 + factor)
                     ax2.set_xlim(new_xlim)
-
+                    plt.title(appID + " " + str(SCALE_FACTOR) + " " + str(DEADLINE))
                     plt.savefig(worker + "." + appID + '.png', bbox_inches='tight', dpi=300)

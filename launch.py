@@ -75,6 +75,8 @@ print([req["SpotInstanceRequestId"] for req in requests["SpotInstanceRequests"]]
 
 request_ids = [req["SpotInstanceRequestId"] for req in requests["SpotInstanceRequests"]]
 
+print("CHECK SECURITY GROUP ALLOWED IP SETTINGS!!!")
+
 # Wait for our spots to fulfill
 wait_for_fulfillment(client, request_ids, copy.deepcopy(request_ids))
 

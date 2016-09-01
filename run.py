@@ -33,6 +33,7 @@ def runbenchmark():
         ssh_client.run('sudo killall java')
         ssh_client.run('sudo killall java')
         ssh_client.run('sudo killall java')
+        ssh_client.run("screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
         if z == 0:
             master_instance = i
             master_dns = i.public_dns_name
@@ -65,7 +66,11 @@ def runbenchmark():
             # CHANGE SCALE FACTOR LINE 127
             ssh_client.run("sed -i '127s{.*{SCALE_FACTOR =" + str(SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
 
+            # CHANGE RAM EXEC
+            ssh_client.run("""sed -i '147s{.*{JavaOptionSet("spark.executor.memory", [""" + RAM_EXEC + """]),{' ./spark-perf/config/config.py""")
+
             # DISABLE AGG-BY-KEY-NAIVE BENCHMARK
+            # TODO
             # ssh_client.run("sed -i '233 s/^/#/' ./spark-perf/config/config.py")
             # ssh_client.run("sed -i '234 s/^/#/' ./spark-perf/config/config.py")
 
