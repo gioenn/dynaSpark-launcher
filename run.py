@@ -1,9 +1,9 @@
 import boto3
 import time
-import copy
 import plot
 from boto.manage.cmdshell import sshclient_from_instance
 import os
+
 from config import *
 
 
@@ -30,9 +30,11 @@ def runbenchmark():
     for i in instances:
         ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
 
+        # Kill Java
         ssh_client.run('sudo killall java')
         ssh_client.run('sudo killall java')
         ssh_client.run('sudo killall java')
+        # Kill SAR CPU Logger
         ssh_client.run("screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
         if z == 0:
             master_instance = i
@@ -67,7 +69,8 @@ def runbenchmark():
             ssh_client.run("sed -i '127s{.*{SCALE_FACTOR =" + str(SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
 
             # CHANGE RAM EXEC
-            ssh_client.run("""sed -i '147s{.*{JavaOptionSet("spark.executor.memory", [""" + RAM_EXEC + """]),{' ./spark-perf/config/config.py""")
+            ssh_client.run(
+                """sed -i '147s{.*{JavaOptionSet("spark.executor.memory", [""" + RAM_EXEC + """]),{' ./spark-perf/config/config.py""")
 
             # DISABLE AGG-BY-KEY-NAIVE BENCHMARK
             # TODO

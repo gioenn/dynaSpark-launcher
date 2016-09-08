@@ -1,6 +1,6 @@
 # AWS
 dataAMI = {"eu-west-1": {"ami": 'ami-7b275508', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.5"},
-           "us-west-2": {"ami": 'ami-91ba6bf1', "az": 'us-west-2c', "keypair": "gazzetta", "price": "1"}}
+           "us-west-2": {"ami": 'ami-91ba6bf1', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.7"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
@@ -19,14 +19,14 @@ if DISABLEHT:
     COREHTVM = COREVM
 
 # CONTROL
-TSAMPLE = 3000
-DEADLINE = 50000
+TSAMPLE = 6000
+DEADLINE = 70000
 MAXEXECUTOR = 4
 ALPHA = 0.8
 OVERSCALE = 2
 
 # BENCHMARK
-SCALE_FACTOR = 1
+SCALE_FACTOR = 2
 RAM_EXEC = '"60g"' if not "r3" in INSTANCE_TYPE else '"100g"'
 lineBench = {"scala-agg-by-key": {"line": ""},
              "scala-agg-by-key-int": {"line": ""},
@@ -40,4 +40,8 @@ BENCHMARK = [lineBench.keys()]
 # Terminate istance after benchmark
 TERMINATE = 0
 
+# RUN BENCHMARK
+RUN = 1
 
+# PLOT ALL
+PLOT_ALL = 0

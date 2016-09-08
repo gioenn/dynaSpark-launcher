@@ -8,7 +8,7 @@ from config import *
 
 
 def plot(folder):
-    print("COREVM = " + str(COREVM))
+    # print("COREVM = " + str(COREVM))
     benchLog = glob.glob(folder + "*.err")
     plotDICT = {}
     for bench in benchLog:
@@ -22,29 +22,32 @@ def plot(folder):
                 if len(l) > 3 and l[3] == "ControllerJob:":
                     if l[5] == "INIT":
                         plotDICT[appID]["startTime"] = datetime.strptime(l[1], '%H:%M:%S').replace(year=2016)
-                        print(l[16].replace(",", ""))
+                        # print(l[16].replace(",", ""))
                         plotDICT[appID]["dealineTime"] = plotDICT[appID]["startTime"] + timedelta(
                             milliseconds=float(l[16].replace(",", "")))
                     if l[5] == "NEEDED":
                         appID = l[-1].replace("\n", "")
-                        print(appID)
+                        # print(appID)
                         plotDICT[appID] = {}
                 elif len(l) > 3 and l[3] == "DAGScheduler:":
                     if l[4] == "ResultStage" and l[-4] == "finished":
                         if appID != "": plotDICT[appID]["finishTime"] = datetime.strptime(l[1], '%H:%M:%S').replace(
                             year=2016)
+                elif len(l) > 10 and l[5] == "added:" and l[4] == "Executor":
+                    # 16/08/31 14:28:52 INFO StandaloneAppClient$ClientEndpoint: Executor added: app-20160831142852-0000/0 on worker-20160831142832-ec2-52-43-162-151.us-west-2.compute.amazonaws.com-9999 (ec2-52-43-162-151.us-west-2.compute.amazonaws.com:9999) with 8 cores
+                    COREHTVM = int(l[-2])
 
-    print(plotDICT.keys())
+                    # print(plotDICT.keys())
     workerLog = glob.glob(folder + "*worker*.out")
     sarLog = glob.glob(folder + "sar*.log")
 
     # Check len log
-    print(len(workerLog), len(sarLog))
+    # print(len(workerLog), len(sarLog))
 
     if len(workerLog) == len(sarLog):
         for w, s in zip(workerLog, sarLog):
-            print(w)
-            print(s)
+            # print(w)
+            # print(s)
             # 16/08/31 14:29:43 INFO Worker: Scaled executorId 2  of appId app-20160831142852-0000 to  8 Core
             with open(w) as wlog:
                 appID = ""
@@ -55,7 +58,7 @@ def plot(folder):
                     l = line.split(" ")
                     if len(l) > 3:
                         if l[4] == "Scaled":
-                            print(l)
+                            # print(l)
                             if appID == "" or appID != l[10] and l[10] != "app-20160831230103-0005":
                                 appID = l[10]
                                 plotDICT[appID][w] = {}
@@ -64,7 +67,7 @@ def plot(folder):
                                 plotDICT[appID][w]["sp_real"] = []
                                 plotDICT[appID][w]["sp"] = []
                         if l[4] == "CoreToAllocate:":
-                            print(l)
+                            # print(l)
                             plotDICT[appID][w]["cpu"].append(int(l[-1].replace("\n", "")))
                         if l[4] == "Real:":
                             plotDICT[appID][w]["sp_real"].append(l[-1].replace("\n", ""))
@@ -82,12 +85,12 @@ def plot(folder):
                         cpuint = '{0:.2f}'.format(float(l[2]) * COREHTVM / 100)
                         plotDICT[w]["cpu_real"].append(cpuint)
 
-    print(plotDICT)
+    # print(plotDICT)
     for appID in plotDICT.keys():
         if len(appID) <= len("app-20160831142852-0000"):
             for worker in plotDICT[appID].keys():
                 if worker not in ["startTime", "dealineTime", "finishTime"] and len(plotDICT[appID][worker]["sp"]) > 0:
-                    print(appID, worker)
+                    # print(appID, worker)
                     fig, ax1 = plt.subplots(figsize=(16, 9), dpi=300)
 
                     sp_plt, = ax1.plot(plotDICT[appID][worker]["time"], plotDICT[appID][worker]["sp"], label='SP',
@@ -131,5 +134,7 @@ def plot(folder):
                     factor = 0.1
                     new_xlim = (xlim[0] + xlim[1]) / 2 + np.array((-0.5, 0.5)) * (xlim[1] - xlim[0]) * (1 + factor)
                     ax2.set_xlim(new_xlim)
-                    plt.title(appID + " " + str(SCALE_FACTOR) + " " + str(DEADLINE))
+                    plt.title(appID + " " + str(SCALE_FACTOR) + " " + str(DEADLINE) + " " + str(TSAMPLE) + " " + str(
+                        SCALE_FACTOR))
                     plt.savefig(worker + "." + appID + '.png', bbox_inches='tight', dpi=300)
+                    plt.close()

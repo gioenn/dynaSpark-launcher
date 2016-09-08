@@ -1,5 +1,7 @@
 import copy
+import socket
 import time
+from errno import ECONNREFUSED
 
 import boto3
 
@@ -7,6 +9,17 @@ import run
 from config import *
 
 ec2 = boto3.resource('ec2', region_name=REGION)
+
+
+def ping(host, port):
+    try:
+        socket.socket().connect((host, port))
+        print(str(port) + " Open")
+        return port
+    except socket.error as err:
+        if err.errno == ECONNREFUSED:
+            return False
+        raise
 
 
 def between(value, a, b):
@@ -20,6 +33,23 @@ def between(value, a, b):
     adjusted_pos_a = pos_a + len(a)
     if adjusted_pos_a >= pos_b: return ""
     return value[adjusted_pos_a:pos_b]
+
+
+def wait_ping(conn, instance_ids, pending_instance_ids):
+    results = conn.describe_instances(InstanceIds=pending_instance_ids)
+    for result in results["Reservations"]:
+        for instace in result["Instances"]:
+            if ping(instace["PublicDnsName"], 22) == 22:
+                pending_instance_ids.pop(pending_instance_ids.index(instace["InstanceId"]))
+                print("instance `{}` ping ok!".format(instace["InstanceId"]))
+            else:
+                print("waiting on `{}`".format(instace["InstanceId"]))
+
+    if len(pending_instance_ids) == 0:
+        print("all instances running!")
+    else:
+        time.sleep(2)
+        wait_ping(conn, instance_ids, pending_instance_ids)
 
 
 def wait_for_running(conn, instance_ids, pending_instance_ids):
@@ -89,12 +119,30 @@ if NUMINSTANCE > 0:
 
     time.sleep(15)
 
-run.runbenchmark()
+    wait_ping(client, instance_ids, copy.deepcopy(instance_ids))
+
+if RUN:
+    run.runbenchmark()
 
 if TERMINATE:
+    if request_ids == None:
+        # TODO
+        print("add missing requests id to terminate")
+    if instance_ids == None:
+        instances = ec2.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+
     # DISTRUGGERE SPOT REQUEST
     client.cancel_spot_instance_requests(SpotInstanceRequestIds=request_ids)
 
     # TERMINARE INSTANCE
     ec2.instances.filter(InstanceIds=instance_ids).stop()
     ec2.instances.filter(InstanceIds=instance_ids).terminate()
+
+if PLOT_ALL:
+    import glob
+    import plot
+
+    for dir in glob.glob("./results/*/"):
+        print(dir)
+        plot.plot(dir)
