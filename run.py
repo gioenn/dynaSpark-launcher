@@ -44,6 +44,8 @@ def runbenchmark():
             master_instance = i
             master_dns = i.public_dns_name
 
+            ssh_client.run("rm /usr/local/spark/spark-events/*")
+
             # DEADLINE LINE 35
             ssh_client.run("sed -i '35s{.*{spark.control.deadline " + str(
                 DEADLINE) + "{' /usr/local/spark/conf/spark-defaults.conf")

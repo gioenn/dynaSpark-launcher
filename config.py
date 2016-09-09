@@ -20,7 +20,7 @@ if DISABLEHT:
 
 # CONTROL
 TSAMPLE = 1000
-DEADLINE = 50000
+DEADLINE = 20000
 MAXEXECUTOR = 4
 ALPHA = 0.8
 OVERSCALE = 2
@@ -38,7 +38,7 @@ linesBench = {"scala-agg-by-key": ["226", "227"],
 
 BENCHMARK = [# "scala-agg-by-key",
              # "scala-agg-by-key-int",
-             "scala-agg-by-key-naive",
+             # "scala-agg-by-key-naive",
              "scala-sort-by-key",
              # "scala-sort-by-key-int",
              # "scala-count",
