@@ -1,6 +1,6 @@
 # AWS
-dataAMI = {"eu-west-1": {"ami": 'ami-7b275508', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.4"},
-           "us-west-2": {"ami": 'ami-91ba6bf1', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.5"}}
+dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.4"},
+           "us-west-2": {"ami": 'ami-e29b4882', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.5"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
