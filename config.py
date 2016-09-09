@@ -1,6 +1,6 @@
 # AWS
 dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.4"},
-           "us-west-2": {"ami": 'ami-e29b4882', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.7"}}
+           "us-west-2": {"ami": 'ami-228a5942', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.7"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
@@ -36,11 +36,11 @@ linesBench = {"scala-agg-by-key": ["226", "227"],
               "scala-count": ["243", "244"],
               "scala-count-w-fltr": ["246", "247"]}
 
-BENCHMARK = ["scala-agg-by-key",
-             "scala-agg-by-key-int",
-             # "scala-agg-by-key-naive",
+BENCHMARK = [# "scala-agg-by-key",
+             # "scala-agg-by-key-int",
+             "scala-agg-by-key-naive",
              "scala-sort-by-key",
-             "scala-sort-by-key-int",
+             # "scala-sort-by-key-int",
              # "scala-count",
              # "scala-count-w-fltr"
              ]
