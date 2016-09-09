@@ -125,7 +125,7 @@ def runbenchmark():
     logfolder = "./" + "/".join(app_log.split("/")[:-1])
     print(logfolder)
     os.makedirs(logfolder)
-    logfolder = "./results/spark_perf_output__2016-09-09_10-27-41_logs"
+
     # WORKER LOGS AND SAR LOG
     for i in instances:
         ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
