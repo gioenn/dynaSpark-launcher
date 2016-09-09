@@ -2,13 +2,12 @@ import copy
 import socket
 import time
 from errno import ECONNREFUSED
+from errno import ETIMEDOUT
 
 import boto3
 
 import run
 from config import *
-
-ec2 = boto3.resource('ec2', region_name=REGION)
 
 
 def ping(host, port):
@@ -17,7 +16,7 @@ def ping(host, port):
         print(str(port) + " Open")
         return port
     except socket.error as err:
-        if err.errno == ECONNREFUSED:
+        if err.errno == ECONNREFUSED or err.errno == ETIMEDOUT:
             return False
         raise
 
@@ -125,6 +124,7 @@ if RUN:
     run.runbenchmark()
 
 if TERMINATE:
+    ec2 = boto3.resource('ec2', region_name=REGION)
     if request_ids == None:
         # TODO
         print("add missing requests id to terminate")

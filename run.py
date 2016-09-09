@@ -36,6 +36,8 @@ def runbenchmark():
         ssh_client.run('sudo killall java')
         # Kill SAR CPU Logger
         ssh_client.run("screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
+        # SYNC TIME
+        ssh_client.run("sudo ntpdate -s time.nist.gov")
         if z == 0:
             master_instance = i
             master_dns = i.public_dns_name
@@ -75,12 +77,15 @@ def runbenchmark():
             # ENABLE BENCHMARK
             for bench in BENCHMARK:
                 for lineNumber in linesBench[bench]:
-                    ssh_client.run("sed '" + lineNumber + " s/[#]//g' ./spark-perf/config/config.py")
+                    commandLineSed = "sed '" + lineNumber + " s/[#]//g' ./spark-perf/config/config.py"
+                    print(commandLineSed)
+                    ssh_client.run(commandLineSed)
 
             # DISABLE BENCHMARK
             for bench in linesBench.keys():
                 if bench not in BENCHMARK:
                     for lineNumber in linesBench[bench]:
+                        print("sed -i '" + lineNumber + " s/^/#/' ./spark-perf/config/config.py")
                         ssh_client.run("sed -i '" + lineNumber + " s/^/#/' ./spark-perf/config/config.py")
 
         else:
@@ -99,26 +104,25 @@ def runbenchmark():
                 '/usr/local/spark/sbin/start-slave.sh ' + master_dns + ':7077 -h ' + i.public_dns_name + ' --port 9999')
             # REAL CPU LOG
             logcpucommand = 'screen -d -m -S "' + i.private_ip_address + '" bash -c "sar -u 1 > sar-' + i.private_ip_address + '.log"'
-            print(logcpucommand)
+            # print(logcpucommand)
             ssh_client.run(logcpucommand)
         z += 1
         print(z, i.public_dns_name)
 
     time.sleep(20)
 
-    print(master_dns)
+    print("MASTER: " + master_dns)
     ssh_client = sshclient_from_instance(master_instance, KEYPAIR_PATH, user_name='ubuntu')
 
     # LANCIARE BENCHMARK
     runstatus, runout, runerr = ssh_client.run('./spark-perf/bin/run')
 
-    # APP LOG
+    # FIND APP LOG FOLDER
     app_log = between(runout, b"2>> ", b".err").decode(encoding='UTF-8')
-
     logfolder = "./" + "/".join(app_log.split("/")[:-1])
     print(logfolder)
     os.makedirs(logfolder)
-
+    logfolder = "./results/spark_perf_output__2016-09-09_10-27-41_logs"
     # WORKER LOGS AND SAR LOG
     for i in instances:
         ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
@@ -135,7 +139,7 @@ def runbenchmark():
         else:
             for file in ssh_client.listdir("/usr/local/spark/spark-events/"):
                 print(file)
-                ssh_client.get_file(logfolder + "/" + file, logfolder + "/" + file)
+                ssh_client.get_file("/usr/local/spark/spark-events/" + file, logfolder + "/" + file)
             for file in ssh_client.listdir(logfolder):
                 print(file)
                 ssh_client.get_file(logfolder + "/" + file, logfolder + "/" + file)
