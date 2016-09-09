@@ -1,6 +1,6 @@
 # AWS
-dataAMI = {"eu-west-1": {"ami": 'ami-7b275508', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.5"},
-           "us-west-2": {"ami": 'ami-91ba6bf1', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.7"}}
+dataAMI = {"eu-west-1": {"ami": 'ami-7b275508', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.4"},
+           "us-west-2": {"ami": 'ami-91ba6bf1', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.5"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
@@ -19,8 +19,8 @@ if DISABLEHT:
     COREHTVM = COREVM
 
 # CONTROL
-TSAMPLE = 6000
-DEADLINE = 70000
+TSAMPLE = 3000
+DEADLINE = 50000
 MAXEXECUTOR = 4
 ALPHA = 0.8
 OVERSCALE = 2
@@ -28,14 +28,22 @@ OVERSCALE = 2
 # BENCHMARK
 SCALE_FACTOR = 2
 RAM_EXEC = '"60g"' if not "r3" in INSTANCE_TYPE else '"100g"'
-lineBench = {"scala-agg-by-key": {"line": ""},
-             "scala-agg-by-key-int": {"line": ""},
-             "scala-agg-by-key-naive": {"line": ""},
-             "scala-sort-by-key": {"line": ""},
-             "scala-sort-by-key-int": {"line": ""},
-             "scala-count": {"line": ""},
-             "scala-count-w-fltr": {"line": ""}}
-BENCHMARK = [lineBench.keys()]
+linesBench = {"scala-agg-by-key": [],
+             "scala-agg-by-key-int":  [],
+             "scala-agg-by-key-naive": [],
+             "scala-sort-by-key": [],
+             "scala-sort-by-key-int": [],
+             "scala-count":  [],
+             "scala-count-w-fltr": []}
+
+BENCHMARK = ["scala-agg-by-key",
+             "scala-agg-by-key-int",
+             # "scala-agg-by-key-naive",
+             "scala-sort-by-key",
+             "scala-sort-by-key-int",
+             # "scala-count",
+             # "scala-count-w-fltr"
+             ]
 
 # Terminate istance after benchmark
 TERMINATE = 0

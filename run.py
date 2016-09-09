@@ -72,11 +72,16 @@ def runbenchmark():
             ssh_client.run(
                 """sed -i '147s{.*{JavaOptionSet("spark.executor.memory", [""" + RAM_EXEC + """]),{' ./spark-perf/config/config.py""")
 
-            # DISABLE AGG-BY-KEY-NAIVE BENCHMARK
-            # TODO
-            # ssh_client.run("sed -i '233 s/^/#/' ./spark-perf/config/config.py")
-            # ssh_client.run("sed -i '234 s/^/#/' ./spark-perf/config/config.py")
+            # ENABLE BENCHMARK
+            for bench in BENCHMARK:
+                for lineNumber in linesBench[bench]:
+                    ssh_client.run("sed '" + lineNumber + " s/[#]//g' ./spark-perf/config/config.py")
 
+            # DISABLE BENCHMARK
+            for bench in linesBench.keys():
+                if bench not in BENCHMARK:
+                    for lineNumber in linesBench[bench]:
+                        ssh_client.run("sed -i '" + lineNumber + " s/^/#/' ./spark-perf/config/config.py")
 
         else:
             # DISABLE HT
@@ -113,6 +118,7 @@ def runbenchmark():
     logfolder = "./" + "/".join(app_log.split("/")[:-1])
     print(logfolder)
     os.makedirs(logfolder)
+
     # WORKER LOGS AND SAR LOG
     for i in instances:
         ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
@@ -127,6 +133,9 @@ def runbenchmark():
             ssh_client.get_file("sar-" + i.private_ip_address + ".log",
                                 logfolder + "/" + "sar-" + i.private_ip_address + ".log")
         else:
+            for file in ssh_client.listdir("/usr/local/spark/spark-events/"):
+                print(file)
+                ssh_client.get_file(logfolder + "/" + file, logfolder + "/" + file)
             for file in ssh_client.listdir(logfolder):
                 print(file)
                 ssh_client.get_file(logfolder + "/" + file, logfolder + "/" + file)
