@@ -30,19 +30,19 @@ def runbenchmark():
     for i in instances:
         ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
 
+        ssh_client.run('ssh-keygen -f "/home/ubuntu/.ssh/known_hosts" -R localhost')
+
         # Kill Java
-        ssh_client.run('sudo killall java')
-        ssh_client.run('sudo killall java')
-        ssh_client.run('sudo killall java')
+        ssh_client.run('sudo killall java && sudo killall java && sudo killall java')
+
         # Kill SAR CPU Logger
         ssh_client.run("screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
+
         # SYNC TIME
         ssh_client.run("sudo ntpdate -s time.nist.gov")
         if z == 0:
             master_instance = i
             master_dns = i.public_dns_name
-            # START MASTER
-            status, stdout, stderr = ssh_client.run('/usr/local/spark/sbin/start-master.sh -h ' + i.public_dns_name)
 
             # DEADLINE LINE 35
             ssh_client.run("sed -i '35s{.*{spark.control.deadline " + str(
@@ -70,6 +70,9 @@ def runbenchmark():
             # CHANGE SCALE FACTOR LINE 127
             ssh_client.run("sed -i '127s{.*{SCALE_FACTOR =" + str(SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
 
+            # NO PROMPT
+            ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./spark-perf/config/config.py")
+
             # CHANGE RAM EXEC
             ssh_client.run(
                 """sed -i '147s{.*{JavaOptionSet("spark.executor.memory", [""" + RAM_EXEC + """]),{' ./spark-perf/config/config.py""")
@@ -77,17 +80,17 @@ def runbenchmark():
             # ENABLE BENCHMARK
             for bench in BENCHMARK:
                 for lineNumber in linesBench[bench]:
-                    commandLineSed = "sed '" + lineNumber + " s/[#]//g' ./spark-perf/config/config.py"
-                    print(commandLineSed)
+                    commandLineSed = "sed -i '" + lineNumber + " s/[#]//g' ./spark-perf/config/config.py"
                     ssh_client.run(commandLineSed)
 
             # DISABLE BENCHMARK
             for bench in linesBench.keys():
                 if bench not in BENCHMARK:
                     for lineNumber in linesBench[bench]:
-                        print("sed -i '" + lineNumber + " s/^/#/' ./spark-perf/config/config.py")
                         ssh_client.run("sed -i '" + lineNumber + " s/^/#/' ./spark-perf/config/config.py")
 
+            # START MASTER
+            ssh_client.run('/usr/local/spark/sbin/start-master.sh -h ' + i.public_dns_name)
         else:
             # DISABLE HT
             # ssh_client.put_file("./disable-ht-v2.sh", "./disable-ht-v2.sh")
