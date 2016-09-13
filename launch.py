@@ -42,7 +42,7 @@ def wait_ping(conn, instance_ids, pending_instance_ids):
                 pending_instance_ids.pop(pending_instance_ids.index(instace["InstanceId"]))
                 print("instance `{}` ping ok!".format(instace["InstanceId"]))
             else:
-                print("waiting on `{}`".format(instace["InstanceId"]))
+                print("pinging on `{}`".format(instace["InstanceId"]))
 
     if len(pending_instance_ids) == 0:
         print("all instances running!")
@@ -98,7 +98,22 @@ if NUMINSTANCE > 0:
                                                      SECURITY_GROUP,
                                                  ],
                                                  "InstanceType": INSTANCE_TYPE,
-                                                 "EbsOptimized": EBS_OPTIMIZED
+                                                 "EbsOptimized": EBS_OPTIMIZED,
+                                                 "BlockDeviceMappings": [
+                                                     {
+                                                         "DeviceName": "/dev/sda1",
+                                                         "Ebs": {
+                                                             "DeleteOnTermination": True,
+                                                             "VolumeType": "gp2",
+                                                             "VolumeSize": 200,
+                                                             "SnapshotId": "snap-cd51489a"
+                                                         }
+                                                     },
+                                                     {
+                                                         "DeviceName": "/dev/sdb",
+                                                         "VirtualName": "ephemeral0"
+                                                     }
+                                                 ],
                                              })
 
     print([req["SpotInstanceRequestId"] for req in requests["SpotInstanceRequests"]])
