@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import glob
-from datetime import datetime
+from datetime import datetime as dt
 from datetime import timedelta
 import numpy as np
 
@@ -10,6 +10,7 @@ from config import *
 # STRPTIME_FORMAT = '%H:%M:%S,%f'
 STRPTIME_FORMAT = '%H:%M:%S'
 SECONDLOCATOR = 10
+
 
 def plot(folder):
     # print("COREVM = " + str(COREVM))
@@ -35,11 +36,11 @@ def plot(folder):
                 if len(l) > 3 and l[3] == "TaskSetManager:" and l[4] == "Finished":
                     try:
                         appIDinfo[appID][int(float(l[9]))]["tasktimestamps"].append(
-                            datetime.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
+                            dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
                     except KeyError:
                         appIDinfo[appID][int(float(l[9]))]["tasktimestamps"] = []
                         appIDinfo[appID][int(float(l[9]))]["tasktimestamps"].append(
-                            datetime.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
+                            dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
                 if len(l) > 3 and l[3] == "StandaloneSchedulerBackend:" and l[4] == "Connected":
                     appIDinfo[l[-1].rstrip()] = {}
                     appID = l[-1].rstrip()
@@ -50,9 +51,9 @@ def plot(folder):
                 elif len(l) > 3 and l[3] == "ControllerJob:":
                     if l[5] == "INIT" and SID != int(l[12].replace(",", "")):
                         SID = int(l[12].replace(",", ""))
-                        appIDinfo[appID][SID]["start"] = datetime.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)
+                        appIDinfo[appID][SID]["start"] = dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)
                         plotDICT[appID]["startTimeStages"].append(appIDinfo[appID][SID]["start"])
-                        print("START: " + str(datetime.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)))
+                        print("START: " + str(dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)))
                         print(l[16].replace(",", ""))
                         appIDinfo[appID][SID]["deadline"] = plotDICT[appID]["startTimeStages"][-1] + timedelta(
                             milliseconds=float(l[16].replace(",", "")))
@@ -69,12 +70,12 @@ def plot(folder):
                     if l[4] == "Submitting" and l[6] == "missing":
                         appIDinfo[appID][int(l[10])] = {}
                         appIDinfo[appID][int(l[10])]["tasks"] = int(l[5])
-                        appIDinfo[appID][int(l[10])]["start"] = datetime.strptime(l[1], STRPTIME_FORMAT).replace(
+                        appIDinfo[appID][int(l[10])]["start"] = dt.strptime(l[1], STRPTIME_FORMAT).replace(
                             year=2016)
                     elif l[-4] == "finished":
                         if appID != "":
                             SID = int(l[5])
-                            appIDinfo[appID][SID]["end"] = datetime.strptime(l[1], STRPTIME_FORMAT).replace(
+                            appIDinfo[appID][SID]["end"] = dt.strptime(l[1], STRPTIME_FORMAT).replace(
                                 year=2016)
                             if len(plotDICT[appID]["startTimeStages"]) > len(plotDICT[appID]["finishTimeStages"]):
                                 plotDICT[appID]["finishTimeStages"].append(appIDinfo[appID][SID]["end"])
@@ -86,8 +87,6 @@ def plot(folder):
 
                     # print(plotDICT.keys())
     print(appIDinfo)
-
-
     for app in appIDinfo.keys():
         if len(appIDinfo[app]) > 0:
             x = []
@@ -95,8 +94,7 @@ def plot(folder):
             colors_stage = colors.cnames
             deadlineapp = 0
             for sid in sorted(appIDinfo[app].keys()):
-                if sid == 1:
-                    deadlineapp = appIDinfo[app][sid]["start"] + timedelta(milliseconds=DEADLINE)
+                deadlineapp = appIDinfo[app][DELETE_HDFS]["start"] + timedelta(milliseconds=DEADLINE)
                 for timestamp in appIDinfo[app][sid]["tasktimestamps"]:
                     x.append(timestamp)
                     if len(y) == 0:
@@ -113,6 +111,7 @@ def plot(folder):
             deadlineAlphaApp = deadlineapp - timedelta(milliseconds=((1 - ALPHA) * DEADLINE))
             ax1.axvline(deadlineAlphaApp)
             ax1.text(deadlineAlphaApp, ymax, 'ALPHA DEADLINE', rotation=90)
+
             for sid in sorted(appIDinfo[app].keys()):
                 color = colors_stage.popitem()[1]
                 try:
@@ -126,12 +125,12 @@ def plot(folder):
                 ax1.axvline(appIDinfo[app][sid]["end"], color="r")
                 ax1.text(appIDinfo[app][sid]["end"], ymax - 0.2 * ymax, 'END SID ' + str(sid), rotation=90)
 
-            # import matplotlib.dates as mdate
-            # print(int(len(x) / 10 ))
-            # locator = mdate.SecondLocator(interval=10)
-            # plt.gca().xaxis.set_major_locator(locator)
-            #
-            # plt.gcf().autofmt_xdate()
+            end = appIDinfo[app][sorted(appIDinfo[app].keys())[-1]]["end"].timestamp()
+            duration = end - appIDinfo[app][DELETE_HDFS]["start"].timestamp()
+            int_dead = deadlineAlphaApp.timestamp()
+            error = round(((int_dead - end) / duration), 2) * 100
+            ax1.text(deadlineAlphaApp, ymax - 0.5 * ymax, "ERROR = " + str(error) + "%")
+
             labels = ax1.get_xticklabels()
             plt.setp(labels, rotation=90)
             import matplotlib.dates as mdate
@@ -168,7 +167,7 @@ def plot(folder):
                             plotDICT[appID][w]["cpu"].append(int(l[-1].replace("\n", "")))
                             plotDICT[appID][w]["sp_real"].append(0.0)
                             plotDICT[appID][w]["time"].append(
-                                    datetime.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
+                                dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
                             plotDICT[appID][w]["sp"].append(0.0)
                         if l[4] == "Scaled":
                             # print(l)
@@ -192,7 +191,7 @@ def plot(folder):
                                 plotDICT[appID][w]["sp_real"].append(l[-1].replace("\n", ""))
                             if l[4] == "SP":
                                 plotDICT[appID][w]["time"].append(
-                                    datetime.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
+                                    dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
                                 plotDICT[appID][w]["sp"].append(l[-1].replace("\n", ""))
 
             with open(s) as cpulog:
@@ -201,7 +200,7 @@ def plot(folder):
                     if not ("Linux" in l[0].split(" ") or "\n" in l[0].split(" ")) and l[1] != " CPU" and l[
                         0] != "Average:":
                         plotDICT[w]["time_cpu"].append(
-                            datetime.strptime(l[0], '%I:%M:%S %p').replace(year=2016))
+                            dt.strptime(l[0], '%I:%M:%S %p').replace(year=2016))
                         cpuint = '{0:.2f}'.format((float(l[2]) * COREHTVM) / 100)
                         plotDICT[w]["cpu_real"].append(cpuint)
     else:
@@ -287,7 +286,7 @@ def plot(folder):
                     new_ylim = (ylim[0] + ylim[1]) / 2 + np.array((-0.5, 0.5)) * (ylim[1] - ylim[0]) * (1 + factor)
                     ax2.set_ylim(new_ylim)
                     plt.title(appID + " " + str(SCALE_FACTOR) + " " + str(DEADLINE) + " " + str(TSAMPLE) + " " + str(
-                        ALPHA)+ " " + str(K))
+                        ALPHA) + " " + str(K))
                     import matplotlib.dates as mdate
                     locator = mdate.SecondLocator(interval=SECONDLOCATOR)
                     plt.gca().xaxis.set_major_locator(locator)
