@@ -1,6 +1,7 @@
 # AWS
-dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.4"},
-           "us-west-2": {"ami": 'ami-4a994b2a', "az": 'us-west-2c', "keypair": "gazzetta", "price": "0.7"}}
+dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
+           "us-west-2": {"ami": 'ami-e60fd386', "snapid": "snap-d9d9b9fe", "az": 'us-west-2c', "keypair": "gazzetta",
+                         "price": "0.4"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
@@ -11,6 +12,15 @@ INSTANCE_TYPE = "r3.4xlarge"
 NUMINSTANCE = 0
 EBS_OPTIMIZED = True if not "r3" in INSTANCE_TYPE else False
 
+SPARK_2 = "/opt/spark/"
+SPARK_DOCKER = "/usr/local/spark/"
+SPARK_HOME = SPARK_DOCKER
+
+UPDATE_SPARK = 0
+UPDATE_SPARK_DOCKER = 0
+ENABLE_EXTERNAL_SHUFFLE = "true"
+LOCALITY_WAIT = 3
+CPU_TASK = 1
 
 # Core
 COREVM = 8
@@ -19,23 +29,21 @@ DISABLEHT = 0
 if DISABLEHT:
     COREHTVM = COREVM
 
-
 # CONTROL
 ALPHA = 0.8
-DEADLINE = 600000
-MAXEXECUTOR = 4
+DEADLINE = 675417
+MAXEXECUTOR = 6
 OVERSCALE = 2
 K = 75
 TI = 10000
 TSAMPLE = 5000
 COREQUANTUM = 1
 
-
 # BENCHMARK
 RUN = 1
 HDFS = 1
-PREV_SCALE_FACTOR = 0
-SCALE_FACTOR = 10
+PREV_SCALE_FACTOR = 100
+SCALE_FACTOR = 100
 DELETE_HDFS = 1 if SCALE_FACTOR != PREV_SCALE_FACTOR else 0
 RAM_EXEC = '"60g"' if not "r3" in INSTANCE_TYPE else '"100g"'
 
@@ -46,16 +54,21 @@ linesBench = {"scala-agg-by-key": ["226", "227"],
               "scala-sort-by-key-int": ["240", "241"],
               "scala-count": ["243", "244"],
               "scala-count-w-fltr": ["246", "247"]}
-BENCHMARK_PERF = [# "scala-agg-by-key",
-             # "scala-agg-by-key-int",
-             "scala-agg-by-key-naive",
-             #"scala-sort-by-key",
-             # "scala-sort-by-key-int",
-             # "scala-count",
-             # "scala-count-w-fltr",
-             ]
-BENCHMARK_BENCH = [ # "PageRank",
-             ]
+BENCHMARK_PERF = [  # "scala-agg-by-key",
+    # "scala-agg-by-key-int",
+    # "scala-agg-by-key-naive",
+    # "scala-sort-by-key",
+    #"scala-sort-by-key-int",
+    # "scala-count",
+    # "scala-count-w-fltr",
+]
+BENCHMARK_BENCH = ["PageRank",
+                   ]
+
+BENCH_NUM_TRIALS = 1
+# PageRank
+V = 2000000
+P = 2000
 
 # Terminate istance after benchmark
 TERMINATE = 0
