@@ -1,7 +1,7 @@
 # AWS
 dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
-           "us-west-2": {"ami": 'ami-e60fd386', "snapid": "snap-d9d9b9fe", "az": 'us-west-2c', "keypair": "gazzetta",
-                         "price": "0.4"}}
+           "us-west-2": {"ami": 'ami-f204d892', "snapid": "snap-bf439091", "az": 'us-west-2c', "keypair": "gazzetta",
+                         "price": "0.5"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
@@ -9,7 +9,7 @@ SECURITY_GROUP = "spark-cluster"
 
 PRICE = dataAMI[REGION]["price"]
 INSTANCE_TYPE = "r3.4xlarge"
-NUMINSTANCE = 0
+NUMINSTANCE = 6
 EBS_OPTIMIZED = True if not "r3" in INSTANCE_TYPE else False
 
 SPARK_2 = "/opt/spark/"
@@ -42,7 +42,7 @@ COREQUANTUM = 1
 # BENCHMARK
 RUN = 1
 HDFS = 1
-PREV_SCALE_FACTOR = 100
+PREV_SCALE_FACTOR = 0
 SCALE_FACTOR = 100
 DELETE_HDFS = 1 if SCALE_FACTOR != PREV_SCALE_FACTOR else 0
 RAM_EXEC = '"60g"' if not "r3" in INSTANCE_TYPE else '"100g"'
@@ -58,11 +58,11 @@ BENCHMARK_PERF = [  # "scala-agg-by-key",
     # "scala-agg-by-key-int",
     # "scala-agg-by-key-naive",
     # "scala-sort-by-key",
-    #"scala-sort-by-key-int",
+    "scala-sort-by-key-int",
     # "scala-count",
     # "scala-count-w-fltr",
 ]
-BENCHMARK_BENCH = ["PageRank",
+BENCHMARK_BENCH = [#"PageRank",
                    ]
 
 BENCH_NUM_TRIALS = 1
