@@ -306,11 +306,9 @@ def runbenchmark():
     for bench in BENCHMARK_BENCH:
         ssh_client.run('rm -r ./spark-bench/num/*')
 
-        if bench == "PageRank":
-            ssh_client.run("""sed -i '2s{.*{numV=""" + str(V) +
-                           """{' ./spark-bench/PageRank/conf/env.sh""")
-            ssh_client.run("""sed -i '3s{.*{NUM_OF_PARTITIONS=""" + str(P) +
-                           """{' ./spark-bench/PageRank/conf/env.sh""")
+        for config in benchConf[bench].keys():
+            ssh_client.run("""sed -i '"""+ str(benchConf[bench][config][0])+ """s{.*{"""+config+""""=""" + str(benchConf[bench][config][1]) +
+                           """{' ./spark-bench/"""+bench+"""/conf/env.sh""")
 
         if DELETE_HDFS:
             print("Generating Data Benchmark " + bench)

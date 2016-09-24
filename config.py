@@ -1,7 +1,7 @@
 # AWS
 dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
-           "us-west-2": {"ami": 'ami-f204d892', "snapid": "snap-bf439091", "az": 'us-west-2c', "keypair": "gazzetta",
-                         "price": "0.5"}}
+           "us-west-2": {"ami": 'ami-11449871', "snapid": "snap-cf9b7899", "az": 'us-west-2a', "keypair": "gazzetta",
+                         "price": "0.4"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
@@ -63,12 +63,25 @@ BENCHMARK_PERF = [  # "scala-agg-by-key",
     # "scala-count-w-fltr",
 ]
 BENCHMARK_BENCH = [#"PageRank",
+                   #"DecisionTree"
                    ]
 
+# config: (line, value)
+benchConf = {
+    "PageRank": {
+        "NUM_OF_PARTITIONS": (3, 2000),
+        "numV": (2, 2000000),
+        "MAX_ITERATION": (8, 1)
+    },
+    "DecisionTree": {
+        "NUM_OF_PARTITIONS": (4, 1200),
+        "NUM_OF_EXAMPLES": (2,50000000),
+        "NUM_OF_FEATURES": (3,6),
+        "NUM_OF_CLASS_C": (7, 10),
+        "MAX_ITERATION": (21, 1)
+    }
+}
 BENCH_NUM_TRIALS = 1
-# PageRank
-V = 2000000
-P = 2000
 
 # Terminate istance after benchmark
 TERMINATE = 0
