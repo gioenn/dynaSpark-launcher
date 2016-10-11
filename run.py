@@ -1,14 +1,27 @@
 import multiprocessing
 import os
 import time
-from concurrent.futures import ThreadPoolExecutor
+import json
 
+from concurrent.futures import ThreadPoolExecutor
+import copy
 import boto3
 from boto.manage.cmdshell import sshclient_from_instance
 
 import log
 import plot
 from config import *
+
+
+def timing(f):
+    def wrap(*args):
+        tstart = time.time()
+        ret = f(*args)
+        tend = time.time()
+        print('\n%s function took %0.3f ms' % (f.__name__, (tend - tstart) * 1000.0))
+        return ret
+
+    return wrap
 
 
 def between(value, a, b):
@@ -26,10 +39,8 @@ def between(value, a, b):
 
 
 def common_setup(ssh_client):
-    if UPDATE_SPARK:
-        ssh_client.run(
-            "cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package")
     if UPDATE_SPARK_DOCKER:
+        print("   Updating Spark Docker Image...")
         ssh_client.run("docker pull elfolink/spark:2.0")
 
     if DELETE_HDFS:
@@ -46,14 +57,23 @@ def common_setup(ssh_client):
     print("   Kill SAR CPU Logger")
     ssh_client.run("screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
 
-    print("   SYNC TIME")
-    ssh_client.run("sudo ntpdate -s time.nist.gov")
+    if SYNC_TIME:
+        print("   SYNC TIME")
+        ssh_client.run("sudo ntpdate -s time.nist.gov")
 
 
-def setup_slave(instance, master_dns, z):
+@timing
+def setup_slave(instance, master_dns, index_slave):
     ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
 
+    print("Setup Slave: " + instance.public_dns_name)
+
     common_setup(ssh_client)
+
+    if UPDATE_SPARK:
+        print("   Updating Spark...")
+        ssh_client.run(
+            "cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package")
 
     # CLEAN UP EXECUTORS APP LOGS
     ssh_client.run("rm -r " + SPARK_HOME + "work/*")
@@ -73,6 +93,12 @@ def setup_slave(instance, master_dns, z):
 
     # ssh_client.run('echo "spark.local.dir /mnt/hdfs" >> '+ SPARK_HOME + 'conf/spark-defaults.conf')
 
+    ssh_client.run(
+        "sed -i '31s{.*{spark.memory.offHeap.enabled " + str(
+            OFF_HEAP) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+    ssh_client.run(
+        "sed -i '32s{.*{spark.memory.offHeap.size " + str(
+            OFF_HEAP_BYTES) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run("sed -i '42s{.*{spark.control.k " + str(
         K) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
@@ -88,7 +114,7 @@ def setup_slave(instance, master_dns, z):
     ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
         COREQUANTUM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
-    if z < MAXEXECUTOR:
+    if index_slave < MAXEXECUTOR and HDFS == 0:
         print("   Starting Spark Slave")
         ssh_client.run(
             'export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/start-slave.sh ' + master_dns + ':7077 -h ' +
@@ -102,6 +128,7 @@ def setup_slave(instance, master_dns, z):
         ssh_client.run(logcpucommand)
 
 
+@timing
 def setup_master(instance):
     ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
 
@@ -109,8 +136,24 @@ def setup_master(instance):
 
     common_setup(ssh_client)
 
+    if UPDATE_SPARK_MASTER:
+        print("   Updating Spark...")
+        ssh_client.run(
+            "cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package")
+
     print("   Remove Logs")
     ssh_client.run("rm " + SPARK_HOME + "spark-events/*")
+
+    # SHUFFLE SERVICE EXTERNAL
+    ssh_client.run(
+        "sed -i '31s{.*{spark.shuffle.service.enabled " + ENABLE_EXTERNAL_SHUFFLE + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+
+    ssh_client.run(
+        "sed -i '32s{.*{spark.memory.offHeap.enabled " + str(
+            OFF_HEAP) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+    ssh_client.run(
+        "sed -i '33s{.*{spark.memory.offHeap.size " + str(
+            OFF_HEAP_BYTES) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     print("   Changing Benchmark settings")
     # DEADLINE LINE 35
@@ -194,37 +237,63 @@ def setup_master(instance):
                 ssh_client.run("sed -i '" + lineNumber + " s/^/#/' ./spark-perf/config/config.py")
 
     # ENABLE HDFS
-    if HDFS:
-        print("   Enabling HDFS in benchmarks")
-        ssh_client.run("sed -i '180s%memory%hdfs%g' ./spark-perf/config/config.py")
+    # if HDFS:
+    print("   Enabling HDFS in benchmarks")
+    ssh_client.run("sed -i '180s%memory%hdfs%g' ./spark-perf/config/config.py")
+    ssh_client.run(
+        """sed -i  '50s%.*%HDFS_URL = "hdfs://""" + instance.public_dns_name + """:9000/test/"%' ./spark-perf/config/config.py""")
+    if HDFS_MASTER != "":
         ssh_client.run(
-            """sed -i  '50s%.*%HDFS_URL = "hdfs://""" + instance.public_dns_name + """:9000/test/"%' ./spark-perf/config/config.py""")
+            """sed -i  '50s%.*%HDFS_URL = "hdfs://""" + HDFS_MASTER + """:9000/test/"%' ./spark-perf/config/config.py""")
+        ssh_client.run(
+            """sed -i  '10s%.*%HDFS_URL="hdfs://""" + HDFS_MASTER + """:9000"%' ./spark-bench/conf/env.sh""")
+        ssh_client.run(
+            """sed -i  '14s%.*%DATA_HDFS="hdfs://""" + HDFS_MASTER + """:9000/SparkBench"%' ./spark-bench/conf/env.sh""")
 
     # START MASTER
-    print("   Starting Spark Master")
-    ssh_client.run(
+    if HDFS == 0:
+        print("   Starting Spark Master")
+        ssh_client.run(
         'export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/start-master.sh -h ' + instance.public_dns_name)
 
     return instance.public_dns_name, instance
 
 
+@timing
 def setup_hdfs_ssd(instance):
     ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
-    ssh_client.run(
+    status, out, err = ssh_client.run(
         "test -d /mnt/hdfs/namenode || sudo mkdir --parents /mnt/hdfs/namenode && sudo mkdir --parents /mnt/hdfs/datanode")
+    if status != 0:
+        print(out, err)
     ssh_client.run("sudo chown ubuntu:hadoop /mnt/hdfs && sudo chown ubuntu:hadoop /mnt/hdfs/*")
 
 
+def rsync_folder(ssh_client, slave):
+    ssh_client.run(
+        "eval `ssh-agent -s` && ssh-add gazzetta.pem && rsync -a " + HADOOP_CONF + " ubuntu@" + slave + ":" + HADOOP_CONF)
+    if DELETE_HDFS:
+        ssh_client.run("rm /mnt/hdfs/datanode/current/VERSION")
+
+
+@timing
 def setup_hdfs_config(master_instance, slaves):
     ssh_client = sshclient_from_instance(master_instance, KEYPAIR_PATH, user_name='ubuntu')
     master_dns = master_instance.public_dns_name
-    HADOOP_CONF = "/usr/local/lib/hadoop-2.7.2/etc/hadoop/"
 
     # Setup Config
-    ssh_client.run(
-        "sed -i '19s%hdfs://ec2-54-70-105-139.us-west-2.compute.amazonaws.com:9000%hdfs://" + master_dns + ":9000%g' " + HADOOP_CONF + "core-site.xml")
-    ssh_client.run(
-        "sed -i 's%ec2-54-70-105-139.us-west-2.compute.amazonaws.com%" + master_dns + "%g' " + HADOOP_CONF + "hdfs-site.xml")
+    # TODO Fix when change runtime hdfs cluster configuration
+    if HDFS_MASTER != "":
+        ssh_client.run(
+            "sed -i '19s%hdfs://ec2-54-70-105-139.us-west-2.compute.amazonaws.com:9000%hdfs://" + HDFS_MASTER + ":9000%g' " + HADOOP_CONF + "core-site.xml")
+        ssh_client.run(
+            "sed -i 's%ec2-54-70-105-139.us-west-2.compute.amazonaws.com%" + HDFS_MASTER + "%g' " + HADOOP_CONF + "hdfs-site.xml")
+    else:
+        ssh_client.run(
+            "sed -i '19s%hdfs://ec2-54-148-208-110.us-west-2.compute.amazonaws.com:9000%hdfs://" + master_dns + ":9000%g' " + HADOOP_CONF + "core-site.xml")
+        ssh_client.run(
+            "sed -i 's%ec2-54-148-208-110.us-west-2.compute.amazonaws.com%" + master_dns + "%g' " + HADOOP_CONF + "hdfs-site.xml")
+
     ssh_client.run(
         "sed -i 's%/var/lib/hadoop/hdfs/namenode%/mnt/hdfs/namenode%g' " + HADOOP_CONF + "hdfs-site.xml")
     ssh_client.run(
@@ -235,20 +304,23 @@ def setup_hdfs_config(master_instance, slaves):
 
     ssh_client.run(
         "echo 'Host *\n  UserKnownHostsFile /dev/null\n  StrictHostKeyChecking no' > ~/.ssh/config")
+
     # Rsync Config
-    for slave in slaves:
-        status, out, err = ssh_client.run(
-            "eval `ssh-agent -s` && ssh-add gazzetta.pem && rsync -a " + HADOOP_CONF + " ubuntu@" + slave + ":" + HADOOP_CONF)
-        # print(status, out, err)
+    with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
+        for slave in slaves:
+            executor.submit(rsync_folder, ssh_client, slave)
 
     # Start HDFS
     if DELETE_HDFS:
+        ssh_client.run(
+            "eval `ssh-agent -s` && ssh-add gazzetta.pem && /usr/local/lib/hadoop-2.7.2/sbin/stop-dfs.sh")
         ssh_client.run("rm /mnt/hdfs/datanode/current/VERSION")
         ssh_client.run("echo 'N' | /usr/local/lib/hadoop-2.7.2/bin/hdfs namenode -format")
 
     status, out, err = ssh_client.run(
         "eval `ssh-agent -s` && ssh-add gazzetta.pem && /usr/local/lib/hadoop-2.7.2/sbin/start-dfs.sh && /usr/local/lib/hadoop-2.7.2/bin/hdfs dfsadmin -safemode leave")
-    # print(status, out, err)
+    if status != 0:
+        print(out, err)
     print("   Started HDFS")
 
     if DELETE_HDFS:
@@ -259,22 +331,35 @@ def setup_hdfs_config(master_instance, slaves):
             print(status, out, err)
 
 
+def write_config(output_folder):
+    with open(output_folder + "/config.json", "w") as config_out:
+        json.dump(CONFIG_DICT, config_out, sort_keys=True, indent=4)
+
+
+@timing
 def runbenchmark():
     ec2 = boto3.resource('ec2', region_name=REGION)
     instances = ec2.instances.filter(
-        Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        Filters=[{'Name': 'instance-state-name', 'Values': ['running']},
+                 {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}
+                 ])
 
+    print("Instance Found: " + str(len(list(instances))))
     if len(list(instances)) == 0:
         print("No instances running")
         exit(1)
 
     master_dns, master_instance = setup_master(list(instances)[0])
     z = 0
-    with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
+    with ThreadPoolExecutor(multiprocessing.cpu_count() * 2) as executor:
         for i in instances:
             if i.public_dns_name != master_dns:
-                executor.submit(setup_slave, i, master_dns, z)
+                executor.submit(setup_slave, i, master_dns, copy.deepcopy(z))
                 z += 1
+
+    print("Slave launched: " + str(z))
+    if z != MAXEXECUTOR:
+        print("ERROR SLAVE LAUNCHED != MAX_EXECUTOR")
 
     if HDFS:
         print("\nStarting Setup of HDFS cluster")
@@ -293,38 +378,43 @@ def runbenchmark():
     ssh_client = sshclient_from_instance(master_instance, KEYPAIR_PATH, user_name='ubuntu')
 
     # LANCIARE BENCHMARK
-    if len(BENCHMARK_PERF) > 0:
-        print("Running Benchmark...")
-        runstatus, runout, runerr = ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ./spark-perf/bin/run')
+    if HDFS == 0:
+        if len(BENCHMARK_PERF) > 0:
+            print("Running Benchmark " + str(BENCHMARK_PERF))
+            runstatus, runout, runerr = ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ./spark-perf/bin/run')
 
-        # FIND APP LOG FOLDER
-        app_log = between(runout, b"2>> ", b".err").decode(encoding='UTF-8')
-        logfolder = "./" + "/".join(app_log.split("/")[:-1])
-        print(logfolder)
-        output_folder = logfolder
+            # FIND APP LOG FOLDER
+            app_log = between(runout, b"2>> ", b".err").decode(encoding='UTF-8')
+            logfolder = "./" + "/".join(app_log.split("/")[:-1])
+            print(logfolder)
+            output_folder = logfolder
 
-    for bench in BENCHMARK_BENCH:
-        ssh_client.run('rm -r ./spark-bench/num/*')
+        for bench in BENCHMARK_BENCH:
+            ssh_client.run('rm -r ./spark-bench/num/*')
 
-        for config in benchConf[bench].keys():
-            ssh_client.run("""sed -i '"""+ str(benchConf[bench][config][0])+ """s{.*{"""+config+""""=""" + str(benchConf[bench][config][1]) +
-                           """{' ./spark-bench/"""+bench+"""/conf/env.sh""")
+            for config in benchConf[bench].keys():
+                if config != "NumTrials":
+                    ssh_client.run("""sed -i '""" + str(benchConf[bench][config][0]) + """s{.*{""" + config + """=""" + str(
+                        benchConf[bench][config][1]) +
+                                   """{' ./spark-bench/""" + bench + """/conf/env.sh""")
 
-        if DELETE_HDFS:
-            print("Generating Data Benchmark " + bench)
+            if DELETE_HDFS:
+                print("Generating Data Benchmark " + bench)
+                ssh_client.run(
+                    'eval `ssh-agent -s` && ssh-add gazzetta.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/gen_data.sh')
+
+            print("Running Benchmark " + bench)
             ssh_client.run(
-                'eval `ssh-agent -s` && ssh-add gazzetta.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/gen_data.sh')
+                'eval `ssh-agent -s` && ssh-add gazzetta.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh')
+            logfolder = "./spark-bench/num"
+            output_folder = "./spark-bench/num/"
 
-        print("Running Benchmark " + bench)
-        ssh_client.run(
-            'eval `ssh-agent -s` && ssh-add gazzetta.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh')
-        logfolder = "./spark-bench/num"
-        output_folder = "./spark-bench/num/"
+        # DOWNLOAD LOGS
+        output_folder = log.download(logfolder, instances, master_dns, output_folder)
 
-    # DOWNLOAD LOGS
-    output_folder = log.download(logfolder, instances, master_dns, output_folder)
+        write_config(output_folder)
 
-    # PLOT LOGS
-    plot.plot(output_folder + "/")
+        # PLOT LOGS
+        plot.plot(output_folder + "/")
 
-    print("\nCHECK VALUE OF SCALE FACTOR AND PREV SCALE FACTOR FOR HDFS CASE")
+        print("\nCHECK VALUE OF SCALE FACTOR AND PREV SCALE FACTOR FOR HDFS CASE")

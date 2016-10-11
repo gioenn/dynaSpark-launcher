@@ -164,6 +164,8 @@ if NUMINSTANCE > 0:
         results = client.describe_spot_instance_requests(SpotInstanceRequestIds=request_ids)
         instance_ids = [result["InstanceId"] for result in results["SpotInstanceRequests"]]
 
+        client.create_tags(Resources=instance_ids, Tags=TAG)
+
         # Wait Running
         wait_for_running(client, instance_ids, copy.deepcopy(instance_ids))
 
@@ -171,10 +173,22 @@ if NUMINSTANCE > 0:
 
         wait_ping(client, instance_ids, copy.deepcopy(instance_ids))
 
+if REBOOT:
+    print("Rebooting instances...")
+    ec2 = boto3.resource('ec2', region_name=REGION)
+    instances = ec2.instances.filter(
+        Filters=[{'Name': 'instance-state-name', 'Values': ['running']},
+                 {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}
+                 ])
+    instance_ids = [x.id for x in instances]
+    client.reboot_instances(InstanceIds=instance_ids)
+    wait_ping(client, instance_ids, copy.deepcopy(instance_ids))
+
 if RUN:
     run.runbenchmark()
 
 if TERMINATE:
+    # TODO: Fix TERMINATE handling
     ec2 = boto3.resource('ec2', region_name=REGION)
     if request_ids == None:
         # TODO
@@ -189,11 +203,3 @@ if TERMINATE:
     # TERMINARE INSTANCE
     ec2.instances.filter(InstanceIds=instance_ids).stop()
     ec2.instances.filter(InstanceIds=instance_ids).terminate()
-
-if PLOT_ALL:
-    import glob
-    import plot
-
-    for dir in glob.glob("./results/*/"):
-        print(dir)
-        plot.plot(dir)

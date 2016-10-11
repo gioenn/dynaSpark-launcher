@@ -6,13 +6,29 @@ import matplotlib.dates as mpdate
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
+import random
+import time
+import math
 
 from config import *
 
 STRPTIME_FORMAT = '%H:%M:%S'
-SECONDLOCATOR = 15
+SECONDLOCATOR = 10
+TITLE = True
 
 
+def timing(f):
+    def wrap(*args):
+        tstart = time.time()
+        ret = f(*args)
+        tend = time.time()
+        print('\n%s function took %0.3f ms' % (f.__name__, (tend - tstart) * 1000.0))
+        return ret
+
+    return wrap
+
+
+@timing
 def plot(folder):
     # COREVM = 12
     # COREHTVM = 12
@@ -58,9 +74,10 @@ def plot(folder):
                         plotDICT[appID]["startTimeStages"].append(appIDinfo[appID][SID]["start"])
                         print("START: " + str(dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)))
                         print(l[16].replace(",", ""))
-                        appIDinfo[appID][SID]["deadline"] = plotDICT[appID]["startTimeStages"][-1] + timedelta(
+                        if float(l[16].replace(",", "")) != 300000:
+                            appIDinfo[appID][SID]["deadline"] = plotDICT[appID]["startTimeStages"][-1] + timedelta(
                             milliseconds=float(l[16].replace(",", "")))
-                        plotDICT[appID]["dealineTimeStages"].append(appIDinfo[appID][SID]["deadline"])
+                            plotDICT[appID]["dealineTimeStages"].append(appIDinfo[appID][SID]["deadline"])
                     if l[5] == "NEEDED" and l[4] == "SEND":
                         nextAppID = l[-1].replace("\n", "")
                         if appID != nextAppID:
@@ -107,43 +124,70 @@ def plot(folder):
                         y.append(y[-1] + 1)
 
             fig, ax1 = plt.subplots(figsize=(16, 9), dpi=300)
-
-            taskprogress, = ax1.plot(x, y, ".k-")
+            normalized = [(z - min(y)) / (max(y) - min(y)) for z in y]
+            taskprogress, = ax1.plot(x, normalized, ".k-")
             ymin, ymax = ax1.get_ylim()
             ax1.axvline(deadlineapp)
             ax1.text(deadlineapp, ymax, 'DEADLINE APP', rotation=90)
             deadlineAlphaApp = deadlineapp - timedelta(milliseconds=((1 - ALPHA) * DEADLINE))
             ax1.axvline(deadlineAlphaApp)
             ax1.text(deadlineAlphaApp, ymax, 'ALPHA DEADLINE', rotation=90)
-
+            ax1.set_xlabel('time')
+            ax1.set_ylabel('app progress')
+            errors = []
             for sid in sorted(appIDinfo[app].keys()):
                 color = colors_stage.popitem()[1]
+                int_dead = 0
                 try:
                     ax1.axvline(appIDinfo[app][sid]["deadline"], color="r", linestyle='--')
                     ax1.text(appIDinfo[app][sid]["deadline"], ymin + 0.15 * ymax, 'DEAD SID ' + str(sid), rotation=90)
+                    int_dead = appIDinfo[app][sid]["deadline"].timestamp()
                 except KeyError:
                     None
                 if sid != 0:
                     ax1.axvline(appIDinfo[app][sid]["start"], color="b")
                     ax1.text(appIDinfo[app][sid]["start"], ymax - 0.02 * ymax, 'START SID ' + str(sid), rotation=90, )
                 ax1.axvline(appIDinfo[app][sid]["end"], color="r")
-                ax1.text(appIDinfo[app][sid]["end"], ymax - 0.2 * ymax, 'END SID ' + str(sid), rotation=90)
+                ax1.text(appIDinfo[app][sid]["end"], ymax - 0.25 * ymax, 'END SID ' + str(sid), rotation=90)
+                if int_dead != 0 and sid != DELETE_HDFS:
+                    end = appIDinfo[app][sid]["end"].timestamp()
+                    duration = deadlineAlphaApp.timestamp() - appIDinfo[app][DELETE_HDFS]["start"].timestamp()
+                    error = round(round(((abs(int_dead - end)) / duration), 3) * 100, 3)
+                    errors.append(error)
+                    ax1.text(appIDinfo[app][sid]["end"], ymax - random.uniform(0.4, 0.5) * ymax,
+                             "E " + str(error) + "%", rotation=90)
+
 
             end = appIDinfo[app][sorted(appIDinfo[app].keys())[-1]]["end"].timestamp()
-            duration = end - appIDinfo[app][DELETE_HDFS]["start"].timestamp()
             int_dead = deadlineAlphaApp.timestamp()
-            error = round(((int_dead - end) / duration), 3) * 100
+            duration = int_dead - appIDinfo[app][DELETE_HDFS]["start"].timestamp()
+            error = round(round(((int_dead - end) / duration), 3) * 100, 3)
             ax1.text(deadlineAlphaApp, ymax - 0.5 * ymax, "ERROR = " + str(error) + "%")
+
+            np_errors = np.array(errors)
+            print("DEADLINE_ERROR " + str(abs(error)))
+            print("MEAN ERROR: " + str(np.mean(np_errors)))
+            print("DEVSTD ERROR: " + str(np.std(np_errors)))
+            print("MEDIAN ERROR: " + str(np.median(np_errors)))
+            print("MAX ERROR: " + str(max(np_errors)))
+            print("MIN ERROR: " + str(min(np_errors)))
+
+            with open(folder + "ERROR.txt", "w") as error_f:
+                error_f.write("DEADLINE_ERROR " + str(abs(error)) + "\n")
+                error_f.write("MEAN_ERROR " + str(np.mean(np_errors)) + "\n")
+                error_f.write("DEVSTD_ERROR: " + str(np.std(np_errors)) + "\n")
+                error_f.write("MEDIAN_ERROR: " + str(np.median(np_errors)) + "\n")
+                error_f.write("MAX_ERROR: " + str(max(np_errors)) + "\n")
+                error_f.write("MIN_ERROR: " + str(min(np_errors)) + "\n")
 
             labels = ax1.get_xticklabels()
             plt.setp(labels, rotation=90)
-            import matplotlib.dates as mdate
-            locator = mdate.SecondLocator(interval=SECONDLOCATOR)
+            locator = mpdate.SecondLocator(interval=SECONDLOCATOR)
             plt.gca().xaxis.set_major_locator(locator)
-
+            plt.gca().xaxis.set_major_formatter(mpdate.DateFormatter(STRPTIME_FORMAT))
             plt.gcf().autofmt_xdate()
-            plt.title(app + " " + str(SCALE_FACTOR) + " " + str(DEADLINE) + " " + str(TSAMPLE) + " " + str(
-                ALPHA) + " " + str(K))
+            if TITLE:
+                plt.title(app + " " + str(SCALE_FACTOR) + " " + str(DEADLINE) + " " + str(TSAMPLE) + " " + str(   ALPHA) + " " + str(K))
             plt.savefig(folder + app + ".png", bbox_inches='tight', dpi=300)
             plt.close()
 
@@ -196,7 +240,9 @@ def plot(folder):
                             if l[4] == "SP":
                                 plotDICT[appID][w]["time"].append(
                                     dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
+                                # print(l[-1].replace("\n", ""))
                                 sp = float(l[-1].replace("\n", ""))
+                                # print(sp)
                                 if sp < 0.0:
                                     plotDICT[appID][w]["sp"].append(abs(sp) / 100)
                                 else:
@@ -217,12 +263,35 @@ def plot(folder):
     for appID in sorted(plotDICT.keys()):
         if len(appID) <= len("app-20160831142852-0000"):
             cpu_time = 0
+            cpu_time_max = 0
             for worker in plotDICT[appID].keys():
                 if worker not in ["startTimeStages", "dealineTimeStages", "finishTimeStages"]:
                     cpu_time += (TSAMPLE / 1000) * sum(plotDICT[appID][worker]["cpu"])
+                    for c, t in zip(plotDICT[appID][worker]["cpu"], plotDICT[appID][worker]["time"]):
+                        try:
+                            index = plotDICT[worker]["time_cpu"].index(t)
+                        except ValueError:
+                            def func(x):
+                                delta = x - t if x > t else timedelta.max
+                                return delta
+
+                            index = plotDICT[worker]["time_cpu"].index(min(plotDICT[worker]["time_cpu"], key=func))
+                        cpu_time_max += (TSAMPLE / 1000) * max(c, plotDICT[worker]["cpu_real"][index])
+
+            if cpu_time == 0:
+                cpu_time = ((appIDinfo[appID][max(list(appIDinfo[appID].keys()))]["end"].timestamp() - appIDinfo[appID][0]["start"].timestamp())) * MAXEXECUTOR * COREVM
+                cpu_time_max = cpu_time
+            cpu_time_max = math.floor(cpu_time_max)
             print("CPU_TIME: " + str(cpu_time))
+            print("CPU TIME MAX: " + str(cpu_time_max))
             print("SID " + str(appIDinfo[appID].keys()))
             print("CHECK NON CONTROLLED STAGE FOR CPU_TIME")
+
+    with open(folder + "CPU_TIME.txt", "w") as cpu_time_f:
+        if plotDICT:
+            cpu_time_f.write("CPU_TIME " + str(cpu_time) + "\n")
+            cpu_time_f.write("CPU_TIME_MAX " + str(cpu_time_max) + "\n")
+
     # print(plotDICT)
     for appID in sorted(plotDICT.keys()):
         if len(appID) <= len("app-20160831142852-0000"):
@@ -244,11 +313,13 @@ def plot(folder):
                     #         plotDICT[appID][worker]["cpu"] = np.insert(plotDICT[appID][worker]["cpu"], p, 0)
                     if len(plotDICT[appID][worker]["sp"]) > 0:
                         sp_plt, = ax1.plot(plotDICT[appID][worker]["time"], plotDICT[appID][worker]["sp"], ".r-",
-                                       label='SP')
-                    sp_real_plt, = ax1.plot(plotDICT[appID][worker]["time"], plotDICT[appID][worker]["sp_real"], ".k-",
-                                            label='SP REAL')
+                                           label='PROGRESS')
+                    if len(plotDICT[appID][worker]["sp_real"]) > 0:
+                        sp_real_plt, = ax1.plot(plotDICT[appID][worker]["time"], plotDICT[appID][worker]["sp_real"],
+                                                ".k-",
+                                                label='PROGRESS REAL')
                     ax1.set_xlabel('time')
-                    ax1.set_ylabel('sp')
+                    ax1.set_ylabel('stage progress')
 
                     for starttime, finishtime in zip(plotDICT[appID]["startTimeStages"],
                                                      plotDICT[appID]["finishTimeStages"]):
@@ -294,9 +365,9 @@ def plot(folder):
                         cpu_real, = ax2.plot(plotDICT[worker]["time_cpu"][indexInit:indexEnd + 1],
                                              plotDICT[worker]["cpu_real"][indexInit:indexEnd + 1], ".g-",
                                              label='CPU REAL')
-                        plt.legend(handles=[sp_plt, sp_real_plt, cpu_plt, cpu_real], bbox_to_anchor=(1.1, -0.025))
+                        plt.legend(handles=[sp_plt, sp_real_plt, cpu_plt, cpu_real], bbox_to_anchor=(1, 0.2), prop={'size': 12})
                     else:
-                        plt.legend(handles=[sp_plt, sp_real_plt, cpu_plt], bbox_to_anchor=(1.1, -0.025))
+                        plt.legend(handles=[sp_plt, sp_real_plt, cpu_plt], bbox_to_anchor=(1, 0.15), prop={'size': 12})
 
                     ax2.set_ylabel('cpu')
                     ax2.set_ylim(0, COREVM)
@@ -311,12 +382,9 @@ def plot(folder):
                     factor = 0.1
                     new_ylim = (ylim[0] + ylim[1]) / 2 + np.array((-0.5, 0.5)) * (ylim[1] - ylim[0]) * (1 + factor)
                     ax2.set_ylim(new_ylim)
-                    plt.title(appID + " " + str(SCALE_FACTOR) + " " + str(DEADLINE) + " " + str(TSAMPLE) + " " + str(
-                        ALPHA) + " " + str(K))
-                    import matplotlib.dates as mdate
-                    locator = mdate.SecondLocator(interval=SECONDLOCATOR)
+                    locator = mpdate.SecondLocator(interval=SECONDLOCATOR)
                     plt.gca().xaxis.set_major_locator(locator)
-
+                    plt.gca().xaxis.set_major_formatter(mpdate.DateFormatter(STRPTIME_FORMAT))
                     plt.gcf().autofmt_xdate()
                     # print(worker)
                     # for starttime, finishtime in zip(plotDICT[appID]["startTimeStages"],
@@ -357,5 +425,53 @@ def plot(folder):
                     #             print(mean_cpu, mean_cpu_real, xmin, xmax)
                     #             ax2.axhline(y=mean_cpu, xmin=xmin, xmax=xmax, c="blue", linewidth=2)
                     #             ax2.axhline(y=mean_cpu_real, xmin=xmin, xmax=xmax, c="green", linewidth=2)
+                    if TITLE:
+                        plt.title(appID + " " + str(SCALE_FACTOR) + " " + str(DEADLINE) + " " + str(TSAMPLE) + " " + str(ALPHA) + " " + str(K))
                     plt.savefig(worker + "." + appID + '.png', bbox_inches='tight', dpi=300)
                     plt.close()
+        else:
+            worker = appID
+            colors_stage = {'m', 'y', 'k', 'c', 'g'}
+            colors2_stage = colors_stage.copy()
+
+            fig, ax1 = plt.subplots(figsize=(16, 9), dpi=300)
+
+            ax1.set_xlabel('time')
+            ax1.set_ylabel('cpu')
+
+            ax1.spines["top"].set_visible(False)
+            ax1.spines["right"].set_visible(False)
+
+            ax1.get_xaxis().tick_bottom()
+            ax1.get_yaxis().tick_left()
+
+            ax2 = ax1.twinx()
+
+            if len(plotDICT[worker]["cpu_real"]) > 0:
+                cpu_real, = ax2.plot(plotDICT[worker]["time_cpu"],
+                                     plotDICT[worker]["cpu_real"], ".g-",
+                                     label='CPU REAL')
+                plt.legend(handles=[cpu_real], bbox_to_anchor=(1.1, -0.025))
+
+            ax2.set_ylabel('cpu')
+            ax2.set_ylim(0, COREVM)
+            labels = ax1.get_xticklabels()
+            plt.setp(labels, rotation=90, fontsize=10)
+            xlim = ax2.get_xlim()
+            # example of how to zoomout by a factor of 0.1
+            factor = 0.1
+            new_xlim = (xlim[0] + xlim[1]) / 2 + np.array((-0.5, 0.5)) * (xlim[1] - xlim[0]) * (1 + factor)
+            ax2.set_xlim(new_xlim)
+            ylim = ax2.get_ylim()
+            factor = 0.1
+            new_ylim = (ylim[0] + ylim[1]) / 2 + np.array((-0.5, 0.5)) * (ylim[1] - ylim[0]) * (1 + factor)
+            ax2.set_ylim(new_ylim)
+            # plt.title(appID + " " + str(SCALE_FACTOR) + " " + str(DEADLINE) + " " + str(TSAMPLE) + " " + str(
+            #   ALPHA) + " " + str(K))
+            import matplotlib.dates as mdate
+            locator = mdate.SecondLocator(interval=SECONDLOCATOR)
+            plt.gca().xaxis.set_major_locator(locator)
+
+            plt.gcf().autofmt_xdate()
+            # plt.savefig(worker + '.png', bbox_inches='tight', dpi=300)
+            plt.close()
