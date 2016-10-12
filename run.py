@@ -290,9 +290,9 @@ def setup_hdfs_config(master_instance, slaves):
             "sed -i 's%ec2-54-70-105-139.us-west-2.compute.amazonaws.com%" + HDFS_MASTER + "%g' " + HADOOP_CONF + "hdfs-site.xml")
     else:
         ssh_client.run(
-            "sed -i '19s%hdfs://ec2-54-148-208-110.us-west-2.compute.amazonaws.com:9000%hdfs://" + master_dns + ":9000%g' " + HADOOP_CONF + "core-site.xml")
+            "sed -i '19s%hdfs://ec2-54-70-105-139.us-west-2.compute.amazonaws.com:9000%hdfs://" + master_dns + ":9000%g' " + HADOOP_CONF + "core-site.xml")
         ssh_client.run(
-            "sed -i 's%ec2-54-148-208-110.us-west-2.compute.amazonaws.com%" + master_dns + "%g' " + HADOOP_CONF + "hdfs-site.xml")
+            "sed -i 's%ec2-54-70-105-139.us-west-2.compute.amazonaws.com%" + master_dns + "%g' " + HADOOP_CONF + "hdfs-site.xml")
 
     ssh_client.run(
         "sed -i 's%/var/lib/hadoop/hdfs/namenode%/mnt/hdfs/namenode%g' " + HADOOP_CONF + "hdfs-site.xml")

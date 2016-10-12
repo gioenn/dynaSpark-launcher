@@ -3,7 +3,7 @@ import random
 # AWS
 dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
            "us-west-2": {"ami": 'ami-0fd30b6f', "snapid": "snap-ca1e1bed", "az": 'us-west-2c', "keypair": "gazzetta",
-                         "price": "0.4"}}
+                         "price": "0.28"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
@@ -30,7 +30,7 @@ SPARK_DOCKER = "/usr/local/spark/"
 SPARK_HOME = SPARK_DOCKER
 
 UPDATE_SPARK = 0
-UPDATE_SPARK_MASTER = 0
+UPDATE_SPARK_MASTER = 1
 UPDATE_SPARK_DOCKER = 0
 ENABLE_EXTERNAL_SHUFFLE = "false"
 LOCALITY_WAIT = 0
@@ -64,7 +64,7 @@ COREQUANTUM = 1
 # BENCHMARK
 RUN = 1
 SYNC_TIME = 1
-PREV_SCALE_FACTOR = 1000
+PREV_SCALE_FACTOR = 0
 BENCH_NUM_TRIALS = 1
 
 BENCHMARK_PERF = [
@@ -78,8 +78,8 @@ BENCHMARK_PERF = [
                   ]
 
 BENCHMARK_BENCH = [
-    "PageRank",
-    # "DecisionTree",
+    #"PageRank",
+    #"DecisionTree",
     # "KMeans"
 ]
 
