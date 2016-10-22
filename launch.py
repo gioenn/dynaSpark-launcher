@@ -2,6 +2,7 @@ import copy
 import socket
 import sys
 import time
+import datetime
 from errno import ECONNREFUSED
 from errno import ETIMEDOUT
 
@@ -123,6 +124,22 @@ client = boto3.client('ec2', region_name=REGION)
 if NUMINSTANCE > 0:
     choice = query_yes_no("Are you sure to launch " + str(NUMINSTANCE) + " new instance?", "no")
     if choice:
+        # Check Price SPOT INSTANCE
+        response = client.describe_spot_price_history(InstanceTypes=[INSTANCE_TYPE], ProductDescriptions=['Linux/UNIX'],
+                                                  AvailabilityZone=dataAMI[REGION]["az"])
+        print(response['SpotPriceHistory'][0])
+        lastspotprice = [float(x['SpotPrice']) for x in response['SpotPriceHistory'][:10]]
+        print(lastspotprice)
+        print("Number of responses:", len(response['SpotPriceHistory']))
+        spotprice = float(sum(lastspotprice)) / max(len(lastspotprice), 1)
+        spotprice += (spotprice * 0.2)
+        spotprice = float("{0:.2f}".format(spotprice))
+        print("LAST 10 SPOT PRICE + 20%: " + str(spotprice))
+        print("YOUR PRICE: " + str(PRICE))
+        if float(PRICE) < spotprice:
+            print("ERROR PRICE")
+            exit(1)
+
         requests = client.request_spot_instances(SpotPrice=PRICE,
                                                  InstanceCount=NUMINSTANCE,
                                                  Type='one-time',
@@ -133,6 +150,9 @@ if NUMINSTANCE > 0:
                                                      "SecurityGroups": [
                                                          SECURITY_GROUP,
                                                      ],
+                                                     'Placement': {
+                                                         'AvailabilityZone': dataAMI[REGION]["az"],
+                                                     },
                                                      "InstanceType": INSTANCE_TYPE,
                                                      "EbsOptimized": EBS_OPTIMIZED,
                                                      "BlockDeviceMappings": [

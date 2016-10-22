@@ -2,8 +2,8 @@ import random
 
 # AWS
 dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
-           "us-west-2": {"ami": 'ami-0fd30b6f', "snapid": "snap-ca1e1bed", "az": 'us-west-2c', "keypair": "gazzetta",
-                         "price": "0.28"}}
+           "us-west-2": {"ami": 'ami-add773cd', "snapid": "snap-83e7f0ad", "az": 'us-west-2a', "keypair": "gazzetta",
+                         "price": "0.4"}}
 
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
@@ -13,6 +13,7 @@ INSTANCE_TYPE = "r3.4xlarge"
 NUMINSTANCE = 0
 EBS_OPTIMIZED = True if not "r3" in INSTANCE_TYPE else False
 REBOOT = 0
+NUM_RUN = 3
 
 CLUSTER_ID = "0"
 print("Cluster ID : " + str(CLUSTER_ID))
@@ -30,11 +31,15 @@ SPARK_DOCKER = "/usr/local/spark/"
 SPARK_HOME = SPARK_DOCKER
 
 UPDATE_SPARK = 0
-UPDATE_SPARK_MASTER = 1
+UPDATE_SPARK_MASTER = 0
 UPDATE_SPARK_DOCKER = 0
-ENABLE_EXTERNAL_SHUFFLE = "false"
+ENABLE_EXTERNAL_SHUFFLE = "true"
 LOCALITY_WAIT = 0
+LOCALITY_WAIT_NODE = 0
+LOCALITY_WAIT_PROCESS = 0
+LOCALITY_WAIT_RACK = 0
 CPU_TASK = 1
+RAM_DRIVER = "50g"
 RAM_EXEC = '"60g"' if not "r3" in INSTANCE_TYPE else '"100g"'
 OFF_HEAP = False
 if OFF_HEAP:
@@ -50,16 +55,24 @@ if DISABLEHT:
 
 # CONTROL
 ALPHA = 0.8
-DEADLINE = 284375
+DEADLINE = 311250
+# SVM
+# 600000
+# KMeans
+# 0% 311250
+# 425625
+# PageRank
 # 0%  203125
 # 20% 243750
 # 40% 284375
 MAXEXECUTOR = 6
 OVERSCALE = 2
-K = 75
-TI = 10000
-TSAMPLE = 2000
-COREQUANTUM = 1
+K = 50
+TI = 12000
+TSAMPLE = 1000
+COREQUANTUM = 0.05
+COREMIN = 0.0
+CPU_PERIOD = 100000
 
 # BENCHMARK
 RUN = 1
@@ -68,23 +81,25 @@ PREV_SCALE_FACTOR = 0
 BENCH_NUM_TRIALS = 1
 
 BENCHMARK_PERF = [
-                    # "scala-agg-by-key",
-                   #"scala-agg-by-key-int",
-                  #  "scala-agg-by-key-naive",
-                  #"scala-sort-by-key",
-                   #"scala-sort-by-key-int",
-                  # "scala-count",
-                  # "scala-count-w-fltr",
-                  ]
-
-BENCHMARK_BENCH = [
-    #"PageRank",
-    #"DecisionTree",
-    # "KMeans"
+    # "scala-agg-by-key",
+    # "scala-agg-by-key-int",
+    # "scala-agg-by-key-naive",
+    # "scala-sort-by-key",
+    # "scala-sort-by-key-int",
+    # "scala-count",
+    # "scala-count-w-fltr",
 ]
 
-if len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) > 1:
+BENCHMARK_BENCH = [
+    # "PageRank",
+    # "DecisionTree",
+    # "KMeans",
+    # "SVM"
+]
+
+if len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) > 1 or len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) == 0:
     print("ERROR BENCHMARK SELECTION")
+    exit(1)
 
 # config: (line, value)
 benchConf = {
@@ -109,9 +124,13 @@ benchConf = {
         "MAX_ITERATION": (8, 1)
     },
     "KMeans": {
-        "NUM_OF_POINTS": (2, 10000000),
+        # DataGen
+        "NUM_OF_POINTS": (2, 100000000),
         "NUM_OF_CLUSTERS": (3, 10),
-        "NUM_OF_PARTITIONS": (6, 500),
+        "DIMENSIONS": (4, 20),
+        "SCALING": (5, 0.6),
+        "NUM_OF_PARTITIONS": (6, 1000),
+        # Run
         "MAX_ITERATION": (8, 1)
     },
     "DecisionTree": {
@@ -120,13 +139,31 @@ benchConf = {
         "NUM_OF_FEATURES": (3, 6),
         "NUM_OF_CLASS_C": (7, 10),
         "MAX_ITERATION": (21, 1)
+    },
+    "SVM": {
+        "NUM_OF_PARTITIONS": (4, 1000),
+        "NUM_OF_EXAMPLES": (2, 200000000),
+        "NUM_OF_FEATURES": (3, 10),
+        "MAX_ITERATION": (7, 1)
     }
 }
 if len(BENCHMARK_PERF) > 0:
     SCALE_FACTOR = benchConf[BENCHMARK_PERF[0]]["ScaleFactor"]
+    INPUT_RECORD = 200 * 1000 * 1000 * SCALE_FACTOR
+    NUM_TASK = SCALE_FACTOR
 else:
     SCALE_FACTOR = benchConf[BENCHMARK_BENCH[0]]["NUM_OF_PARTITIONS"][1]
+    NUM_TASK = SCALE_FACTOR
+    try:
+        INPUT_RECORD = benchConf[BENCHMARK_BENCH[0]]["NUM_OF_EXAMPLES"][1]
+    except KeyError:
+        try:
+            INPUT_RECORD = benchConf[BENCHMARK_BENCH[0]]["NUM_OF_POINTS"][1]
+        except KeyError:
+            INPUT_RECORD = benchConf[BENCHMARK_BENCH[0]]["numV"][1]
 benchConf[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]["NumTrials"] = BENCH_NUM_TRIALS
+
+
 
 # Terminate istance after benchmark
 TERMINATE = 0
@@ -163,6 +200,9 @@ CONFIG_DICT = {"Benchmark": {
         "ExecutorMemory": RAM_EXEC,
         "ExternalShuffle": ENABLE_EXTERNAL_SHUFFLE,
         "LocalityWait": LOCALITY_WAIT,
+        "LocalityWaitProcess": LOCALITY_WAIT_PROCESS,
+        "LocalityWaitNode": LOCALITY_WAIT_NODE,
+        "LocalityWaitRack": LOCALITY_WAIT_RACK,
         "CPUtask": CPU_TASK
     },
     "HDFS": bool(HDFS)}

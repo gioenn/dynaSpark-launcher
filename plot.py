@@ -67,14 +67,14 @@ def plot(folder):
                     plotDICT[appID]["dealineTimeStages"] = []
                     plotDICT[appID]["startTimeStages"] = []
                     plotDICT[appID]["finishTimeStages"] = []
-                elif len(l) > 3 and l[3] == "ControllerJob:":
-                    if l[5] == "INIT" and SID != int(l[12].replace(",", "")):
-                        SID = int(l[12].replace(",", ""))
-                        appIDinfo[appID][SID]["start"] = dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)
-                        plotDICT[appID]["startTimeStages"].append(appIDinfo[appID][SID]["start"])
-                        print("START: " + str(dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)))
-                        print(l[16].replace(",", ""))
-                        if float(l[16].replace(",", "")) != 300000:
+                elif len(l) > 12 and l[3] == "ControllerJob:":
+                    if l[5] == "INIT":
+                        if SID != int(l[12].replace(",", "")) or int(l[12].replace(",", "")) == 0:
+                            SID = int(l[12].replace(",", ""))
+                            appIDinfo[appID][SID]["start"] = dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)
+                            plotDICT[appID]["startTimeStages"].append(appIDinfo[appID][SID]["start"])
+                            print("START: " + str(dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016)))
+                            print(l[16].replace(",", ""))
                             appIDinfo[appID][SID]["deadline"] = plotDICT[appID]["startTimeStages"][-1] + timedelta(
                             milliseconds=float(l[16].replace(",", "")))
                             plotDICT[appID]["dealineTimeStages"].append(appIDinfo[appID][SID]["deadline"])
@@ -115,13 +115,16 @@ def plot(folder):
             colors_stage = colors.cnames
             deadlineapp = 0
             for sid in sorted(appIDinfo[app].keys()):
-                deadlineapp = appIDinfo[app][DELETE_HDFS]["start"] + timedelta(milliseconds=DEADLINE)
-                for timestamp in appIDinfo[app][sid]["tasktimestamps"]:
-                    x.append(timestamp)
-                    if len(y) == 0:
-                        y.append(1)
-                    else:
-                        y.append(y[-1] + 1)
+                try:
+                    deadlineapp = appIDinfo[app][DELETE_HDFS]["start"] + timedelta(milliseconds=DEADLINE)
+                    for timestamp in appIDinfo[app][sid]["tasktimestamps"]:
+                        x.append(timestamp)
+                        if len(y) == 0:
+                            y.append(1)
+                        else:
+                            y.append(y[-1] + 1)
+                except KeyError:
+                    None
 
             fig, ax1 = plt.subplots(figsize=(16, 9), dpi=300)
             normalized = [(z - min(y)) / (max(y) - min(y)) for z in y]
@@ -136,29 +139,31 @@ def plot(folder):
             ax1.set_ylabel('app progress')
             errors = []
             for sid in sorted(appIDinfo[app].keys()):
-                color = colors_stage.popitem()[1]
+                # color = colors_stage.popitem()[1]
                 int_dead = 0
                 try:
                     ax1.axvline(appIDinfo[app][sid]["deadline"], color="r", linestyle='--')
                     ax1.text(appIDinfo[app][sid]["deadline"], ymin + 0.15 * ymax, 'DEAD SID ' + str(sid), rotation=90)
                     int_dead = appIDinfo[app][sid]["deadline"].timestamp()
-                except KeyError:
-                    None
-                if sid != 0:
+                    # if sid != 0:
                     ax1.axvline(appIDinfo[app][sid]["start"], color="b")
                     ax1.text(appIDinfo[app][sid]["start"], ymax - 0.02 * ymax, 'START SID ' + str(sid), rotation=90, )
-                ax1.axvline(appIDinfo[app][sid]["end"], color="r")
-                ax1.text(appIDinfo[app][sid]["end"], ymax - 0.25 * ymax, 'END SID ' + str(sid), rotation=90)
-                if int_dead != 0 and sid != DELETE_HDFS:
+                    ax1.axvline(appIDinfo[app][sid]["end"], color="r")
+                    ax1.text(appIDinfo[app][sid]["end"], ymax - 0.25 * ymax, 'END SID ' + str(sid), rotation=90)
+                    #if int_dead != 0 and sid != DELETE_HDFS:
                     end = appIDinfo[app][sid]["end"].timestamp()
                     duration = deadlineAlphaApp.timestamp() - appIDinfo[app][DELETE_HDFS]["start"].timestamp()
                     error = round(round(((abs(int_dead - end)) / duration), 3) * 100, 3)
                     errors.append(error)
                     ax1.text(appIDinfo[app][sid]["end"], ymax - random.uniform(0.4, 0.5) * ymax,
                              "E " + str(error) + "%", rotation=90)
+                except KeyError:
+                    None
 
-
-            end = appIDinfo[app][sorted(appIDinfo[app].keys())[-1]]["end"].timestamp()
+            try:
+                end = appIDinfo[app][sorted(appIDinfo[app].keys())[-1]]["end"].timestamp()
+            except KeyError:
+                None
             int_dead = deadlineAlphaApp.timestamp()
             duration = int_dead - appIDinfo[app][DELETE_HDFS]["start"].timestamp()
             error = round(round(((int_dead - end) / duration), 3) * 100, 3)
@@ -166,19 +171,21 @@ def plot(folder):
 
             np_errors = np.array(errors)
             print("DEADLINE_ERROR " + str(abs(error)))
-            print("MEAN ERROR: " + str(np.mean(np_errors)))
-            print("DEVSTD ERROR: " + str(np.std(np_errors)))
-            print("MEDIAN ERROR: " + str(np.median(np_errors)))
-            print("MAX ERROR: " + str(max(np_errors)))
-            print("MIN ERROR: " + str(min(np_errors)))
+            if len(np_errors) > 0:
+                print("MEAN ERROR: " + str(np.mean(np_errors)))
+                print("DEVSTD ERROR: " + str(np.std(np_errors)))
+                print("MEDIAN ERROR: " + str(np.median(np_errors)))
+                print("MAX ERROR: " + str(max(np_errors)))
+                print("MIN ERROR: " + str(min(np_errors)))
 
             with open(folder + "ERROR.txt", "w") as error_f:
                 error_f.write("DEADLINE_ERROR " + str(abs(error)) + "\n")
-                error_f.write("MEAN_ERROR " + str(np.mean(np_errors)) + "\n")
-                error_f.write("DEVSTD_ERROR: " + str(np.std(np_errors)) + "\n")
-                error_f.write("MEDIAN_ERROR: " + str(np.median(np_errors)) + "\n")
-                error_f.write("MAX_ERROR: " + str(max(np_errors)) + "\n")
-                error_f.write("MIN_ERROR: " + str(min(np_errors)) + "\n")
+                if len(np_errors) > 0:
+                    error_f.write("MEAN_ERROR " + str(np.mean(np_errors)) + "\n")
+                    error_f.write("DEVSTD_ERROR: " + str(np.std(np_errors)) + "\n")
+                    error_f.write("MEDIAN_ERROR: " + str(np.median(np_errors)) + "\n")
+                    error_f.write("MAX_ERROR: " + str(max(np_errors)) + "\n")
+                    error_f.write("MIN_ERROR: " + str(min(np_errors)) + "\n")
 
             labels = ax1.get_xticklabels()
             plt.setp(labels, rotation=90)
@@ -212,7 +219,7 @@ def plot(folder):
                     l = line.split(" ")
                     if len(l) > 3:
                         if l[4] == "Created" and appID != "":
-                            plotDICT[appID][w]["cpu"].append(int(l[-1].replace("\n", "")))
+                            plotDICT[appID][w]["cpu"].append(float(l[-1].replace("\n", "")))
                             plotDICT[appID][w]["sp_real"].append(0.0)
                             plotDICT[appID][w]["time"].append(
                                 dt.strptime(l[1], STRPTIME_FORMAT).replace(year=2016))
@@ -276,7 +283,7 @@ def plot(folder):
                                 return delta
 
                             index = plotDICT[worker]["time_cpu"].index(min(plotDICT[worker]["time_cpu"], key=func))
-                        cpu_time_max += (TSAMPLE / 1000) * max(c, plotDICT[worker]["cpu_real"][index])
+                        cpu_time_max += (TSAMPLE / 1000) * max(c, plotDICT[worker]["cpu_real"][index + int(TSAMPLE / 1000)])
 
             if cpu_time == 0:
                 cpu_time = ((appIDinfo[appID][max(list(appIDinfo[appID].keys()))]["end"].timestamp() - appIDinfo[appID][0]["start"].timestamp())) * MAXEXECUTOR * COREVM
@@ -326,7 +333,13 @@ def plot(folder):
                         try:
                             c = colors_stage.pop()
                         except KeyError:
-                            c = colors2_stage.pop()
+                            colors_stage = {'m', 'y', 'k', 'c', 'g'}
+                            try:
+                                c = colors2_stage.pop()
+                            except KeyError:
+                                colors2_stage = {'m', 'y', 'k', 'c', 'g'}
+                                c = colors_stage.pop()
+
                         ax1.axvline(starttime, color=c, linestyle='--')
                         ax1.axvline(finishtime, color=c)
                     for deadline in plotDICT[appID]["dealineTimeStages"]:
@@ -365,7 +378,8 @@ def plot(folder):
                         cpu_real, = ax2.plot(plotDICT[worker]["time_cpu"][indexInit:indexEnd + 1],
                                              plotDICT[worker]["cpu_real"][indexInit:indexEnd + 1], ".g-",
                                              label='CPU REAL')
-                        plt.legend(handles=[sp_plt, sp_real_plt, cpu_plt, cpu_real], bbox_to_anchor=(1, 0.2), prop={'size': 12})
+                        #plt.legend(handles=[sp_plt, sp_real_plt, cpu_plt, cpu_real], bbox_to_anchor=(1, 0.2), prop={'size': 12})
+                        plt.legend(handles=[sp_plt, sp_real_plt, cpu_plt, cpu_real], loc='best', prop={'size': 12})
                     else:
                         plt.legend(handles=[sp_plt, sp_real_plt, cpu_plt], bbox_to_anchor=(1, 0.15), prop={'size': 12})
 

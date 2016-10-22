@@ -21,6 +21,7 @@ def timing(f):
 
 def download_master(i, output_folder, logfolder):
     ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
+    appid = ""
     for file in ssh_client.listdir("" + SPARK_HOME + "spark-events/"):
         print("BENCHMARK: " + file)
         print("LOG FOLDER: " + logfolder)
@@ -32,8 +33,11 @@ def download_master(i, output_folder, logfolder):
             os.makedirs(output_folder)
         except FileExistsError:
             print("Output folder already exists")
-        if len(BENCHMARK_PERF) > 0:
-            ssh_client.get_file("" + SPARK_HOME + "spark-events/" + file, output_folder + "/" + file)
+        inputfile = SPARK_HOME + "spark-events/" + file
+        outputbz = inputfile + ".bz"
+        print("Bzipping event log...")
+        ssh_client.run("pbzip2 -9 -p" + str(COREVM) + " -c " + inputfile + " > " + outputbz)
+        ssh_client.get_file(outputbz, output_folder + "/" + file + ".bz")
     for file in ssh_client.listdir(logfolder):
         print(file)
         if file != "bench-report.dat":
