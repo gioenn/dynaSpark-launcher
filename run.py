@@ -1,16 +1,19 @@
-import multiprocessing
-import os
-import time
 import json
-
+import multiprocessing
+import time
 from concurrent.futures import ThreadPoolExecutor
-import copy
+
 import boto3
 from boto.manage.cmdshell import sshclient_from_instance
 
 import log
 import plot
-from config import *
+from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC_TIME, KEYPAIR_PATH, UPDATE_SPARK, \
+    DISABLEHT, ENABLE_EXTERNAL_SHUFFLE, OFF_HEAP, OFF_HEAP_BYTES, K, TSAMPLE, TI, COREQUANTUM, COREMIN, CPU_PERIOD, HDFS, \
+    COREVM, UPDATE_SPARK_MASTER, DEADLINE, MAXEXECUTOR, ALPHA, OVERSCALE, LOCALITY_WAIT, LOCALITY_WAIT_NODE, CPU_TASK, \
+    LOCALITY_WAIT_PROCESS, LOCALITY_WAIT_RACK, INPUT_RECORD, NUM_TASK, BENCH_NUM_TRIALS, SCALE_FACTOR, RAM_EXEC, \
+    RAM_DRIVER, BENCHMARK_PERF, BENCH_LINES, HDFS_MASTER, DATA_AMI, REGION, HADOOP_CONF, CONFIG_DICT, CREDENTIAL_PROFILE, \
+    CLUSTER_ID, SPARK_2, BENCHMARK_BENCH, BENCH_CONF
 
 
 def timing(f):
@@ -18,7 +21,7 @@ def timing(f):
         tstart = time.time()
         ret = f(*args)
         tend = time.time()
-        print('\n%s function took %0.3f ms' % (f.__name__, (tend - tstart) * 1000.0))
+        print('\n%s function took %0.3f s' % (f.__name__, (tend - tstart)))
         return ret
 
     return wrap
@@ -55,8 +58,9 @@ def common_setup(ssh_client):
     ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-slave.sh')
     ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-master.sh')
 
-    print("   Killing Java")
-    # ssh_client.run('sudo killall java && sudo killall java && sudo killall java')
+    if KILL_JAVA:
+        print("   Killing Java")
+        ssh_client.run('sudo killall java && sudo killall java && sudo killall java')
 
     print("   Kill SAR CPU Logger")
     ssh_client.run("screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
@@ -231,12 +235,12 @@ def setup_master(instance):
         COREMIN) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run(
-        "sed -i '54s{.*{spark.control.inputrecord " + str(INPUT_RECORD) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        "sed -i '54s{.*{spark.control.inputrecord " + str(
+            INPUT_RECORD) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run(
         "sed -i '55s{.*{spark.control.numtask " + str(
             NUM_TASK) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
-
 
     ssh_client.run("""sed -i '3s{.*{master=""" + instance.public_dns_name +
                    """{' ./spark-bench/conf/env.sh""")
@@ -266,14 +270,14 @@ def setup_master(instance):
     print("   Enabling/Disabling Benchmark")
     # ENABLE BENCHMARK
     for bench in BENCHMARK_PERF:
-        for lineNumber in linesBench[bench]:
+        for lineNumber in BENCH_LINES[bench]:
             commandLineSed = "sed -i '" + lineNumber + " s/[#]//g' ./spark-perf/config/config.py"
             ssh_client.run(commandLineSed)
 
     # DISABLE BENCHMARK
-    for bench in linesBench.keys():
+    for bench in BENCH_LINES.keys():
         if bench not in BENCHMARK_PERF:
-            for lineNumber in linesBench[bench]:
+            for lineNumber in BENCH_LINES[bench]:
                 ssh_client.run("sed -i '" + lineNumber + " s/^/#/' ./spark-perf/config/config.py")
 
     # ENABLE HDFS
@@ -311,7 +315,7 @@ def setup_hdfs_ssd(instance):
 
 def rsync_folder(ssh_client, slave):
     ssh_client.run(
-        "eval `ssh-agent -s` && ssh-add " + dataAMI[REGION][
+        "eval `ssh-agent -s` && ssh-add " + DATA_AMI[REGION][
             "keypair"] + ".pem && rsync -a " + HADOOP_CONF + " ubuntu@" + slave + ":" + HADOOP_CONF)
     if DELETE_HDFS:
         ssh_client.run("rm /mnt/hdfs/datanode/current/VERSION")
@@ -359,13 +363,13 @@ def setup_hdfs_config(master_instance, slaves):
     # Start HDFS
     if DELETE_HDFS or HDFS_MASTER == "":
         ssh_client.run(
-            "eval `ssh-agent -s` && ssh-add " + dataAMI[REGION][
+            "eval `ssh-agent -s` && ssh-add " + DATA_AMI[REGION][
                 "keypair"] + ".pem && /usr/local/lib/hadoop-2.7.2/sbin/stop-dfs.sh")
         ssh_client.run("rm /mnt/hdfs/datanode/current/VERSION")
         ssh_client.run("echo 'N' | /usr/local/lib/hadoop-2.7.2/bin/hdfs namenode -format")
 
     status, out, err = ssh_client.run(
-        "eval `ssh-agent -s` && ssh-add " + dataAMI[REGION][
+        "eval `ssh-agent -s` && ssh-add " + DATA_AMI[REGION][
             "keypair"] + ".pem && /usr/local/lib/hadoop-2.7.2/sbin/start-dfs.sh && /usr/local/lib/hadoop-2.7.2/bin/hdfs dfsadmin -safemode leave")
     if status != 0:
         print(out, err)
@@ -386,7 +390,8 @@ def write_config(output_folder):
 
 @timing
 def runbenchmark():
-    ec2 = boto3.resource('ec2', region_name=REGION)
+    session = boto3.Session(profile_name=CREDENTIAL_PROFILE)
+    ec2 = session.resource('ec2', region_name=REGION)
     instances = ec2.instances.filter(
         Filters=[{'Name': 'instance-state-name', 'Values': ['running']},
                  {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}
@@ -406,7 +411,7 @@ def runbenchmark():
             if i.public_dns_name != master_dns:
                 executor.submit(setup_slave, i, master_dns)
 
-    if HDFS:
+    if HDFS or HDFS_MASTER == master_dns:
         print("\nStarting Setup of HDFS cluster")
         # Format instance store SSD for hdfs usage
         with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
@@ -422,9 +427,9 @@ def runbenchmark():
     print("MASTER: " + master_dns)
     ssh_client = sshclient_from_instance(master_instance, KEYPAIR_PATH, user_name='ubuntu')
     #  CHECK IF KEY IN MASTER
-    status = ssh_client.run('[ ! -e %s ]; echo $?' % (dataAMI[REGION]["keypair"] + ".pem"))
+    status = ssh_client.run('[ ! -e %s ]; echo $?' % (DATA_AMI[REGION]["keypair"] + ".pem"))
     if not int(status[1].decode('utf8').replace("\n", "")):
-        ssh_client.put_file(KEYPAIR_PATH, "/home/ubuntu/" + dataAMI[REGION]["keypair"] + ".pem")
+        ssh_client.put_file(KEYPAIR_PATH, "/home/ubuntu/" + DATA_AMI[REGION]["keypair"] + ".pem")
 
     # LANCIARE BENCHMARK
     if HDFS == 0:
@@ -441,22 +446,22 @@ def runbenchmark():
         for bench in BENCHMARK_BENCH:
             ssh_client.run('rm -r ./spark-bench/num/*')
 
-            for config in benchConf[bench].keys():
+            for config in BENCH_CONF[bench].keys():
                 if config != "NumTrials":
                     ssh_client.run(
-                        """sed -i '""" + str(benchConf[bench][config][0]) + """s{.*{""" + config + """=""" + str(
-                            benchConf[bench][config][1]) +
+                        """sed -i '""" + str(BENCH_CONF[bench][config][0]) + """s{.*{""" + config + """=""" + str(
+                            BENCH_CONF[bench][config][1]) +
                         """{' ./spark-bench/""" + bench + """/conf/env.sh""")
 
             if DELETE_HDFS:
                 print("Generating Data Benchmark " + bench)
                 ssh_client.run(
-                    'eval `ssh-agent -s` && ssh-add ' + dataAMI[REGION][
+                    'eval `ssh-agent -s` && ssh-add ' + DATA_AMI[REGION][
                         "keypair"] + '.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/gen_data.sh')
 
             print("Running Benchmark " + bench)
             ssh_client.run(
-                'eval `ssh-agent -s` && ssh-add ' + dataAMI[REGION][
+                'eval `ssh-agent -s` && ssh-add ' + DATA_AMI[REGION][
                     "keypair"] + '.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh')
             logfolder = "./spark-bench/num"
             output_folder = "./spark-bench/num/"

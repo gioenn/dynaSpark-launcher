@@ -1,19 +1,20 @@
-import random
+import pprint
 
 # AWS
-dataAMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
-           "us-west-2": {"ami": 'ami-add773cd', "snapid": "snap-83e7f0ad", "az": 'us-west-2a', "keypair": "gazzetta",
-                         "price": "0.4"}}
-
+DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
+            "us-west-2": {"ami": 'ami-17329677', "snapid": "snap-dcfa768b", "az": 'us-west-2a', "keypair": "gazzetta",
+                          "price": "0.35"}}
+CREDENTIAL_PROFILE = 'default'
 REGION = "us-west-2"
-KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + dataAMI[REGION]["keypair"] + ".pem"
+KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + DATA_AMI[REGION]["keypair"] + ".pem"
 SECURITY_GROUP = "spark-cluster"
-PRICE = dataAMI[REGION]["price"]
+PRICE = DATA_AMI[REGION]["price"]
 INSTANCE_TYPE = "r3.4xlarge"
 NUMINSTANCE = 0
-EBS_OPTIMIZED = True if not "r3" in INSTANCE_TYPE else False
+EBS_OPTIMIZED = True if "r3" not in INSTANCE_TYPE else False
 REBOOT = 0
-NUM_RUN = 3
+KILL_JAVA = 0
+NUM_RUN = 1
 
 CLUSTER_ID = "0"
 print("Cluster ID : " + str(CLUSTER_ID))
@@ -36,14 +37,14 @@ UPDATE_SPARK_DOCKER = 0
 ENABLE_EXTERNAL_SHUFFLE = "true"
 LOCALITY_WAIT = 0
 LOCALITY_WAIT_NODE = 0
-LOCALITY_WAIT_PROCESS = 0
+LOCALITY_WAIT_PROCESS = 2
 LOCALITY_WAIT_RACK = 0
 CPU_TASK = 1
 RAM_DRIVER = "50g"
-RAM_EXEC = '"60g"' if not "r3" in INSTANCE_TYPE else '"100g"'
+RAM_EXEC = '"60g"' if "r3" not in INSTANCE_TYPE else '"100g"'
 OFF_HEAP = False
 if OFF_HEAP:
-    RAM_EXEC = '"30g"' if not "r3" in INSTANCE_TYPE else '"70g"'
+    RAM_EXEC = '"30g"' if "r3" not in INSTANCE_TYPE else '"70g"'
 OFF_HEAP_BYTES = 30720000000
 
 # Core Config
@@ -59,13 +60,14 @@ DEADLINE = 311250
 # SVM
 # 600000
 # KMeans
-# 0% 311250
-# 425625
+# 0%  311250
+# 20% 373500
+# 40% 435750
 # PageRank
 # 0%  203125
 # 20% 243750
 # 40% 284375
-MAXEXECUTOR = 6
+MAXEXECUTOR = 26
 OVERSCALE = 2
 K = 50
 TI = 12000
@@ -77,7 +79,7 @@ CPU_PERIOD = 100000
 # BENCHMARK
 RUN = 1
 SYNC_TIME = 1
-PREV_SCALE_FACTOR = 0
+PREV_SCALE_FACTOR = 1000
 BENCH_NUM_TRIALS = 1
 
 BENCHMARK_PERF = [
@@ -93,7 +95,7 @@ BENCHMARK_PERF = [
 BENCHMARK_BENCH = [
     # "PageRank",
     # "DecisionTree",
-    # "KMeans",
+    "KMeans",
     # "SVM"
 ]
 
@@ -102,7 +104,7 @@ if len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) > 1 or len(BENCHMARK_PERF) + len(B
     exit(1)
 
 # config: (line, value)
-benchConf = {
+BENCH_CONF = {
     "scala-agg-by-key": {
         "ScaleFactor": 10
     },
@@ -117,6 +119,12 @@ benchConf = {
     },
     "scala-sort-by-key-int": {
         "ScaleFactor": 50
+    },
+    "scala-count": {
+        "ScaleFactor": 10
+    },
+    "scala-count-w-fltr": {
+        "ScaleFactor": 10
     },
     "PageRank": {
         "NUM_OF_PARTITIONS": (3, 1000),
@@ -148,22 +156,20 @@ benchConf = {
     }
 }
 if len(BENCHMARK_PERF) > 0:
-    SCALE_FACTOR = benchConf[BENCHMARK_PERF[0]]["ScaleFactor"]
+    SCALE_FACTOR = BENCH_CONF[BENCHMARK_PERF[0]]["ScaleFactor"]
     INPUT_RECORD = 200 * 1000 * 1000 * SCALE_FACTOR
     NUM_TASK = SCALE_FACTOR
 else:
-    SCALE_FACTOR = benchConf[BENCHMARK_BENCH[0]]["NUM_OF_PARTITIONS"][1]
+    SCALE_FACTOR = BENCH_CONF[BENCHMARK_BENCH[0]]["NUM_OF_PARTITIONS"][1]
     NUM_TASK = SCALE_FACTOR
     try:
-        INPUT_RECORD = benchConf[BENCHMARK_BENCH[0]]["NUM_OF_EXAMPLES"][1]
+        INPUT_RECORD = BENCH_CONF[BENCHMARK_BENCH[0]]["NUM_OF_EXAMPLES"][1]
     except KeyError:
         try:
-            INPUT_RECORD = benchConf[BENCHMARK_BENCH[0]]["NUM_OF_POINTS"][1]
+            INPUT_RECORD = BENCH_CONF[BENCHMARK_BENCH[0]]["NUM_OF_POINTS"][1]
         except KeyError:
-            INPUT_RECORD = benchConf[BENCHMARK_BENCH[0]]["numV"][1]
-benchConf[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]["NumTrials"] = BENCH_NUM_TRIALS
-
-
+            INPUT_RECORD = BENCH_CONF[BENCHMARK_BENCH[0]]["numV"][1]
+BENCH_CONF[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]["NumTrials"] = BENCH_NUM_TRIALS
 
 # Terminate istance after benchmark
 TERMINATE = 0
@@ -176,7 +182,7 @@ DELETE_HDFS = 1 if SCALE_FACTOR != PREV_SCALE_FACTOR else 0
 # CONFIG JSON
 CONFIG_DICT = {"Benchmark": {
     "Name": BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0],
-    "Config": benchConf[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]
+    "Config": BENCH_CONF[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]
 },
     "Deadline": DEADLINE,
     "Control": {
@@ -192,7 +198,7 @@ CONFIG_DICT = {"Benchmark": {
         "InstanceType": INSTANCE_TYPE,
         "HyperThreading": not DISABLEHT,
         "Price": PRICE,
-        "AMI": dataAMI[REGION]["ami"],
+        "AMI": DATA_AMI[REGION]["ami"],
         "Region": REGION
     },
     "Spark": {
@@ -208,14 +214,12 @@ CONFIG_DICT = {"Benchmark": {
     "HDFS": bool(HDFS)}
 
 # Line needed for enabling/disabling benchmark in spark-perf config.py
-linesBench = {"scala-agg-by-key": ["226", "227"],
-              "scala-agg-by-key-int": ["230", "231"],
-              "scala-agg-by-key-naive": ["233", "234"],
-              "scala-sort-by-key": ["237", "238"],
-              "scala-sort-by-key-int": ["240", "241"],
-              "scala-count": ["243", "244"],
-              "scala-count-w-fltr": ["246", "247"]}
-
-import pprint
+BENCH_LINES = {"scala-agg-by-key": ["226", "227"],
+               "scala-agg-by-key-int": ["230", "231"],
+               "scala-agg-by-key-naive": ["233", "234"],
+               "scala-sort-by-key": ["237", "238"],
+               "scala-sort-by-key-int": ["240", "241"],
+               "scala-count": ["243", "244"],
+               "scala-count-w-fltr": ["246", "247"]}
 
 pprint.pprint(CONFIG_DICT)

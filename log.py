@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from boto.manage.cmdshell import sshclient_from_instance
 
-from config import *
+from config import KEYPAIR_PATH, SPARK_HOME, COREVM
 
 
 def timing(f):
@@ -81,6 +81,6 @@ def download(logfolder, instances, master_dns, output_folder):
     with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
         for i in instances:
             if i.public_dns_name != master_dns:
-                F = executor.submit(download_slave, i, output_folder, appid)
-                output_folder = F.result()
+                worker = executor.submit(download_slave, i, output_folder, appid)
+                output_folder = worker.result()
     return output_folder
