@@ -13,7 +13,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     COREVM, UPDATE_SPARK_MASTER, DEADLINE, MAXEXECUTOR, ALPHA, OVERSCALE, LOCALITY_WAIT, LOCALITY_WAIT_NODE, CPU_TASK, \
     LOCALITY_WAIT_PROCESS, LOCALITY_WAIT_RACK, INPUT_RECORD, NUM_TASK, BENCH_NUM_TRIALS, SCALE_FACTOR, RAM_EXEC, \
     RAM_DRIVER, BENCHMARK_PERF, BENCH_LINES, HDFS_MASTER, DATA_AMI, REGION, HADOOP_CONF, CONFIG_DICT, CREDENTIAL_PROFILE, \
-    CLUSTER_ID, SPARK_2, BENCHMARK_BENCH, BENCH_CONF
+    CLUSTER_ID, SPARK_2, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL
 
 
 def timing(f):
@@ -57,6 +57,11 @@ def common_setup(ssh_client):
     print("   Stop Spark Slave/Master")
     ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-slave.sh')
     ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-master.sh')
+
+    print("    Set Log Level")
+    ssh_client.run(
+        "sed -i '31s{.*{log4j.rootCategory=" + str(
+            LOG_LEVEL) + ", console {' " + SPARK_HOME + "conf/log4j.properties")
 
     if KILL_JAVA:
         print("   Killing Java")
@@ -270,15 +275,15 @@ def setup_master(instance):
     print("   Enabling/Disabling Benchmark")
     # ENABLE BENCHMARK
     for bench in BENCHMARK_PERF:
-        for lineNumber in BENCH_LINES[bench]:
-            commandLineSed = "sed -i '" + lineNumber + " s/[#]//g' ./spark-perf/config/config.py"
-            ssh_client.run(commandLineSed)
+        for line_number in BENCH_LINES[bench]:
+            sed_command_line = "sed -i '" + line_number + " s/[#]//g' ./spark-perf/config/config.py"
+            ssh_client.run(sed_command_line)
 
     # DISABLE BENCHMARK
     for bench in BENCH_LINES.keys():
         if bench not in BENCHMARK_PERF:
-            for lineNumber in BENCH_LINES[bench]:
-                ssh_client.run("sed -i '" + lineNumber + " s/^/#/' ./spark-perf/config/config.py")
+            for line_number in BENCH_LINES[bench]:
+                ssh_client.run("sed -i '" + line_number + " s/^/#/' ./spark-perf/config/config.py")
 
     # ENABLE HDFS
     # if HDFS:
@@ -397,17 +402,19 @@ def runbenchmark():
                  {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}
                  ])
 
-    instanceList = list(instances)
-    print("Instance Found: " + str(len(instanceList)))
+    instance_list = list(instances)
+    print("Instance Found: " + str(len(instance_list)))
     if len(list(instances)) == 0:
         print("No instances running")
         exit(1)
 
-    master_dns, master_instance = setup_master(instanceList[0])
+    master_dns, master_instance = setup_master(instance_list[0])
     if SPARK_HOME == SPARK_2:
         print("Check Effectively Executor Running")
-    with ThreadPoolExecutor(multiprocessing.cpu_count() * 2) as executor:
-        for i in instanceList[1:MAXEXECUTOR + 1]:
+
+    end_index = min(len(instance_list), MAXEXECUTOR + 1)
+    with ThreadPoolExecutor(end_index - 1) as executor:
+        for i in instance_list[1:end_index]:
             if i.public_dns_name != master_dns:
                 executor.submit(setup_slave, i, master_dns)
 

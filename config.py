@@ -2,8 +2,9 @@ import pprint
 
 # AWS
 DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
-            "us-west-2": {"ami": 'ami-17329677', "snapid": "snap-dcfa768b", "az": 'us-west-2a', "keypair": "gazzetta",
-                          "price": "0.35"}}
+            "us-west-2": {"ami": 'ami-bd8126dd', "snapid": "snap-d4196afa", "az": 'us-west-2a', "keypair": "gazzetta",
+                          "price": "0.4"}}
+
 CREDENTIAL_PROFILE = 'default'
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + DATA_AMI[REGION]["keypair"] + ".pem"
@@ -13,7 +14,7 @@ INSTANCE_TYPE = "r3.4xlarge"
 NUMINSTANCE = 0
 EBS_OPTIMIZED = True if "r3" not in INSTANCE_TYPE else False
 REBOOT = 0
-KILL_JAVA = 0
+KILL_JAVA = 1
 NUM_RUN = 1
 
 CLUSTER_ID = "0"
@@ -31,13 +32,14 @@ SPARK_2 = "/opt/spark/"
 SPARK_DOCKER = "/usr/local/spark/"
 SPARK_HOME = SPARK_DOCKER
 
+LOG_LEVEL = "INFO"
 UPDATE_SPARK = 0
 UPDATE_SPARK_MASTER = 0
 UPDATE_SPARK_DOCKER = 0
 ENABLE_EXTERNAL_SHUFFLE = "true"
 LOCALITY_WAIT = 0
 LOCALITY_WAIT_NODE = 0
-LOCALITY_WAIT_PROCESS = 2
+LOCALITY_WAIT_PROCESS = 1
 LOCALITY_WAIT_RACK = 0
 CPU_TASK = 1
 RAM_DRIVER = "50g"
@@ -71,7 +73,7 @@ MAXEXECUTOR = 26
 OVERSCALE = 2
 K = 50
 TI = 12000
-TSAMPLE = 1000
+TSAMPLE = 2000
 COREQUANTUM = 0.05
 COREMIN = 0.0
 CPU_PERIOD = 100000
@@ -79,7 +81,7 @@ CPU_PERIOD = 100000
 # BENCHMARK
 RUN = 1
 SYNC_TIME = 1
-PREV_SCALE_FACTOR = 1000
+PREV_SCALE_FACTOR = 0
 BENCH_NUM_TRIALS = 1
 
 BENCHMARK_PERF = [
@@ -95,7 +97,7 @@ BENCHMARK_PERF = [
 BENCHMARK_BENCH = [
     # "PageRank",
     # "DecisionTree",
-    "KMeans",
+    # "KMeans",
     # "SVM"
 ]
 
