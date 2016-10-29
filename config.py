@@ -2,7 +2,7 @@ import pprint
 
 # AWS
 DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
-            "us-west-2": {"ami": 'ami-bd8126dd', "snapid": "snap-d4196afa", "az": 'us-west-2a', "keypair": "gazzetta",
+            "us-west-2": {"ami": 'ami-7f5ff81f', "snapid": "snap-4f38bf1c", "az": 'us-west-2c', "keypair": "gazzetta",
                           "price": "0.4"}}
 
 CREDENTIAL_PROFILE = 'default'
@@ -58,22 +58,24 @@ if DISABLEHT:
 
 # CONTROL
 ALPHA = 0.8
-DEADLINE = 311250
+DEADLINE = 304500
 # SVM
-# 600000
+# 0%  217500
+# 20% 261000
+# 40% 304500
 # KMeans
-# 0%  311250
-# 20% 373500
-# 40% 435750
+# 0%  166250
+# 20% 199500
+# 40% 232750
 # PageRank
-# 0%  203125
-# 20% 243750
+# 0%  209062
+# 20% 250874
 # 40% 284375
-MAXEXECUTOR = 26
+MAXEXECUTOR = 14
 OVERSCALE = 2
 K = 50
 TI = 12000
-TSAMPLE = 2000
+TSAMPLE = 1000
 COREQUANTUM = 0.05
 COREMIN = 0.0
 CPU_PERIOD = 100000

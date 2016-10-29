@@ -42,6 +42,8 @@ def between(value, a, b):
 
 
 def common_setup(ssh_client):
+    ssh_client.run("export GOMAXPROCS=`nproc`")
+
     if UPDATE_SPARK_DOCKER:
         print("   Updating Spark Docker Image...")
         ssh_client.run("docker pull elfolink/spark:2.0")
@@ -58,7 +60,7 @@ def common_setup(ssh_client):
     ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-slave.sh')
     ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-master.sh')
 
-    print("    Set Log Level")
+    print("   Set Log Level")
     ssh_client.run(
         "sed -i '31s{.*{log4j.rootCategory=" + str(
             LOG_LEVEL) + ", console {' " + SPARK_HOME + "conf/log4j.properties")
@@ -89,7 +91,7 @@ def setup_slave(instance, master_dns):
     if UPDATE_SPARK:
         print("   Updating Spark...")
         ssh_client.run(
-            "cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package")
+            "cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package")
 
     # CLEAN UP EXECUTORS APP LOGS
     ssh_client.run("rm -r " + SPARK_HOME + "work/*")
@@ -316,6 +318,8 @@ def setup_hdfs_ssd(instance):
     if status != 0:
         print(out, err)
     ssh_client.run("sudo chown ubuntu:hadoop /mnt/hdfs && sudo chown ubuntu:hadoop /mnt/hdfs/*")
+    if DELETE_HDFS or HDFS_MASTER == "":
+        ssh_client.run("rm /mnt/hdfs/datanode/current/VERSION")
 
 
 def rsync_folder(ssh_client, slave):
@@ -393,6 +397,10 @@ def write_config(output_folder):
         json.dump(CONFIG_DICT, config_out, sort_keys=True, indent=4)
 
 
+def check_slave_connected_master(ssh_client):
+    pass
+
+
 @timing
 def runbenchmark():
     session = boto3.Session(profile_name=CREDENTIAL_PROFILE)
@@ -413,10 +421,16 @@ def runbenchmark():
         print("Check Effectively Executor Running")
 
     end_index = min(len(instance_list), MAXEXECUTOR + 1)
-    with ThreadPoolExecutor(end_index - 1) as executor:
+    with ThreadPoolExecutor(8) as executor:
         for i in instance_list[1:end_index]:
             if i.public_dns_name != master_dns:
                 executor.submit(setup_slave, i, master_dns)
+
+    with ThreadPoolExecutor(8) as executor:
+        for i in instance_list[end_index:]:
+            if i.public_dns_name != master_dns:
+                ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
+                executor.submit(common_setup, ssh_client)
 
     if HDFS or HDFS_MASTER == master_dns:
         print("\nStarting Setup of HDFS cluster")
@@ -425,7 +439,7 @@ def runbenchmark():
             for i in instances:
                 executor.submit(setup_hdfs_ssd, i)
 
-        slaves = [i.public_dns_name for i in instances]
+        slaves = [i.public_dns_name for i in instance_list[:end_index]]
         slaves.remove(master_dns)
         setup_hdfs_config(master_instance, slaves)
 
@@ -466,7 +480,13 @@ def runbenchmark():
                     'eval `ssh-agent -s` && ssh-add ' + DATA_AMI[REGION][
                         "keypair"] + '.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/gen_data.sh')
 
+
+            check_slave_connected_master(ssh_client)
             print("Running Benchmark " + bench)
+            # import pyssh
+            # s = pyssh.new_session(hostname=master_dns, port=22)
+            # s.execute('eval `ssh-agent -s` && ssh-add ' + DATA_AMI[REGION][
+            #         "keypair"] + '.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh')
             ssh_client.run(
                 'eval `ssh-agent -s` && ssh-add ' + DATA_AMI[REGION][
                     "keypair"] + '.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh')
@@ -474,7 +494,7 @@ def runbenchmark():
             output_folder = "./spark-bench/num/"
 
         # DOWNLOAD LOGS
-        output_folder = log.download(logfolder, instances, master_dns, output_folder)
+        output_folder = log.download(logfolder, [i for i in instance_list[:end_index]], master_dns, output_folder)
 
         write_config(output_folder)
 
