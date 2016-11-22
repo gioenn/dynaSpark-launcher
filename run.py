@@ -7,6 +7,7 @@ import boto3
 from boto.manage.cmdshell import sshclient_from_instance
 
 import log
+import metrics
 import plot
 from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC_TIME, KEYPAIR_PATH, UPDATE_SPARK, \
     DISABLEHT, ENABLE_EXTERNAL_SHUFFLE, OFF_HEAP, OFF_HEAP_BYTES, K, TSAMPLE, TI, COREQUANTUM, COREMIN, CPU_PERIOD, HDFS, \
@@ -500,5 +501,8 @@ def runbenchmark():
 
         # PLOT LOGS
         plot.plot(output_folder + "/")
+
+        # COMPUTE METRICS
+        metrics.compute_metrics(output_folder + "/")
 
         print("\nCHECK VALUE OF SCALE FACTOR AND PREV SCALE FACTOR FOR HDFS CASE")

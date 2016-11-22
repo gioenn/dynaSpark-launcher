@@ -1,23 +1,40 @@
 import glob
 import json
 import math
-import random
 import time
 from datetime import datetime as dt
 from datetime import timedelta
 from pathlib import Path
 
-import matplotlib.colors as colors
-import matplotlib.dates as mpdate
-import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 
-from config import COREVM, COREHTVM
-from config import DELETE_HDFS
+matplotlib.use('PDF')
+import matplotlib.ticker as plticker
+import matplotlib.pyplot as plt
 
-STRPTIME_FORMAT = '%H:%M:%S'
-SECONDLOCATOR = 10
-TITLE = True
+from config import COREVM, COREHTVM
+
+Y_TICK_AGG = 40
+Y_TICK_SORT = 40
+TITLE = False
+PLOT_SID_STAGE = 0
+PLOT_LABEL = True
+LABEL_SIZE = 20
+TQ_MICRO = 10
+TQ_KMEANS = 9
+PDF = 1
+
+params = {
+    'axes.labelsize': LABEL_SIZE,  # fontsize for x and y labels (was 10)
+    'axes.titlesize': 8,
+    'font.size': LABEL_SIZE,  # was 10
+    'legend.fontsize': 8,  # was 10
+    'xtick.labelsize': LABEL_SIZE,
+    'ytick.labelsize': LABEL_SIZE,
+}
+
+matplotlib.rcParams.update(params)
 
 
 def timing(f):
@@ -45,6 +62,15 @@ def load_config(folder):
         return CONFIG_DICT
 
 
+def string_to_datetime(time_string):
+    split = time_string.split(":")
+    if "." in time_string:
+        split_2 = split[2].split(".")
+        return dt(2016, 1, 1, int(split[0]), int(split[1]), int(split_2[0]), int(split_2[1]))
+    else:
+        return dt(2016, 1, 1, int(split[0]), int(split[1]), int(split[2]), 0)
+
+
 def load_app_data(app_log, hdfs):
     print("Loading app data from log")
     dict_to_plot = {}
@@ -56,16 +82,10 @@ def load_app_data(app_log, hdfs):
             line = line.split(" ")
             if len(line) > 3 and line[3] == "TaskSetManager:" and line[4] == "Finished":
                 try:
-                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
-                        dt.strptime(line[1], STRPTIME_FORMAT).replace(year=2016))
+                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(string_to_datetime(line[1]))
                 except (KeyError, ValueError) as e:
                     app_info[app_id][int(float(line[9]))]["tasktimestamps"] = []
-                    try:
-                        app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
-                            dt.strptime(line[1], STRPTIME_FORMAT).replace(year=2016))
-                    except ValueError:
-                        app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
-                            dt.strptime(line[1], "%H:%M:%S").replace(year=2016))
+                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(string_to_datetime(line[1]))
             if len(line) > 3 and line[3] == "StandaloneSchedulerBackend:" and line[4] == "Connected":
                 app_info[line[-1].rstrip()] = {}
                 app_id = line[-1].rstrip()
@@ -78,14 +98,13 @@ def load_app_data(app_log, hdfs):
                     if len(dict_to_plot[app_id]["startTimeStages"]) == len(
                             dict_to_plot[app_id]["finishTimeStages"]):
                         stage_id = int(line[12].replace(",", ""))
-                        app_info[app_id][stage_id]["start"] = dt.strptime(line[1], STRPTIME_FORMAT).replace(
-                            year=2016)
+                        app_info[app_id][stage_id]["start"] = string_to_datetime(line[1])
                         dict_to_plot[app_id]["startTimeStages"].append(app_info[app_id][stage_id]["start"])
-                        print("START: " + str(dt.strptime(line[1], STRPTIME_FORMAT).replace(year=2016)))
-                        print(line[16].replace(",", ""))
-                        app_info[app_id][stage_id]["deadline"] = dict_to_plot[app_id]["startTimeStages"][
-                                                                     -1] + timedelta(
-                            milliseconds=float(line[16].replace(",", "")))
+                        print("START: " + str(app_info[app_id][stage_id]["start"]))
+                        deadline_ms = float(line[16].replace(",", ""))
+                        print(deadline_ms)
+                        app_info[app_id][stage_id]["deadline"] = dict_to_plot[app_id]["startTimeStages"][-1] \
+                                                                 + timedelta(milliseconds=deadline_ms)
                         dict_to_plot[app_id]["dealineTimeStages"].append(app_info[app_id][stage_id]["deadline"])
                 if line[5] == "NEEDED" and line[4] == "SEND":
                     next_app_id = line[-1].replace("\n", "")
@@ -100,21 +119,11 @@ def load_app_data(app_log, hdfs):
                     stage_id = int(line[10])
                     app_info[app_id][stage_id] = {}
                     app_info[app_id][stage_id]["tasks"] = int(line[5])
-                    try:
-                        app_info[app_id][stage_id]["start"] = dt.strptime(line[1], STRPTIME_FORMAT).replace(
-                            year=2016)
-                    except ValueError:
-                        app_info[app_id][stage_id]["start"] = dt.strptime(line[1], "%H:%M:%S").replace(
-                            year=2016)
+                    app_info[app_id][stage_id]["start"] = string_to_datetime(line[1])
                 elif line[-4] == "finished":
                     if app_id != "":
                         stage_id = int(line[5])
-                        try:
-                            app_info[app_id][stage_id]["end"] = dt.strptime(line[1], STRPTIME_FORMAT).replace(
-                                year=2016)
-                        except ValueError:
-                            app_info[app_id][stage_id]["end"] = dt.strptime(line[1], "%H:%M:%S").replace(
-                                year=2016)
+                        app_info[app_id][stage_id]["end"] = string_to_datetime(line[1])
                         if len(dict_to_plot[app_id]["startTimeStages"]) > len(
                                 dict_to_plot[app_id]["finishTimeStages"]):
                             dict_to_plot[app_id]["finishTimeStages"].append(app_info[app_id][stage_id]["end"])
@@ -122,125 +131,192 @@ def load_app_data(app_log, hdfs):
         return app_info
 
 
-def compute_cputime(app_id, app_info, workers_dict, config, folder):
-    cpu_time = 0
-    cpu_time_max = 0
-    for worker_dict in workers_dict:
-        for sid in worker_dict[app_id]:
-            cpu_time += (config["Control"]["Tsample"] / 1000) * sum(worker_dict[app_id][sid]["cpu"])
-
-            for cpu, time in zip(worker_dict[app_id][sid]["cpu"], worker_dict[app_id][sid]["time"]):
-                index = worker_dict["time_cpu"].index(time)
-
-                cpu_time_max += (config["Control"]["Tsample"] / 1000) * max(cpu, worker_dict["cpu_real"][
-                    index + int(config["Control"]["Tsample"] / 1000)])
-
-    if cpu_time == 0:
-        cpu_time = ((app_info[app_id][max(list(app_info[app_id].keys()))]["end"].timestamp() -
-                     app_info[app_id][0]["start"].timestamp())) * config["Control"]["MaxExecutor"] * COREVM
-        cpu_time_max = cpu_time
-    cpu_time_max = math.floor(cpu_time_max)
-    print("CPU_TIME: " + str(cpu_time))
-    print("CPU TIME MAX: " + str(cpu_time_max))
-    print("SID " + str(app_info[app_id].keys()))
-    print("CHECK NON CONTROLLED STAGE FOR CPU_TIME")
-    with open(folder + "CPU_TIME.txt", "w") as cpu_time_f:
-        cpu_time_f.write("CPU_TIME " + str(cpu_time) + "\n")
-        cpu_time_f.write("CPU_TIME_MAX " + str(cpu_time_max) + "\n")
+def get_text_positions(x_data, y_data, txt_width, txt_height):
+    a = list(zip(y_data, x_data))
+    text_positions = y_data.copy()
+    for index, (y, x) in enumerate(a):
+        local_text_positions = [i for i in a if i[0] > (y - txt_height)
+                                and (abs(i[1] - x) < txt_width * 2) and i != (y, x)]
+        if local_text_positions:
+            sorted_ltp = sorted(local_text_positions)
+            if abs(sorted_ltp[0][0] - y) < txt_height:  # True == collision
+                differ = np.diff(sorted_ltp, axis=0)
+                a[index] = (sorted_ltp[-1][0] + txt_height, a[index][1])
+                text_positions[index] = sorted_ltp[-1][0] + txt_height
+                for k, (j, m) in enumerate(differ):
+                    # j is the vertical distance between words
+                    if j > txt_height * 2:  # if True then room to fit a word in
+                        a[index] = (sorted_ltp[k][0] + txt_height, a[index][1])
+                        text_positions[index] = sorted_ltp[k][0] + txt_height
+                        break
+    return text_positions
 
 
-def plot_worker(app_id, app_info, worker_log, worker_dict, config):
-    colors_stage = list(colors.cnames.values())
-    fig, ax1 = plt.subplots(figsize=(16, 9), dpi=300)
-    for sid in sorted(app_info[app_id]):
+def text_plotter(x_data, y_data, text_positions, axis, txt_width, txt_height, labels):
+    for i, (x, y, t, l) in enumerate(zip(x_data, y_data, text_positions, labels)):
+        if len(x_data) > 2:
+            yt = 102 if (i % 2) == 1 else 110
+        else:
+            yt = 102
+        axis.text(x, yt, l, rotation=0, horizontalalignment='center', size=LABEL_SIZE)
+
+
+def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_worker):
+    fig, ax1 = plt.subplots(figsize=(16, 5), dpi=300)
+    times = []
+    cpus = []
+    label_to_plot = []
+    ts_to_plot = []
+    sorted_sid = sorted(app_info[app_id])
+    if config["HDFS"]:
+        sorted_sid.remove(0)
+    for sid in sorted_sid:
         try:
-            ax1.plot(worker_dict[app_id][sid]["time"],
-                     worker_dict[app_id][sid]["sp"], ".r-", label='PROGRESS')
-
-            ax1.plot(worker_dict[app_id][sid]["time"],
-                     worker_dict[app_id][sid]["sp_real"], ".k-",
-                     label='PROGRESS REAL')
-
-            color = colors_stage[random.randint(0, len(colors_stage) - 1)]
-            ax1.axvline(app_info[app_id][sid]["start"], color=color, linestyle='--')
-            ax1.axvline(app_info[app_id][sid]["end"], color=color)
-            ax1.axvline(app_info[app_id][sid]["deadline"], color="red", linestyle='--')
-        except KeyError:
+            start_ts = app_info[app_id][sid]["start"].timestamp() - first_ts_worker
+            ax1.axvline(start_ts, ymin=0.0, ymax=1.1, color="green", zorder=100)
+            # try:
+            #     label_to_plot[tq_ts].append("S" + str(sid))
+            # except KeyError:
+            #     label_to_plot[tq_ts] = []
+            #     label_to_plot[tq_ts].append("S" + str(sid))
+            # ax1.text(start_ts, 105, "S" + str(sid), style="italic", weight="bold", horizontalalignment='center')
+            end_ts = app_info[app_id][sid]["end"].timestamp() - first_ts_worker
+            ax1.axvline(end_ts, color="red")
+            label_to_plot.append("E" + str(sid))
+            ts_to_plot.append(end_ts)
+            # ax1.text(end_ts, -0.035, "E"+str(sid), style="italic", weight="bold", horizontalalignment='center')
+            dead_ts = app_info[app_id][sid]["deadline"].timestamp() - first_ts_worker
+            ax1.axvline(dead_ts, color="green", linestyle='--')
+            # try:
+            #     label_to_plot[tq_ts].append("D" + str(sid))
+            # except KeyError:
+            #     label_to_plot[tq_ts] = []
+            #     label_to_plot[tq_ts].append("D" + str(sid))
+            # ax1.text(dead_ts, 101, "D" + str(sid), style="italic", weight="bold", horizontalalignment='center')
+            time_sp = [t.timestamp() - first_ts_worker for t in worker_dict[app_id][sid]["time"]]
+            time_sp_real = [t.timestamp() - first_ts_worker for t in worker_dict[app_id][sid]["time"]]
+            sp_real = worker_dict[app_id][sid]["sp_real"]
+            sp = worker_dict[app_id][sid]["sp"]
+            if sp[-1] < 1.0:
+                time_sp.append(dead_ts)
+                sp.append(1.0)
+            if sp_real[-1] < 1.0:
+                next_time = time_sp_real[-1] + (int(config["Control"]["Tsample"]) / 1000)
+                if next_time <= end_ts:
+                    time_sp_real.append(next_time)
+                    sp_real.append(1.0)
+                else:
+                    time_sp_real.append(end_ts)
+                    sp_real.append(1.0)
+            sp = [x * 100 for x in sp]
+            sp_real = [y * 100 for y in sp_real]
+            ax1.plot(time_sp, sp, "gray", label='PROGRESS', linewidth=2)
+            ax1.plot(time_sp_real, sp_real, "black", label='PROGRESS REAL', linewidth=2)
+        except KeyError as e:
             print("SID " + str(sid) + " not executed by " + worker_log)
 
-    ax1.set_xlabel('time')
-    ax1.set_ylabel('stage progress')
+    if PLOT_LABEL:
+        # set the bbox for the text. Increase txt_width for wider text.
+        txt_height = 0.2 * (plt.ylim()[1] - plt.ylim()[0])
+        txt_width = 0.2 * (plt.xlim()[1] - plt.xlim()[0])
+        # Get the corrected text positions, then write the text.
+        y_label = np.full(len(label_to_plot), plt.ylim()[1])
+        text_positions = get_text_positions(ts_to_plot,
+                                            y_label, txt_width, txt_height)
+        text_plotter(ts_to_plot, y_label,
+                     text_positions, ax1, txt_width, txt_height, label_to_plot)
+
+    ax1.set_xlabel('Time [s]')
+    ax1.set_ylabel('Stage Progress [%]')
     ax1.spines["top"].set_visible(False)
     ax1.spines["right"].set_visible(False)
     ax1.get_xaxis().tick_bottom()
     ax1.get_yaxis().tick_left()
 
     xlim = ax1.get_xlim()
-    factor = 0.1
-    new_xlim = (xlim[0] + xlim[1]) / 2 + np.array((-0.5, 0.5)) * (xlim[1] - xlim[0]) * (1 + factor)
-    ax1.set_xlim(new_xlim)
+    ax1.set_xlim(0.0, xlim[1])
+    ax1.set_ylim(0.0, 100.0)
 
-    ylim = ax1.get_ylim()
-    new_ylim = (ylim[0] + ylim[1]) / 2 + np.array((-0.5, 0.5)) * (ylim[1] - ylim[0]) * (1 + factor)
-    ax1.set_ylim(new_ylim)
+    folder_split = worker_log.split("/")
+    name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
+           folder_split[-1].split("-")[-1].replace(".out", "")
+    if "agg" in name:
+        ax1.xaxis.set_major_locator(plticker.MultipleLocator(base=Y_TICK_AGG))
+    elif "sort" in name:
+        ax1.xaxis.set_major_locator(plticker.MultipleLocator(base=Y_TICK_SORT))
+    ax1.yaxis.set_major_locator(plticker.MultipleLocator(base=10.0))
 
     ax2 = ax1.twinx()
 
-    for sid in sorted(app_info[app_id]):
+    for sid in sorted_sid:
         try:
-            ax2.plot(worker_dict[app_id][sid]["time"], worker_dict[app_id][sid]["cpu"],
-                     ".b-",
-                     label='CPU')
+            time = [t.timestamp() - first_ts_worker for t in worker_dict[app_id][sid]["time"]]
+            times += time
+            cpus += worker_dict[app_id][sid]["cpu"]
 
-            start_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][0])
-            end_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][-1])
-
-            ax2.plot(worker_dict["time_cpu"][start_index:end_index],
-                     worker_dict["cpu_real"][start_index:end_index], ".g-",
-                     label='CPU REAL')
-        except KeyError:
+            end_ts = app_info[app_id][sid]["end"].timestamp() - first_ts_worker
+            dead_ts = app_info[app_id][sid]["deadline"].timestamp() - first_ts_worker
+            if sid == sorted(app_info[app_id])[-1] and end_ts < dead_ts:
+                times.append(dead_ts)
+                cpus.append(cpus[-1] * 2 / 3)
+            else:
+                next_time = time[-1] + (int(config["Control"]["Tsample"]) / 1000)
+                if next_time <= end_ts:
+                    times.append(next_time)
+                    cpus.append(0.0)
+                times.append(end_ts)
+                cpus.append(0.0)
+                index_next = min(sorted(app_info[app_id]).index(sid) + 1, len(app_info[app_id]) - 1)
+                times.append(
+                    app_info[app_id][sorted(app_info[app_id])[index_next]]["start"].timestamp() - first_ts_worker)
+                cpus.append(0.0)
+                # start_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][0])
+                # end_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][-1])
+                #
+                # time_cpu = [t.timestamp() - first_ts_worker for t in worker_dict["time_cpu"][start_index:end_index]]
+                # ax2.plot(time_cpu,
+                #          worker_dict["cpu_real"][start_index:end_index], ".g-",
+                #          label='CPU REAL')
+        except KeyError as e:
             print("SID " + str(sid) + " not executed by " + worker_log)
 
-    handles_ax1, labels_ax1 = ax1.get_legend_handles_labels()
-    handles_ax2, labels_ax2 = ax2.get_legend_handles_labels()
-    handles = handles_ax1[:2] + handles_ax2[:2]
-    labels = labels_ax1[:2] + labels_ax2[:2]
-    plt.legend(handles, labels, loc='best', prop={'size': 12})
-    ax2.set_ylabel('cpu')
+    ax2.plot(times, cpus, ".b-", label='CPU')
+    ax2.fill_between(times, 0.0, cpus, facecolor="b", alpha=0.2)
+    # handles_ax1, labels_ax1 = ax1.get_legend_handles_labels()
+    # handles_ax2, labels_ax2 = ax2.get_legend_handles_labels()
+    # handles = handles_ax1[:2] + handles_ax2[:2]
+    # labels = labels_ax1[:2] + labels_ax2[:2]
+    # plt.legend(handles, labels, loc='best', prop={'size': 6})
+    ax2.set_ylabel('Core [#]')
     ax2.set_ylim(0, COREVM)
-    labels = ax1.get_xticklabels()
-    plt.setp(labels, rotation=90, fontsize=10)
     xlim = ax2.get_xlim()
-    # example of how to zoomout by a factor of 0.1
-    factor = 0.1
-    new_xlim = (xlim[0] + xlim[1]) / 2 + np.array((-0.5, 0.5)) * (xlim[1] - xlim[0]) * (1 + factor)
-    ax2.set_xlim(new_xlim)
-    ylim = ax2.get_ylim()
-    new_ylim = (ylim[0] + ylim[1]) / 2 + np.array((-0.5, 0.5)) * (ylim[1] - ylim[0]) * (1 + factor)
-    ax2.set_ylim(new_ylim)
-    locator = mpdate.SecondLocator(interval=SECONDLOCATOR)
-    plt.gca().xaxis.set_major_locator(locator)
-    plt.gca().xaxis.set_major_formatter(mpdate.DateFormatter(STRPTIME_FORMAT))
-    plt.gcf().autofmt_xdate()
+    ax2.set_xlim(0.0, xlim[1])
+    # labels = ax1.get_xticklabels()
+    # plt.setp(labels, rotation=90, fontsize=10)
 
+    ax2.yaxis.set_major_locator(plticker.MultipleLocator(base=1.0))
+    # locator = mpdate.SecondLocator(interval=SECONDLOCATOR)
+    # plt.gca().xaxis.set_major_locator(locator)
+    # plt.gca().xaxis.set_major_formatter(mpdate.DateFormatter(STRPTIME_FORMAT))
+    # plt.gcf().autofmt_xdate()
     if TITLE:
         plt.title(
             app_id + " " + str(config["Deadline"]) + " " + str(
                 config["Control"]["Tsample"]) + " " + str(
                 config["Control"]["Alpha"]) + " " + str(config["Control"]["K"]))
-    plt.savefig(worker_log + "." + app_id + '.png', bbox_inches='tight', dpi=300)
+    ax1.set_zorder(ax2.get_zorder() + 1)
+    ax1.patch.set_visible(False)
+    folder_split = worker_log.split("/")
+    name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
+           folder_split[-1].split("-")[-1].replace(".out", "")
+    folder = "/".join(worker_log.split("\\")[:-1])
+    labels = ax1.get_xticklabels()
+    plt.setp(labels, rotation=45)
+    if PDF:
+        plt.savefig(folder + "/" + name + ".pdf", bbox_inches='tight', dpi=300)
+    else:
+        plt.savefig(folder + "/" + name + '.png', bbox_inches='tight', dpi=300)
     plt.close()
-
-
-def save_deadline_errors(folder, deadline_error, stage_errors):
-    with open(folder + "ERROR.txt", "w") as error_f:
-        error_f.write("DEADLINE_ERROR " + str(abs(deadline_error)) + "\n")
-        if len(stage_errors) > 0:
-            error_f.write("MEAN_ERROR " + str(np.mean(stage_errors)) + "\n")
-            error_f.write("DEVSTD_ERROR: " + str(np.std(stage_errors)) + "\n")
-            error_f.write("MEDIAN_ERROR: " + str(np.median(stage_errors)) + "\n")
-            error_f.write("MAX_ERROR: " + str(max(stage_errors)) + "\n")
-            error_f.write("MIN_ERROR: " + str(min(stage_errors)) + "\n")
 
 
 def plot_app_overview(app_id, app_dict, folder, config):
@@ -249,11 +325,17 @@ def plot_app_overview(app_id, app_dict, folder, config):
         timestamps = []
         times = []
         app_deadline = 0
+        first_ts = app_dict[PLOT_SID_STAGE]["start"].timestamp()
         for sid in sorted(app_dict):
             try:
-                app_deadline = app_dict[DELETE_HDFS]["start"] + timedelta(milliseconds=config["Deadline"])
+                app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(milliseconds=config["Deadline"])
+                app_deadline = app_deadline.replace(microsecond=0)
                 for timestamp in app_dict[sid]["tasktimestamps"]:
-                    timestamps.append(timestamp)
+                    if first_ts == 0:
+                        timestamps.append(0.0)
+                        first_ts = timestamp.timestamp()
+                    else:
+                        timestamps.append(timestamp.timestamp() - first_ts)
                     if len(times) == 0:
                         times.append(1)
                     else:
@@ -265,71 +347,63 @@ def plot_app_overview(app_id, app_dict, folder, config):
         # PLOT NORMALIZED TASK PROGRESS
         min_times = min(times)
         max_times = max(times)
-        normalized = [(z - min_times) / (max_times - min_times) for z in times]
+        normalized = [(z - min_times) / (max_times - min_times) * 100 for z in times]
         ax1.plot(timestamps, normalized, ".k-")
         ymin, ymax = ax1.get_ylim()
         # PLOT DEADLINE
-        ax1.axvline(app_deadline)
-        ax1.text(app_deadline, ymax, 'DEADLINE APP', rotation=90)
+        app_dead_ts = app_deadline.timestamp() - first_ts
+        ax1.axvline(app_dead_ts)
+        ax1.text(app_dead_ts, ymax + 0.5, 'D', weight="bold", horizontalalignment='center')
         # PLOT ALPHA DEADLINE
         app_alpha_deadline = app_deadline - timedelta(
             milliseconds=((1 - float(config["Control"]["Alpha"])) * float(config["Deadline"])))
-        ax1.axvline(app_alpha_deadline)
-        ax1.text(app_alpha_deadline, ymax, 'ALPHA DEADLINE', rotation=90)
-        ax1.set_xlabel('time')
-        ax1.set_ylabel('app progress')
+        app_alpha_deadline_ts = app_alpha_deadline.timestamp() - first_ts
+        ax1.axvline(app_alpha_deadline_ts)
+        ax1.text(app_alpha_deadline_ts, ymax + 0.5, 'AD', weight="bold", horizontalalignment='center')
+        ax1.set_xlabel('Time [s]')
+        ax1.set_ylabel('App Progress [%]')
 
-        # COMPUTE ERRORS AND PLOT VERTICAL LINES DEAD, START, END
-        errors = []
-        for sid in sorted(app_dict):
-            int_dead = 0
+        # PLOT VERTICAL LINES DEAD, START, END
+        sorted_sid = sorted(app_dict)
+        for sid in sorted_sid:
             try:
-                ax1.axvline(app_dict[sid]["deadline"], color="r", linestyle='--')
-                ax1.text(app_dict[sid]["deadline"], ymin + 0.15 * ymax, 'DEAD SID ' + str(sid), rotation=90)
-                int_dead = app_dict[sid]["deadline"].timestamp()
-                ax1.axvline(app_dict[sid]["start"], color="b")
-                ax1.text(app_dict[sid]["start"], ymax - 0.02 * ymax, 'START SID ' + str(sid), rotation=90, )
-                ax1.axvline(app_dict[sid]["end"], color="r")
-                ax1.text(app_dict[sid]["end"], ymax - 0.25 * ymax, 'END SID ' + str(sid), rotation=90)
+                start_ts = app_dict[sid]["start"].timestamp() - first_ts
+                # ax1.axvline(start_ts, color="black")
+                # try:
+                #     s_y = normalized[timestamps.index(start_ts)]
+                # except ValueError:
+                #     s_y = start_ts
+                # ax1.text(start_ts + 3, s_y - 2, 'S' + str(sid), style="italic",weight="bold", horizontalalignment='center')
                 end = app_dict[sid]["end"].timestamp()
-                duration = app_alpha_deadline.timestamp() - app_dict[DELETE_HDFS]["start"].timestamp()
-                deadline_error = round(round(((abs(int_dead - end)) / duration), 3) * 100, 3)
-                errors.append(deadline_error)
-                ax1.text(app_dict[sid]["end"], ymax - random.uniform(0.4, 0.5) * ymax,
-                         "E " + str(deadline_error) + "%", rotation=90)
+                end_ts = end - first_ts
+                #
+                ax1.axvline(end_ts, color="r")
+                # try:
+                #     index_t = timestamps.index(end_ts)
+                # except ValueError:
+                #     index_t = min(range(len(timestamps)), key=lambda i: abs(timestamps[i] - end_ts))
+                # e_y = normalized[index_t]
+                # ax1.text(end_ts, ymin - 3.5, 'E' + str(sid), style="italic", weight="bold", horizontalalignment='center', verticalalignment='bottom')
+                int_dead = app_dict[sid]["deadline"].timestamp()
+                dead_ts = int_dead - first_ts
+                if sid == sorted_sid[-1] and start_ts < app_alpha_deadline_ts:
+                    dead_ts = app_alpha_deadline_ts
+                # print(dead_ts)
+                ax1.axvline(dead_ts, color="r", linestyle='--')
             except KeyError:
                 None
 
-        try:
-            end = app_dict[sorted(app_dict.keys())[-1]]["end"].timestamp()
-        except KeyError:
-            None
-        int_dead = app_alpha_deadline.timestamp()
-        duration = int_dead - app_dict[DELETE_HDFS]["start"].timestamp()
-        app_deadline_error = round(round(((int_dead - end) / duration), 3) * 100, 3)
-        ax1.text(app_alpha_deadline, ymax - 0.5 * ymax, "ERROR = " + str(app_deadline_error) + "%")
-
-        stage_errors = np.array(errors)
-        print("DEADLINE_ERROR " + str(abs(app_deadline_error)))
-        if len(stage_errors) > 0:
-            print("MEAN ERROR: " + str(np.mean(stage_errors)))
-            print("DEVSTD ERROR: " + str(np.std(stage_errors)))
-            print("MEDIAN ERROR: " + str(np.median(stage_errors)))
-            print("MAX ERROR: " + str(max(stage_errors)))
-            print("MIN ERROR: " + str(min(stage_errors)))
-
-            save_deadline_errors(folder, app_deadline_error, stage_errors)
-
-        labels = ax1.get_xticklabels()
-        plt.setp(labels, rotation=90)
-        locator = mpdate.SecondLocator(interval=SECONDLOCATOR)
-        plt.gca().xaxis.set_major_locator(locator)
-        plt.gca().xaxis.set_major_formatter(mpdate.DateFormatter(STRPTIME_FORMAT))
-        plt.gcf().autofmt_xdate()
         if TITLE:
             plt.title(app_id + " " + str(config["Deadline"]) + " " + str(config["Control"]["Tsample"]) + " " + str(
                 config["Control"]["Alpha"]) + " " + str(config["Control"]["K"]))
-        plt.savefig(folder + app_id + ".png", bbox_inches='tight', dpi=300)
+        folder_split = folder.split("/")
+        name = folder_split[-4].lower() + "-overview-" + folder_split[-3].replace("%", "")
+        labels = ax1.get_xticklabels()
+        plt.setp(labels, rotation=45)
+        if PDF:
+            plt.savefig(folder + name + ".png", bbox_inches='tight', dpi=300)
+        else:
+            plt.savefig(folder + name + ".pdf", bbox_inches='tight', dpi=300)
         plt.close()
 
 
@@ -355,8 +429,7 @@ def load_worker_data(worker_log, cpu_log):
                         worker_dict[app_id][sid]["sp"] = []
                     worker_dict[app_id][sid]["cpu"].append(float(line[-1].replace("\n", "")))
                     worker_dict[app_id][sid]["sp_real"].append(0.0)
-                    worker_dict[app_id][sid]["time"].append(
-                        dt.strptime(line[1], STRPTIME_FORMAT).replace(year=2016))
+                    worker_dict[app_id][sid]["time"].append(string_to_datetime(line[1]))
                     worker_dict[app_id][sid]["sp"].append(0.0)
                 if line[4] == "Scaled":
                     # print(l)
@@ -374,8 +447,7 @@ def load_worker_data(worker_log, cpu_log):
                     if line[4] == "Real:":
                         worker_dict[app_id][sid]["sp_real"].append(float(line[-1].replace("\n", "")))
                     if line[4] == "SP":
-                        worker_dict[app_id][sid]["time"].append(
-                            dt.strptime(line[1], STRPTIME_FORMAT).replace(year=2016))
+                        worker_dict[app_id][sid]["time"].append(string_to_datetime(line[1]))
                         # print(l[-1].replace("\n", ""))
                         progress = float(line[-1].replace("\n", ""))
                         # print(sp)
@@ -393,16 +465,274 @@ def load_worker_data(worker_log, cpu_log):
                     dt.strptime(line[0], '%I:%M:%S %p').replace(year=2016))
                 cpuint = float('{0:.2f}'.format((float(line[2]) * COREHTVM) / 100))
                 worker_dict["cpu_real"].append(cpuint)
-
+    print(list(worker_dict.keys()))
     return worker_dict
+
+
+def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
+    print("Plotting APP Overview")
+    if len(app_info[app_id]) > 0:
+        folder_split = folder.split("/")
+        name = folder_split[-4].lower() + "-overview-" + folder_split[-3].replace("%", "")
+        timestamps = [0]
+        times = [0]
+        app_deadline = dt.now()
+        first_ts = app_info[app_id][PLOT_SID_STAGE]["start"].timestamp()
+        sorted_sid = sorted(app_info[app_id])
+        if config["HDFS"]:
+            sorted_sid.remove(0)
+        for sid in sorted_sid:
+            try:
+                app_deadline = app_info[app_id][PLOT_SID_STAGE]["start"] + timedelta(milliseconds=config["Deadline"])
+                for timestamp in app_info[app_id][sid]["tasktimestamps"]:
+                    if first_ts == 0:
+                        first_ts = timestamp.timestamp()
+                    else:
+                        timestamps.append(timestamp.timestamp() - first_ts)
+                        times.append(times[-1] + 1)
+            except KeyError:
+                None
+
+        fig, ax1 = plt.subplots(figsize=(16, 5), dpi=300)
+        # PLOT NORMALIZED TASK PROGRESS
+        min_times = min(times)
+        max_times = max(times)
+        normalized = [(z - min_times) / (max_times - min_times) * 100 for z in times]
+        ax1.plot(timestamps, normalized, "black", linewidth=3, zorder=10)
+        ymin, ymax = ax1.get_ylim()
+        ax1.set_ylim(0.0, 100.0)
+        xmin, xmax = ax1.get_xlim()
+        ax1.set_xlim(0.0, xmax)
+        # PLOT DEADLINE
+        label_to_plot = {}
+        original_ts = {}
+        app_dead_ts = app_deadline.timestamp() - first_ts
+        ax1.axvline(app_dead_ts, color="green", linewidth=3)
+        if "agg" in name or "sort" in name:
+            TQ = TQ_MICRO
+        else:
+            TQ = TQ_KMEANS
+        # tq_ts = math.floor(app_dead_ts / TQ) * TQ
+        # original_ts[tq_ts] = app_dead_ts
+        # try:
+        #     label_to_plot[tq_ts].append("D")
+        # except KeyError:
+        #     label_to_plot[tq_ts] = []
+        #     label_to_plot[tq_ts].append("D")
+        # ax1.text(app_dead_ts, ymax + 0.5, 'D', weight="bold", horizontalalignment='center')
+        # PLOT ALPHA DEADLINE
+        app_alpha_deadline = app_deadline - timedelta(
+            milliseconds=((1 - float(config["Control"]["Alpha"])) * float(config["Deadline"])))
+        app_alpha_deadline_ts = app_alpha_deadline.timestamp() - first_ts
+        tq_ts = math.floor(app_alpha_deadline_ts / TQ) * TQ
+        original_ts[tq_ts] = app_alpha_deadline_ts
+        ax1.axvline(app_alpha_deadline_ts, color="green", linewidth=3, zorder=10)
+        try:
+            label_to_plot[tq_ts].append("AD")
+        except KeyError:
+            label_to_plot[tq_ts] = []
+            label_to_plot[tq_ts].append("AD")
+        # ax1.text(app_alpha_deadline_ts, ymax + 0.5, 'AD', weight="bold", horizontalalignment='center')
+        ax1.set_xlabel('Time [s]')
+        ax1.set_ylabel('App Progress [%]')
+
+        # PLOT VERTICAL LINES DEAD, START, END
+        for sid in sorted_sid:
+            try:
+                int_dead = app_info[app_id][sid]["deadline"].timestamp()
+                dead_ts = int_dead - first_ts
+                # tq_ts = math.floor(dead_ts / TQ) * TQ
+                # original_ts[tq_ts] = dead_ts
+                # if sid == sorted(app_info[app_id])[-1] and dead_ts < app_alpha_deadline_ts:
+                #     original_ts[tq_ts] = app_alpha_deadline_ts
+                #     ax1.axvline(app_alpha_deadline_ts, color="mediumseagreen", linestyle='--')
+                # else:
+                #     ax1.axvline(dead_ts, color="mediumseagreen", linestyle='--')
+                # try:
+                #     label_to_plot[tq_ts].append('D' + str(sid))
+                # except KeyError:
+                #     label_to_plot[tq_ts] = []
+                #     label_to_plot[tq_ts].append('D' + str(sid))
+                start_ts = app_info[app_id][sid]["start"].timestamp() - first_ts
+                # ax1.axvline(start_ts, color="black")
+                try:
+                    s_y = normalized[timestamps.index(start_ts)]
+                except ValueError:
+                    s_y = start_ts
+                # ax1.text(start_ts + 3, s_y - 2, 'S' + str(sid), style="italic",weight="bold", horizontalalignment='center')
+                end = app_info[app_id][sid]["end"].timestamp()
+                end_ts = end - first_ts
+                tq_ts = math.floor(end_ts / TQ) * TQ
+                original_ts[tq_ts] = end_ts
+                try:
+                    label_to_plot[tq_ts].append("E" + str(sid))
+                except KeyError:
+                    label_to_plot[tq_ts] = []
+                    label_to_plot[tq_ts].append("E" + str(sid))
+                ax1.axvline(end_ts, color="r")
+                try:
+                    index_t = timestamps.index(end_ts)
+                except ValueError:
+                    index_t = min(range(len(timestamps)), key=lambda i: abs(timestamps[i] - end_ts))
+                e_y = normalized[index_t]
+                # ax1.text(end_ts, ymin - 3.5, 'E' + str(sid), style="italic", weight="bold", horizontalalignment='center', verticalalignment='bottom')
+            except KeyError:
+                None
+
+        if PLOT_LABEL:
+            # set the bbox for the text. Increase txt_width for wider text.
+            txt_height = 0.05 * (plt.ylim()[1] - plt.ylim()[0])
+            txt_width = 0.025 * (plt.xlim()[1] - plt.xlim()[0])
+            # Get the corrected text positions, then write the text.
+            sorted_label_ts = [original_ts[ts] for ts in sorted(label_to_plot)]
+            text_positions = get_text_positions(sorted_label_ts,
+                                                np.full(len(label_to_plot), ymax), txt_width, txt_height)
+            # print(text_positions)
+            text_plotter(sorted_label_ts, np.full(len(label_to_plot), ymax), text_positions,
+                         ax1, txt_width, txt_height,
+                         ["/".join(label_to_plot[ts]) for ts in sorted(label_to_plot)])
+
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Core [#]")
+        ts_cpu = []
+        cpus = []
+        sid_len = {}
+        for worker_log in workers_dict:
+            worker_dict = workers_dict[worker_log]
+            for sid in sorted(worker_dict[app_id]):
+                try:
+                    sid_len[sid] = max(sid_len[sid], len(worker_dict[app_id][sid]["cpu"]))
+                except KeyError:
+                    sid_len[sid] = len(worker_dict[app_id][sid]["cpu"])
+        for sid in sorted(sid_len):
+            if sid > sorted(sid_len.keys())[0]:
+                print(sid, sorted(sid_len)[0])
+                sid_len[sid] += sid_len[list(sorted(sid_len))[list(sorted(sid_len)).index(sid) - 1]]
+        sid_len_keys = list(sid_len.keys())
+        max_cpu = (len(list(workers_dict.keys())) * COREVM)
+        # first_ts = app_info[app_id][PLOT_SID_STAGE]["start"].replace(microsecond=0).timestamp()
+        for worker_log in workers_dict.keys():
+            print(worker_log)
+            worker_dict = workers_dict[worker_log]
+            first_sid = sorted(worker_dict[app_id])[0]
+            for sid in sorted(worker_dict[app_id]):
+                s_index = sid_len[sid_len_keys[sid_len_keys.index(sid) - 1]] if sid != first_sid else 0
+                for i, (time_cpu, cpu) in enumerate(
+                        zip(worker_dict[app_id][sid]["time"], worker_dict[app_id][sid]["cpu"])):
+                    time_cpu_ts = time_cpu.replace(microsecond=0).timestamp()
+                    if "2016-10-02_16-43-31" in worker_log:
+                        if "74.out" in worker_log and sid == 2:
+                            time_cpu_ts -= 6
+                        if "100.out" in worker_log and sid == 2:
+                            time_cpu_ts -= 2
+                        elif "2016-10-03_08-01-39" in worker_log:
+                            if "38.out" in worker_log and sid == 1:
+                                time_cpu_ts -= 1
+                    try:
+                        if ts_cpu[s_index] != (time_cpu_ts - first_ts) and abs(
+                                        ts_cpu[s_index] - (time_cpu_ts - first_ts)) >= (
+                            config["Control"]["Tsample"] / 1000):
+                            # print(ts_cpu)
+                            # print([tixm.replace(microsecond=0).timestamp() - first_ts for tixm in worker_dict[app_id][sid]["time"]])
+                            # print("QUI", sid, (time_cpu_ts - first_ts),  ts_cpu[s_index])
+                            index = ts_cpu.index(time_cpu_ts - first_ts)
+                            cpus[index] += cpu
+                        else:
+                            if (cpus[s_index] + cpu) > max_cpu:
+                                print("+0 ERR")
+                                if (cpus[s_index + 1] + cpu) > max_cpu:
+                                    print("+1 ERR")
+                                    if (cpus[s_index + 2] + cpu) > max_cpu: print("+2 ERR")
+                                    cpus[s_index + 2] += cpu
+                                else:
+                                    cpus[s_index + 1] += cpu
+                            else:
+                                cpus[s_index] += cpu
+                            if ts_cpu[s_index] == 0.0:
+                                print(time_cpu_ts - first_ts)
+                                ts_cpu[s_index] = time_cpu_ts - first_ts
+                    except (IndexError, ValueError):
+                        ts_cpu.append(time_cpu_ts - first_ts)
+                        cpus.append(cpu)
+                    s_index += 1
+                padding = sid_len[sid] - len(worker_dict[app_id][sid]["cpu"])
+                if len(ts_cpu) < sid_len[sid] and padding > 0:
+                    for i in range(padding):
+                        next_ts = ts_cpu[-1] + (config["Control"]["Tsample"] / 1000)
+                        if next_ts <= (end_ts - first_ts):
+                            ts_cpu.append(next_ts)
+                            cpus.append(0.0)
+        for sid in sorted_sid:
+            if sid != sorted_sid[-1]:
+                end = app_info[app_id][sid]["end"].replace(microsecond=100).timestamp() - first_ts
+                next_sid = sorted_sid[sorted_sid.index(sid) + 1]
+                next_start = app_info[app_id][next_sid]["start"].replace(microsecond=0).timestamp() - first_ts
+                if (next_start - end) > (config["Control"]["Tsample"] / 1000):
+                    print("ERR ", sid)
+                    ts_cpu.append(end)
+                    cpus.append(0.0)
+                    ts_cpu.append(next_start)
+                    cpus.append(0.0)
+        ts_cpu, cpus = (list(t) for t in zip(*sorted(zip(ts_cpu, cpus))))
+        ts_cpu.append(end_ts)
+        cpus.append(cpus[-1] * 2 / 3)
+        ax2.plot(ts_cpu, cpus, zorder=0)
+        xmin, xmax = ax2.get_xlim()
+        ax2.set_xlim(0.0, xmax)
+        ymin, ymax = ax2.get_ylim()
+        print(ymax)
+        ax2.set_ylim(0.0, len(list(workers_dict.keys())) * COREVM)
+
+        ax2.fill_between(ts_cpu, 0.0, cpus, facecolor="b", alpha=0.2)
+        yaxis_multiplier = float(COREVM)
+        if len(workers_dict) > 11:
+            yaxis_multiplier = float(COREVM) * 2
+        ax2.yaxis.set_major_locator(plticker.MultipleLocator(base=yaxis_multiplier))
+        ax1.yaxis.set_major_locator(plticker.MultipleLocator(base=10.0))
+
+        if "agg" in name:
+            ax1.xaxis.set_major_locator(plticker.MultipleLocator(base=Y_TICK_AGG))
+        elif "sort" in name:
+            ax1.xaxis.set_major_locator(plticker.MultipleLocator(base=Y_TICK_SORT))
+        if TITLE:
+            plt.title(app_id + " " + str(config["Deadline"]) + " " + str(config["Control"]["Tsample"]) + " " + str(
+                config["Control"]["Alpha"]) + " " + str(config["Control"]["K"]))
+
+        ax1.set_zorder(ax2.get_zorder() + 1)
+        ax1.patch.set_visible(False)
+        labels = ax1.get_xticklabels()
+        plt.setp(labels, rotation=45)
+        # latexify(columns=1)
+        # format_axes(ax1)
+        # format_axes(ax2)
+        if PDF:
+            plt.savefig(folder + name + ".pdf", bbox_inches='tight', dpi=300)
+        else:
+            plt.savefig(folder + name + ".png", bbox_inches='tight', dpi=300)
+        plt.close()
+
+
+def find_first_ts_worker(app_id, workers_dict):
+    first_ts_worker = float('inf')
+    for worker_log in workers_dict:
+        try:
+            first_ts_worker = min(first_ts_worker,
+                                  workers_dict[worker_log][app_id][PLOT_SID_STAGE]["time"][0].timestamp())
+        except KeyError:
+            None
+    return first_ts_worker
 
 
 @timing
 def plot(folder):
+    print(folder)
     if folder[-1] != "/":
         folder += "/"
     config = load_config(folder)
     print(config)
+
+    global PLOT_SID_STAGE
+    PLOT_SID_STAGE = 1 if config["HDFS"] else 0
 
     app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
     app_info = {}
@@ -416,13 +746,17 @@ def plot(folder):
     cpu_logs = glob.glob(folder + "sar*.log")
 
     if len(worker_logs) == len(cpu_logs):
-        workers_dict = []
+        workers_dict = {}
         for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
             worker_dict = load_worker_data(worker_log, cpu_log)
-            workers_dict.append(worker_dict)
+            workers_dict[worker_log] = worker_dict
+
+        first_ts_worker = -1
+        for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
             for app_id in app_info:
-                plot_worker(app_id, app_info, worker_log, worker_dict, config)
+                if first_ts_worker == -1: first_ts_worker = find_first_ts_worker(app_id, workers_dict)
+                plot_worker(app_id, app_info, worker_log, workers_dict[worker_log], config, first_ts_worker)
         for app_id in app_info:
-            compute_cputime(app_id, app_info, workers_dict, config, folder)
+            plot_overview_cpu(app_id, app_info, workers_dict, config, folder)
     else:
         print("ERROR: SAR != WORKER LOGS")
