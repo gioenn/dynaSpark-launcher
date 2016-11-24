@@ -1,3 +1,7 @@
+"""
+This module handle the configuration of the instances and the execution of  the benchmark on the cluster
+"""
+
 import json
 import multiprocessing
 import time
@@ -9,40 +13,28 @@ from boto.manage.cmdshell import sshclient_from_instance
 import log
 import metrics
 import plot
-from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC_TIME, KEYPAIR_PATH, UPDATE_SPARK, \
-    DISABLEHT, ENABLE_EXTERNAL_SHUFFLE, OFF_HEAP, OFF_HEAP_BYTES, K, TSAMPLE, TI, COREQUANTUM, COREMIN, CPU_PERIOD, HDFS, \
-    COREVM, UPDATE_SPARK_MASTER, DEADLINE, MAXEXECUTOR, ALPHA, OVERSCALE, LOCALITY_WAIT, LOCALITY_WAIT_NODE, CPU_TASK, \
-    LOCALITY_WAIT_PROCESS, LOCALITY_WAIT_RACK, INPUT_RECORD, NUM_TASK, BENCH_NUM_TRIALS, SCALE_FACTOR, RAM_EXEC, \
-    RAM_DRIVER, BENCHMARK_PERF, BENCH_LINES, HDFS_MASTER, DATA_AMI, REGION, HADOOP_CONF, CONFIG_DICT, CREDENTIAL_PROFILE, \
+from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC_TIME, \
+    KEYPAIR_PATH, \
+    UPDATE_SPARK, \
+    DISABLEHT, ENABLE_EXTERNAL_SHUFFLE, OFF_HEAP, OFF_HEAP_BYTES, K, TSAMPLE, TI, COREQUANTUM, \
+    COREMIN, CPU_PERIOD, HDFS, \
+    COREVM, UPDATE_SPARK_MASTER, DEADLINE, MAXEXECUTOR, ALPHA, OVERSCALE, LOCALITY_WAIT, \
+    LOCALITY_WAIT_NODE, CPU_TASK, \
+    LOCALITY_WAIT_PROCESS, LOCALITY_WAIT_RACK, INPUT_RECORD, NUM_TASK, BENCH_NUM_TRIALS, \
+    SCALE_FACTOR, RAM_EXEC, \
+    RAM_DRIVER, BENCHMARK_PERF, BENCH_LINES, HDFS_MASTER, DATA_AMI, REGION, HADOOP_CONF, \
+    CONFIG_DICT, CREDENTIAL_PROFILE, \
     CLUSTER_ID, SPARK_2, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL
-
-
-def timing(f):
-    def wrap(*args):
-        tstart = time.time()
-        ret = f(*args)
-        tend = time.time()
-        print('\n%s function took %0.3f s' % (f.__name__, (tend - tstart)))
-        return ret
-
-    return wrap
-
-
-def between(value, a, b):
-    print("Finding log folder")
-    # Find and validate before-part.
-    pos_a = value.find(a)
-    if pos_a == -1: return ""
-    # Find and validate after part.
-    pos_b = value.find(b)
-    if pos_b == -1: return ""
-    # Return middle part.
-    adjusted_pos_a = pos_a + len(a)
-    if adjusted_pos_a >= pos_b: return ""
-    return value[adjusted_pos_a:pos_b]
+from util.utils import timing, between
 
 
 def common_setup(ssh_client):
+    """
+    Common setup of the instance of the cluster with ssh_client is connected
+
+    :param ssh_client: the ssh client to launch command on the instance
+    :return: nothing
+    """
     ssh_client.run("export GOMAXPROCS=`nproc`")
 
     if UPDATE_SPARK_DOCKER:
@@ -51,7 +43,8 @@ def common_setup(ssh_client):
 
     if DELETE_HDFS:
         ssh_client.run("sudo umount /mnt")
-        ssh_client.run("sudo mkfs.ext4 -E nodiscard /dev/xvdb && sudo mount -o discard /dev/xvdb /mnt")
+        ssh_client.run(
+            "sudo mkfs.ext4 -E nodiscard /dev/xvdb && sudo mount -o discard /dev/xvdb /mnt")
     ssh_client.run("test -d /mnt/tmp || sudo mkdir -m 1777 /mnt/tmp")
     ssh_client.run("sudo mount --bind /mnt/tmp /tmp")
 
@@ -59,7 +52,8 @@ def common_setup(ssh_client):
 
     print("   Stop Spark Slave/Master")
     ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-slave.sh')
-    ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-master.sh')
+    ssh_client.run(
+        'export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-master.sh')
 
     print("   Set Log Level")
     ssh_client.run(
@@ -83,6 +77,12 @@ def common_setup(ssh_client):
 
 @timing
 def setup_slave(instance, master_dns):
+    """
+
+    :param instance:
+    :param master_dns:
+    :return:
+    """
     ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
 
     print("Setup Slave: " + instance.public_dns_name)
@@ -155,6 +155,11 @@ def setup_slave(instance, master_dns):
 
 @timing
 def setup_master(instance):
+    """
+
+    :param instance:
+    :return:
+    """
     ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
 
     print("Setup Master: " + instance.public_dns_name)
@@ -168,6 +173,8 @@ def setup_master(instance):
 
     print("   Remove Logs")
     ssh_client.run("rm " + SPARK_HOME + "spark-events/*")
+
+    # TODO Check number of lines in spark-defaults.conf
 
     # SHUFFLE SERVICE EXTERNAL
     ssh_client.run(
@@ -217,7 +224,8 @@ def setup_master(instance):
         COREQUANTUM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run(
-        "sed -i '46s{.*{spark.locality.wait " + str(LOCALITY_WAIT) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        "sed -i '46s{.*{spark.locality.wait " + str(
+            LOCALITY_WAIT) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run(
         "sed -i '51s{.*{spark.locality.wait.node " + str(
@@ -232,7 +240,8 @@ def setup_master(instance):
             LOCALITY_WAIT_RACK) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run(
-        "sed -i '47s{.*{spark.task.cpus " + str(CPU_TASK) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        "sed -i '47s{.*{spark.task.cpus " + str(
+            CPU_TASK) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run(
         "sed -i '48s{.*{spark.control.nominalrate 0.0{' " + SPARK_HOME + "conf/spark-defaults.conf")
@@ -260,7 +269,8 @@ def setup_master(instance):
                    """:7077"{' ./spark-perf/config/config.py""")
 
     # CHANGE SCALE FACTOR LINE 127
-    ssh_client.run("sed -i '127s{.*{SCALE_FACTOR = " + str(SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
+    ssh_client.run(
+        "sed -i '127s{.*{SCALE_FACTOR = " + str(SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
 
     # NO PROMPT
     ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./spark-perf/config/config.py")
@@ -273,7 +283,8 @@ def setup_master(instance):
         """sed -i '55s{.*{SPARK_EXECUTOR_MEMORY=""" + RAM_EXEC + """{' ./spark-bench/conf/env.sh""")
 
     # CHANGE RAM DRIVER
-    ssh_client.run("sed -i '26s{.*{spark.driver.memory " + RAM_DRIVER + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+    ssh_client.run(
+        "sed -i '26s{.*{spark.driver.memory " + RAM_DRIVER + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     print("   Enabling/Disabling Benchmark")
     # ENABLE BENCHMARK
@@ -313,6 +324,11 @@ def setup_master(instance):
 
 @timing
 def setup_hdfs_ssd(instance):
+    """
+
+    :param instance:
+    :return:
+    """
     ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
     status, out, err = ssh_client.run(
         "test -d /mnt/hdfs/namenode || sudo mkdir --parents /mnt/hdfs/namenode && sudo mkdir --parents /mnt/hdfs/datanode")
@@ -324,6 +340,12 @@ def setup_hdfs_ssd(instance):
 
 
 def rsync_folder(ssh_client, slave):
+    """
+
+    :param ssh_client:
+    :param slave:
+    :return:
+    """
     ssh_client.run(
         "eval `ssh-agent -s` && ssh-add " + DATA_AMI[REGION][
             "keypair"] + ".pem && rsync -a " + HADOOP_CONF + " ubuntu@" + slave + ":" + HADOOP_CONF)
@@ -333,6 +355,12 @@ def rsync_folder(ssh_client, slave):
 
 @timing
 def setup_hdfs_config(master_instance, slaves):
+    """
+
+    :param master_instance:
+    :param slaves:
+    :return:
+    """
     ssh_client = sshclient_from_instance(master_instance, KEYPAIR_PATH, user_name='ubuntu')
     if HDFS_MASTER == "":
         master_dns = master_instance.public_dns_name
@@ -394,6 +422,11 @@ def setup_hdfs_config(master_instance, slaves):
 
 
 def write_config(output_folder):
+    """
+
+    :param output_folder:
+    :return:
+    """
     with open(output_folder + "/config.json", "w") as config_out:
         json.dump(CONFIG_DICT, config_out, sort_keys=True, indent=4)
 
@@ -403,7 +436,11 @@ def check_slave_connected_master(ssh_client):
 
 
 @timing
-def runbenchmark():
+def run_benchmark():
+    """
+
+    :return:
+    """
     session = boto3.Session(profile_name=CREDENTIAL_PROFILE)
     ec2 = session.resource('ec2', region_name=REGION)
     instances = ec2.instances.filter(
@@ -457,9 +494,11 @@ def runbenchmark():
     if HDFS == 0:
         if len(BENCHMARK_PERF) > 0:
             print("Running Benchmark " + str(BENCHMARK_PERF))
-            runstatus, runout, runerr = ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ./spark-perf/bin/run')
+            runstatus, runout, runerr = ssh_client.run(
+                'export SPARK_HOME="' + SPARK_HOME + '" && ./spark-perf/bin/run')
 
             # FIND APP LOG FOLDER
+            print("Finding log folder")
             app_log = between(runout, b"2>> ", b".err").decode(encoding='UTF-8')
             logfolder = "./" + "/".join(app_log.split("/")[:-1])
             print(logfolder)
@@ -471,7 +510,8 @@ def runbenchmark():
             for config in BENCH_CONF[bench].keys():
                 if config != "NumTrials":
                     ssh_client.run(
-                        """sed -i '""" + str(BENCH_CONF[bench][config][0]) + """s{.*{""" + config + """=""" + str(
+                        """sed -i '""" + str(
+                            BENCH_CONF[bench][config][0]) + """s{.*{""" + config + """=""" + str(
                             BENCH_CONF[bench][config][1]) +
                         """{' ./spark-bench/""" + bench + """/conf/env.sh""")
 
@@ -481,13 +521,8 @@ def runbenchmark():
                     'eval `ssh-agent -s` && ssh-add ' + DATA_AMI[REGION][
                         "keypair"] + '.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/gen_data.sh')
 
-
             check_slave_connected_master(ssh_client)
             print("Running Benchmark " + bench)
-            # import pyssh
-            # s = pyssh.new_session(hostname=master_dns, port=22)
-            # s.execute('eval `ssh-agent -s` && ssh-add ' + DATA_AMI[REGION][
-            #         "keypair"] + '.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh')
             ssh_client.run(
                 'eval `ssh-agent -s` && ssh-add ' + DATA_AMI[REGION][
                     "keypair"] + '.pem && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh')
@@ -495,7 +530,8 @@ def runbenchmark():
             output_folder = "./spark-bench/num/"
 
         # DOWNLOAD LOGS
-        output_folder = log.download(logfolder, [i for i in instance_list[:end_index]], master_dns, output_folder)
+        output_folder = log.download(logfolder, [i for i in instance_list[:end_index]], master_dns,
+                                     output_folder)
 
         write_config(output_folder)
 

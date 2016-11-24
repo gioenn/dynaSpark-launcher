@@ -1,7 +1,10 @@
+"""
+
+"""
+
 import glob
 import json
 import math
-import time
 from datetime import datetime as dt
 from datetime import timedelta
 from pathlib import Path
@@ -9,46 +12,33 @@ from pathlib import Path
 import numpy as np
 
 from config import COREVM, COREHTVM
+from util.utils import timing, string_to_datetime
 
 PLOT_SID_STAGE = 0
 
 
-def timing(f):
-    def wrap(*args):
-        tstart = time.time()
-        ret = f(*args)
-        tend = time.time()
-        print('\n%s function took %0.3f ms' % (f.__name__, (tend - tstart) * 1000.0))
-        return ret
-
-    return wrap
-
-
-def string_to_datetime(time_string):
-    split = time_string.split(":")
-    if "." in time_string:
-        split_2 = split[2].split(".")
-        return dt(2016, 1, 1, int(split[0]), int(split[1]), int(split_2[0]), int(split_2[1]))
-    else:
-        return dt(2016, 1, 1, int(split[0]), int(split[1]), int(split[2]), 0)
-
-
 def load_config(folder):
+    """
+
+    :param folder:
+    :return:
+    """
     config_file = Path(folder + "config.json")
     print(config_file)
     if config_file.exists():
         config = json.load(open(folder + "config.json"))
         if len(config) == 0:
-            from config import CONFIG_DICT
+            from csparkbench.config import CONFIG_DICT
             return CONFIG_DICT
         else:
             return config
     else:
-        from config import CONFIG_DICT
+        from csparkbench.config import CONFIG_DICT
         return CONFIG_DICT
 
 
 def load_app_data(app_log, hdfs):
+    
     print("Loading app data from log")
     dict_to_plot = {}
     app_info = {}
@@ -59,11 +49,14 @@ def load_app_data(app_log, hdfs):
             line = line.split(" ")
             if len(line) > 3 and line[3] == "TaskSetManager:" and line[4] == "Finished":
                 try:
-                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(string_to_datetime(line[1]))
+                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
+                        string_to_datetime(line[1]))
                 except (KeyError, ValueError) as e:
                     app_info[app_id][int(float(line[9]))]["tasktimestamps"] = []
-                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(string_to_datetime(line[1]))
-            if len(line) > 3 and line[3] == "StandaloneSchedulerBackend:" and line[4] == "Connected":
+                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
+                        string_to_datetime(line[1]))
+            if len(line) > 3 and line[3] == "StandaloneSchedulerBackend:" and line[
+                4] == "Connected":
                 app_info[line[-1].rstrip()] = {}
                 app_id = line[-1].rstrip()
                 dict_to_plot[app_id] = {}
@@ -76,13 +69,16 @@ def load_app_data(app_log, hdfs):
                             dict_to_plot[app_id]["finishTimeStages"]):
                         stage_id = int(line[12].replace(",", ""))
                         app_info[app_id][stage_id]["start"] = string_to_datetime(line[1])
-                        dict_to_plot[app_id]["startTimeStages"].append(app_info[app_id][stage_id]["start"])
+                        dict_to_plot[app_id]["startTimeStages"].append(
+                            app_info[app_id][stage_id]["start"])
                         print("START: " + str(app_info[app_id][stage_id]["start"]))
                         deadline_ms = float(line[16].replace(",", ""))
                         print(deadline_ms)
-                        app_info[app_id][stage_id]["deadline"] = dict_to_plot[app_id]["startTimeStages"][-1] \
-                                                                 + timedelta(milliseconds=deadline_ms)
-                        dict_to_plot[app_id]["dealineTimeStages"].append(app_info[app_id][stage_id]["deadline"])
+                        app_info[app_id][stage_id]["deadline"] = \
+                            dict_to_plot[app_id]["startTimeStages"][-1] \
+                            + timedelta(milliseconds=deadline_ms)
+                        dict_to_plot[app_id]["dealineTimeStages"].append(
+                            app_info[app_id][stage_id]["deadline"])
                 if line[5] == "NEEDED" and line[4] == "SEND":
                     next_app_id = line[-1].replace("\n", "")
                     if app_id != next_app_id:
@@ -103,7 +99,8 @@ def load_app_data(app_log, hdfs):
                         app_info[app_id][stage_id]["end"] = string_to_datetime(line[1])
                         if len(dict_to_plot[app_id]["startTimeStages"]) > len(
                                 dict_to_plot[app_id]["finishTimeStages"]):
-                            dict_to_plot[app_id]["finishTimeStages"].append(app_info[app_id][stage_id]["end"])
+                            dict_to_plot[app_id]["finishTimeStages"].append(
+                                app_info[app_id][stage_id]["end"])
                             print("END: " + str(app_info[app_id][stage_id]["end"]))
         return app_info
 
@@ -117,15 +114,18 @@ def compute_cputime(app_id, app_info, workers_dict, config, folder):
         try:
             for sid in worker_dict[app_id]:
                 cpus += sum(worker_dict[app_id][sid]["cpu"])
-                cpu_time += (config["Control"]["Tsample"] / 1000) * sum(worker_dict[app_id][sid]["cpu"])
+                cpu_time += (config["Control"]["Tsample"] / 1000) * sum(
+                    worker_dict[app_id][sid]["cpu"])
                 time_cpu = worker_dict["time_cpu"]
-                for cpu, time in zip(worker_dict[app_id][sid]["cpu"], worker_dict[app_id][sid]["time"]):
+                for cpu, time in zip(worker_dict[app_id][sid]["cpu"],
+                                     worker_dict[app_id][sid]["time"]):
                     try:
                         index = time_cpu.index(time)
                     except ValueError:
                         index = min(range(len(time_cpu)), key=lambda i: abs(time_cpu[i] - time))
                         # print(index)
-                    cpu_time_max += (config["Control"]["Tsample"] / 1000) * max(cpu, worker_dict["cpu_real"][
+                    cpu_time_max += (config["Control"]["Tsample"] / 1000) * max(cpu, worker_dict[
+                        "cpu_real"][
                         index + int(config["Control"]["Tsample"] / 1000)])
         except KeyError:
             print(app_id + " not found")
@@ -149,7 +149,8 @@ def compute_cputime(app_id, app_info, workers_dict, config, folder):
     throughput = float(num_task) / duration_s
     if cpu_time == 0:
         cpu_time = ((app_info[app_id][max(list(app_info[app_id].keys()))]["end"].timestamp() -
-                     app_info[app_id][PLOT_SID_STAGE]["start"].timestamp())) * config["Control"]["MaxExecutor"] * COREVM
+                     app_info[app_id][PLOT_SID_STAGE]["start"].timestamp())) * config["Control"][
+                       "MaxExecutor"] * COREVM
         cpu_time_max = cpu_time
     cpu_time_max = math.floor(cpu_time_max)
     print("CPU_TIME: " + str(cpu_time))
@@ -212,7 +213,8 @@ def load_worker_data(worker_log, cpu_log):
                         # print(l)
                         worker_dict[app_id][sid]["cpu"].append(float(line[-1].replace("\n", "")))
                     if line[4] == "Real:":
-                        worker_dict[app_id][sid]["sp_real"].append(float(line[-1].replace("\n", "")))
+                        worker_dict[app_id][sid]["sp_real"].append(
+                            float(line[-1].replace("\n", "")))
                     if line[4] == "SP":
                         worker_dict[app_id][sid]["time"].append(string_to_datetime(line[1]))
                         # print(l[-1].replace("\n", ""))
@@ -226,7 +228,8 @@ def load_worker_data(worker_log, cpu_log):
     with open(cpu_log) as cpulog:
         for line in cpulog:
             line = line.split("    ")
-            if not ("Linux" in line[0].split(" ") or "\n" in line[0].split(" ")) and line[1] != " CPU" and line[
+            if not ("Linux" in line[0].split(" ") or "\n" in line[0].split(" ")) and line[
+                1] != " CPU" and line[
                 0] != "Average:":
                 worker_dict["time_cpu"].append(
                     dt.strptime(line[0], '%I:%M:%S %p').replace(year=2016))
@@ -244,7 +247,8 @@ def compute_errors(app_id, app_dict, folder, config):
         first_ts = app_dict[PLOT_SID_STAGE]["start"].timestamp()
         for sid in sorted(app_dict):
             try:
-                app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(milliseconds=config["Deadline"])
+                app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(
+                    milliseconds=config["Deadline"])
                 app_deadline = app_deadline.replace(microsecond=0)
                 for timestamp in app_dict[sid]["tasktimestamps"]:
                     if first_ts == 0:
@@ -266,7 +270,8 @@ def compute_errors(app_id, app_dict, folder, config):
         # COMPUTE ERRORS
         errors = []
         sorted_sid = sorted(app_dict)
-        total_duration = app_alpha_deadline.timestamp() - app_dict[PLOT_SID_STAGE]["start"].timestamp()
+        total_duration = app_alpha_deadline.timestamp() - app_dict[PLOT_SID_STAGE][
+            "start"].timestamp()
         for sid in sorted_sid:
             try:
                 start_ts = app_dict[sid]["start"].timestamp() - first_ts
@@ -277,14 +282,16 @@ def compute_errors(app_id, app_dict, folder, config):
                 if sid == sorted_sid[-1] and start_ts < app_alpha_deadline_ts:
                     dead_ts = app_alpha_deadline_ts
                 print(abs(int_dead - end), total_duration, end)
-                deadline_error = round(round(((abs(dead_ts - end_ts)) / total_duration), 4) * 100, 3)
+                deadline_error = round(round(((abs(dead_ts - end_ts)) / total_duration), 4) * 100,
+                                       3)
                 errors.append(deadline_error)
             except KeyError:
                 None
 
         end = app_dict[sorted_sid[-1]]["end"].timestamp()
         print(abs(app_alpha_deadline.timestamp() - end), total_duration, end)
-        app_deadline_error = round(round(((abs(app_alpha_deadline.timestamp() - end)) / total_duration), 4) * 100, 3)
+        app_deadline_error = round(
+            round(((abs(app_alpha_deadline.timestamp() - end)) / total_duration), 4) * 100, 3)
 
         stage_errors = np.array(errors)
         print("DEADLINE_ERROR " + str(app_deadline_error))

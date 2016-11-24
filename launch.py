@@ -1,26 +1,24 @@
-import copy
+"""
+Launch the instance with spot request
+"""
+
 import socket
 import sys
 import time
 from errno import ECONNREFUSED
 from errno import ETIMEDOUT
 
-import boto3
-
-import run
-from config import DATA_AMI, INSTANCE_TYPE, REGION, PRICE, NUMINSTANCE, SECURITY_GROUP, EBS_OPTIMIZED, TAG, REBOOT,\
-    CLUSTER_ID, TERMINATE, RUN, NUM_RUN, CREDENTIAL_PROFILE
-
+from config import DATA_AMI, INSTANCE_TYPE, REGION, PRICE, SECURITY_GROUP, EBS_OPTIMIZED
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
 
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
+    :param question: is a string that is presented to the user.
+    :param default:  is the presumed answer if the user just hits <Enter>.
         It must be "yes" (the default), "no" or None (meaning
         an answer is required of the user).
 
-    The "answer" return value is True for "yes" or False for "no".
+    :return: The "answer" return value is True for "yes" or False for "no".
     """
     valid = {"yes": True, "y": True, "ye": True,
              "no": False, "n": False}
@@ -46,6 +44,14 @@ def query_yes_no(question, default="yes"):
 
 
 def ping(host, port):
+    """
+    Ping the port of the host
+
+    :param host: the host to ping
+    :param port: the port of the host to ping
+    :return: the port if the port is open or False if there is a connection error
+    """
+
     try:
         socket.socket().connect((host, port))
         print(str(port) + " Open")
@@ -56,58 +62,66 @@ def ping(host, port):
         raise
 
 
-def between(value, a, b):
-    # Find and validate before-part.
-    pos_a = value.find(a)
-    if pos_a == -1:
-        return ""
-    # Find and validate after part.
-    pos_b = value.find(b)
-    if pos_b == -1:
-        return ""
-    # Return middle part.
-    adjusted_pos_a = pos_a + len(a)
-    if adjusted_pos_a >= pos_b:
-        return ""
-    return value[adjusted_pos_a:pos_b]
+def wait_ping(client, instance_ids, pending_instance_ids):
+    """Wait that all the instance have open the ssh port (22)
 
+    :param client: the ec2 client
+    :param instance_ids: id of all the instance to ping
+    :param pending_instance_ids: id of the remaining instance to ping
+    :return: Exit when all the instance are reachable on port 22
+    """
 
-def wait_ping(conn, instance_ids, pending_instance_ids):
-    results = conn.describe_instances(InstanceIds=pending_instance_ids)
+    results = client.describe_instances(InstanceIds=pending_instance_ids)
     for result in results["Reservations"]:
-        for instace in result["Instances"]:
-            if ping(instace["PublicDnsName"], 22) == 22:
-                pending_instance_ids.pop(pending_instance_ids.index(instace["InstanceId"]))
-                print("instance `{}` ping ok!".format(instace["InstanceId"]))
+        for instance in result["Instances"]:
+            if ping(instance["PublicDnsName"], 22) == 22:
+                pending_instance_ids.pop(pending_instance_ids.index(instance["InstanceId"]))
+                print("instance `{}` ping ok!".format(instance["InstanceId"]))
             else:
-                print("pinging on `{}`".format(instace["InstanceId"]))
+                print("pinging on `{}`".format(instance["InstanceId"]))
 
     if len(pending_instance_ids) == 0:
         print("all instances running!")
     else:
         time.sleep(2)
-        wait_ping(conn, instance_ids, pending_instance_ids)
+        wait_ping(client, instance_ids, pending_instance_ids)
 
 
-def wait_for_running(conn, instance_ids, pending_instance_ids):
-    results = conn.describe_instances(InstanceIds=pending_instance_ids)
+def wait_for_running(client, instance_ids, pending_instance_ids):
+    """Wait that all the instance are in running state
+
+    :param client: the ec2 client
+    :param instance_ids: id of all the instance to check running
+    :param pending_instance_ids: id of the remaining instance to check running
+    :return: Exit when all the instance are running
+    """
+
+    results = client.describe_instances(InstanceIds=pending_instance_ids)
     for result in results["Reservations"]:
-        for instace in result["Instances"]:
-            if instace["State"]["Name"] == 'running':
-                pending_instance_ids.pop(pending_instance_ids.index(instace["InstanceId"]))
-                print("instance `{}` running!".format(instace["InstanceId"]))
+        for instance in result["Instances"]:
+            if instance["State"]["Name"] == 'running':
+                pending_instance_ids.pop(pending_instance_ids.index(instance["InstanceId"]))
+                print("instance `{}` running!".format(instance["InstanceId"]))
             else:
-                print("waiting on `{}`".format(instace["InstanceId"]))
+                print("waiting on `{}`".format(instance["InstanceId"]))
 
     if len(pending_instance_ids) == 0:
         print("all instances running!")
     else:
         time.sleep(10)
-        wait_for_running(conn, instance_ids, pending_instance_ids)
+        wait_for_running(client, instance_ids, pending_instance_ids)
 
 
-def wait_for_fulfillment(conn, request_ids, pending_request_ids):
-    results = conn.describe_spot_instance_requests(SpotInstanceRequestIds=pending_request_ids)
+def wait_for_fulfillment(client, request_ids, pending_request_ids):
+    """Wait that all the spot instance request are fulfilled
+
+    :param client: the ec2 client
+    :param request_ids: id of all the spot instance request to fulfill
+    :param pending_request_ids: id of the remaining spot instance request to fulfill
+    :return: Exit when all the spot request are fulfilled
+    """
+
+    results = client.describe_spot_instance_requests(SpotInstanceRequestIds=pending_request_ids)
     for result in results["SpotInstanceRequests"]:
         if result["Status"]["Code"] == 'fulfilled':
             pending_request_ids.pop(pending_request_ids.index(result["SpotInstanceRequestId"]))
@@ -119,124 +133,102 @@ def wait_for_fulfillment(conn, request_ids, pending_request_ids):
         print("all spots fulfilled!")
     else:
         time.sleep(10)
-        wait_for_fulfillment(conn, request_ids, pending_request_ids)
+        wait_for_fulfillment(client, request_ids, pending_request_ids)
 
 
-def terminate(ec2, client, spot_request_ids, instance_ids):
-    # DISTRUGGERE SPOT REQUEST
+def terminate(client, spot_request_ids, instance_ids):
+    """Delete all the spot_request_ids and terminate al the instance_ids
+
+    :param client:  the ec2 client
+    :param spot_request_ids: id of all the spot instance request to delete
+    :param instance_ids: id of all the instance to terminate
+    :return:
+    """
+
+    # DELETE SPOT REQUEST
     client.cancel_spot_instance_requests(SpotInstanceRequestIds=spot_request_ids)
 
-    # TERMINARE INSTANCE
-    ec2.instances.filter(InstanceIds=instance_ids).stop()
-    ec2.instances.filter(InstanceIds=instance_ids).terminate()
+    # TERMINATE INSTANCE
+    client.instances.filter(InstanceIds=instance_ids).stop()
+    client.instances.filter(InstanceIds=instance_ids).terminate()
 
 
 def check_spot_price(client):
-    # Check Price SPOT INSTANCE
+    """Check the current spot price on the selected amazon region of the instance type choosen
+        and compare with the one provided by the user
+
+    :param client: the ec2 client
+    :return: Exit if the spot price of the user is too low (< current price + 20%)
+    """
+
     spot_price_history_response = client.describe_spot_price_history(InstanceTypes=[INSTANCE_TYPE],
-                                                                     ProductDescriptions=['Linux/UNIX'],
-                                                                     AvailabilityZone=DATA_AMI[REGION]["az"])
+                                                                     ProductDescriptions=[
+                                                                         'Linux/UNIX'],
+                                                                     AvailabilityZone=
+                                                                     DATA_AMI[REGION]["az"])
     print(spot_price_history_response['SpotPriceHistory'][0])
-    lastspotprice = [float(x['SpotPrice']) for x in spot_price_history_response['SpotPriceHistory'][:10]]
-    print(lastspotprice)
+    last_spot_price = [float(x['SpotPrice']) for x in
+                       spot_price_history_response['SpotPriceHistory'][:10]]
+    print(last_spot_price)
     print("Number of responses:", len(spot_price_history_response['SpotPriceHistory']))
-    spotprice = float(sum(lastspotprice)) / max(len(lastspotprice), 1)
-    spotprice += (spotprice * 0.2)
-    spotprice = float("{0:.2f}".format(spotprice))
-    print("LAST 10 SPOT PRICE + 20%: " + str(spotprice))
+    spot_price = float(sum(last_spot_price)) / max(len(last_spot_price), 1)
+    spot_price += (spot_price * 0.2)
+    spot_price = float("{0:.2f}".format(spot_price))
+    print("LAST 10 SPOT PRICE + 20%: " + str(spot_price))
     print("YOUR PRICE: " + str(PRICE))
-    if float(PRICE) < spotprice:
+    if float(PRICE) < spot_price:
         print("ERROR PRICE")
         exit(1)
 
 
-def main():
-    session = boto3.Session(profile_name=CREDENTIAL_PROFILE)
-    client = session.client('ec2', region_name=REGION)
+def launch(client, num_instance):
+    """
+    Launch num_instance on Amazon EC2 with spot request
 
-    if NUMINSTANCE > 0:
-        if query_yes_no("Are you sure to launch " + str(NUMINSTANCE) + " new instance?", "no"):
-            check_spot_price(client)
-            spot_request_response = client.request_spot_instances(SpotPrice=PRICE,
-                                                                  InstanceCount=NUMINSTANCE,
-                                                                  Type='one-time',
-                                                                  AvailabilityZoneGroup=DATA_AMI[REGION]["az"],
-                                                                  LaunchSpecification={
-                                                                      "ImageId": DATA_AMI[REGION]["ami"],
-                                                                      "KeyName": DATA_AMI[REGION]["keypair"],
-                                                                      "SecurityGroups": [
-                                                                          SECURITY_GROUP,
-                                                                      ],
-                                                                      'Placement': {
-                                                                          'AvailabilityZone': DATA_AMI[REGION]["az"],
-                                                                      },
-                                                                      "InstanceType": INSTANCE_TYPE,
-                                                                      "EbsOptimized": EBS_OPTIMIZED,
-                                                                      "BlockDeviceMappings": [
-                                                                          {
-                                                                              "DeviceName": "/dev/sda1",
-                                                                              "Ebs": {
-                                                                                  "DeleteOnTermination": True,
-                                                                                  "VolumeType": "gp2",
-                                                                                  "VolumeSize": 200,
-                                                                                  "SnapshotId": DATA_AMI[REGION][
-                                                                                      "snapid"]
-                                                                              }
-                                                                          },
-                                                                          {
-                                                                              "DeviceName": "/dev/sdb",
-                                                                              "VirtualName": "ephemeral0"
-                                                                          }
-                                                                      ],
-                                                                  })
+    :param client: the ec2 client
+    :param num_instance: number of instance to launch
+    :return: the list of spot request's ids
+    """
+    if query_yes_no("Are you sure to launch " + str(num_instance) + " new instance?", "no"):
+        check_spot_price(client)
+        spot_request_response = client.request_spot_instances(
+            SpotPrice=PRICE,
+            InstanceCount=num_instance,
+            Type='one-time',
+            AvailabilityZoneGroup=
+            DATA_AMI[REGION]["az"],
+            LaunchSpecification={
+                "ImageId": DATA_AMI[REGION]["ami"],
+                "KeyName": DATA_AMI[REGION]["keypair"],
+                "SecurityGroups": [
+                    SECURITY_GROUP,
+                ],
+                'Placement': {
+                    'AvailabilityZone':
+                        DATA_AMI[REGION]["az"],
+                },
+                "InstanceType": INSTANCE_TYPE,
+                "EbsOptimized": EBS_OPTIMIZED,
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": True,
+                            "VolumeType": "gp2",
+                            "VolumeSize": 200,
+                            "SnapshotId":
+                                DATA_AMI[REGION]["snapid"]
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+            })
 
-            print([req["SpotInstanceRequestId"] for req in spot_request_response["SpotInstanceRequests"]])
+        print([req["SpotInstanceRequestId"] for req in
+               spot_request_response["SpotInstanceRequests"]])
 
-            spot_request_ids = [req["SpotInstanceRequestId"] for req in spot_request_response["SpotInstanceRequests"]]
-
-            print("CHECK SECURITY GROUP ALLOWED IP SETTINGS!!!")
-
-            # Wait for our spots to fulfill
-            wait_for_fulfillment(client, spot_request_ids, copy.deepcopy(spot_request_ids))
-
-            spot_instance_response = client.describe_spot_instance_requests(SpotInstanceRequestIds=spot_request_ids)
-            instance_ids = [result["InstanceId"] for result in spot_instance_response["SpotInstanceRequests"]]
-
-            client.create_tags(Resources=instance_ids, Tags=TAG)
-
-            # Wait Running
-            wait_for_running(client, instance_ids, copy.deepcopy(instance_ids))
-
-            time.sleep(15)
-
-            wait_ping(client, instance_ids, copy.deepcopy(instance_ids))
-
-    if REBOOT:
-        print("Rebooting instances...")
-        session = boto3.Session(profile_name=CREDENTIAL_PROFILE)
-        ec2 = session.resource('ec2', region_name=REGION)
-        instances = ec2.instances.filter(
-            Filters=[{'Name': 'instance-state-name', 'Values': ['running']},
-                     {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}
-                     ])
-        instance_ids = [x.id for x in instances]
-        client.reboot_instances(InstanceIds=instance_ids)
-        wait_ping(client, instance_ids, copy.deepcopy(instance_ids))
-
-    if RUN:
-        for i in range(NUM_RUN):
-            run.runbenchmark()
-
-    if TERMINATE:
-        session = boto3.Session(profile_name=CREDENTIAL_PROFILE)
-        ec2 = session.resource('ec2', region_name=REGION)
-        instances = ec2.instances.filter(
-            Filters=[{'Name': 'instance-state-name', 'Values': ['running']},
-                     {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}
-                     ])
-        instance_ids = [x.id for x in instances]
-        terminate(client, ec2, spot_request_ids, instance_ids)
-
-
-if __name__ == "__main__":
-    main()
+        return [req["SpotInstanceRequestId"] for req in
+                spot_request_response["SpotInstanceRequests"]]

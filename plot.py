@@ -1,13 +1,23 @@
+"""
+Plot module to generate figure from the log of the application and worker's logs.
+
+This module can generate two type of figure: Overview, Worker. The Overview figure is the overview
+ of the all application with the aggregated cpu metrics from the workers. The Worker figure is the
+ detail of the execution of one worker in which each stage as its real progress and estimated progress
+ including the allocation of cpu.
+
+"""
+
 import glob
 import json
 import math
-import time
-from datetime import datetime as dt
-from datetime import timedelta
+from datetime import datetime as dt, timedelta
 from pathlib import Path
 
 import matplotlib
 import numpy as np
+
+from util.utils import timing, string_to_datetime
 
 matplotlib.use('PDF')
 import matplotlib.ticker as plticker
@@ -37,41 +47,35 @@ params = {
 matplotlib.rcParams.update(params)
 
 
-def timing(f):
-    def wrap(*args):
-        tstart = time.time()
-        ret = f(*args)
-        tend = time.time()
-        print('\n%s function took %0.3f ms' % (f.__name__, (tend - tstart) * 1000.0))
-        return ret
-
-    return wrap
-
-
 def load_config(folder):
+    """
+    Load the config from the folder if present otherwise load the config from config.py
+
+    :param folder: the folder path where find the config file
+    :return: the config dictionary
+    """
     config_file = Path(folder + "config.json")
     if config_file.exists():
         config = json.load(open(folder + "config.json"))
         if len(config) == 0:
-            from config import CONFIG_DICT
+            from csparkbench.config import CONFIG_DICT
             return CONFIG_DICT
         else:
             return config
     else:
-        from config import CONFIG_DICT
+        from csparkbench.config import CONFIG_DICT
         return CONFIG_DICT
 
 
-def string_to_datetime(time_string):
-    split = time_string.split(":")
-    if "." in time_string:
-        split_2 = split[2].split(".")
-        return dt(2016, 1, 1, int(split[0]), int(split[1]), int(split_2[0]), int(split_2[1]))
-    else:
-        return dt(2016, 1, 1, int(split[0]), int(split[1]), int(split[2]), 0)
-
-
 def load_app_data(app_log, hdfs):
+    """
+    Function that parse the application data like stage ids, start, deadline, end,
+    tasktimestamps from the app_log
+
+    :param app_log: The log of the application with log level INFO
+    :param hdfs:
+    :return: app_info dictionary
+    """
     print("Loading app data from log")
     dict_to_plot = {}
     app_info = {}
@@ -82,11 +86,14 @@ def load_app_data(app_log, hdfs):
             line = line.split(" ")
             if len(line) > 3 and line[3] == "TaskSetManager:" and line[4] == "Finished":
                 try:
-                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(string_to_datetime(line[1]))
+                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
+                        string_to_datetime(line[1]))
                 except (KeyError, ValueError) as e:
                     app_info[app_id][int(float(line[9]))]["tasktimestamps"] = []
-                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(string_to_datetime(line[1]))
-            if len(line) > 3 and line[3] == "StandaloneSchedulerBackend:" and line[4] == "Connected":
+                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
+                        string_to_datetime(line[1]))
+            if len(line) > 3 and line[3] == "StandaloneSchedulerBackend:" and line[
+                4] == "Connected":
                 app_info[line[-1].rstrip()] = {}
                 app_id = line[-1].rstrip()
                 dict_to_plot[app_id] = {}
@@ -99,13 +106,16 @@ def load_app_data(app_log, hdfs):
                             dict_to_plot[app_id]["finishTimeStages"]):
                         stage_id = int(line[12].replace(",", ""))
                         app_info[app_id][stage_id]["start"] = string_to_datetime(line[1])
-                        dict_to_plot[app_id]["startTimeStages"].append(app_info[app_id][stage_id]["start"])
+                        dict_to_plot[app_id]["startTimeStages"].append(
+                            app_info[app_id][stage_id]["start"])
                         print("START: " + str(app_info[app_id][stage_id]["start"]))
                         deadline_ms = float(line[16].replace(",", ""))
                         print(deadline_ms)
-                        app_info[app_id][stage_id]["deadline"] = dict_to_plot[app_id]["startTimeStages"][-1] \
-                                                                 + timedelta(milliseconds=deadline_ms)
-                        dict_to_plot[app_id]["dealineTimeStages"].append(app_info[app_id][stage_id]["deadline"])
+                        app_info[app_id][stage_id]["deadline"] = \
+                            dict_to_plot[app_id]["startTimeStages"][-1] \
+                            + timedelta(milliseconds=deadline_ms)
+                        dict_to_plot[app_id]["dealineTimeStages"].append(
+                            app_info[app_id][stage_id]["deadline"])
                 if line[5] == "NEEDED" and line[4] == "SEND":
                     next_app_id = line[-1].replace("\n", "")
                     if app_id != next_app_id:
@@ -126,7 +136,8 @@ def load_app_data(app_log, hdfs):
                         app_info[app_id][stage_id]["end"] = string_to_datetime(line[1])
                         if len(dict_to_plot[app_id]["startTimeStages"]) > len(
                                 dict_to_plot[app_id]["finishTimeStages"]):
-                            dict_to_plot[app_id]["finishTimeStages"].append(app_info[app_id][stage_id]["end"])
+                            dict_to_plot[app_id]["finishTimeStages"].append(
+                                app_info[app_id][stage_id]["end"])
                             print("END: " + str(app_info[app_id][stage_id]["end"]))
         return app_info
 
@@ -154,7 +165,7 @@ def get_text_positions(x_data, y_data, txt_width, txt_height):
 
 def text_plotter(x_data, y_data, text_positions, axis, txt_width, txt_height, labels):
     for i, (x, y, t, l) in enumerate(zip(x_data, y_data, text_positions, labels)):
-        if len(x_data) > 2:
+        if len(x_data) > 3:
             yt = 102 if (i % 2) == 1 else 110
         else:
             yt = 102
@@ -162,6 +173,17 @@ def text_plotter(x_data, y_data, text_positions, axis, txt_width, txt_height, la
 
 
 def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_worker):
+    """
+    Plot the progress of each stage in the worker with the controller's data
+
+    :param app_id: the id of the application
+    :param app_info: the dictionary with the application's data
+    :param worker_log: the path of the worker's log file
+    :param worker_dict: the dictionary with the worker's data
+    :param config: the dictionary of the config file
+    :param first_ts_worker: the first start ts of PLOT_SID_STAGE
+    :return: nothing; save the figure in the output folder
+    """
     fig, ax1 = plt.subplots(figsize=(16, 5), dpi=300)
     times = []
     cpus = []
@@ -179,12 +201,14 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             # except KeyError:
             #     label_to_plot[tq_ts] = []
             #     label_to_plot[tq_ts].append("S" + str(sid))
-            # ax1.text(start_ts, 105, "S" + str(sid), style="italic", weight="bold", horizontalalignment='center')
+            # ax1.text(start_ts, 105, "S" + str(sid), style="italic", weight="bold",
+            # horizontalalignment='center')
             end_ts = app_info[app_id][sid]["end"].timestamp() - first_ts_worker
             ax1.axvline(end_ts, color="red")
             label_to_plot.append("E" + str(sid))
             ts_to_plot.append(end_ts)
-            # ax1.text(end_ts, -0.035, "E"+str(sid), style="italic", weight="bold", horizontalalignment='center')
+            # ax1.text(end_ts, -0.035, "E"+str(sid), style="italic", weight="bold",
+            # horizontalalignment='center')
             dead_ts = app_info[app_id][sid]["deadline"].timestamp() - first_ts_worker
             ax1.axvline(dead_ts, color="green", linestyle='--')
             # try:
@@ -192,9 +216,11 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             # except KeyError:
             #     label_to_plot[tq_ts] = []
             #     label_to_plot[tq_ts].append("D" + str(sid))
-            # ax1.text(dead_ts, 101, "D" + str(sid), style="italic", weight="bold", horizontalalignment='center')
+            # ax1.text(dead_ts, 101, "D" + str(sid), style="italic", weight="bold",
+            # horizontalalignment='center')
             time_sp = [t.timestamp() - first_ts_worker for t in worker_dict[app_id][sid]["time"]]
-            time_sp_real = [t.timestamp() - first_ts_worker for t in worker_dict[app_id][sid]["time"]]
+            time_sp_real = [t.timestamp() - first_ts_worker for t in
+                            worker_dict[app_id][sid]["time"]]
             sp_real = worker_dict[app_id][sid]["sp_real"]
             sp = worker_dict[app_id][sid]["sp"]
             if sp[-1] < 1.0:
@@ -268,12 +294,14 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
                 cpus.append(0.0)
                 index_next = min(sorted(app_info[app_id]).index(sid) + 1, len(app_info[app_id]) - 1)
                 times.append(
-                    app_info[app_id][sorted(app_info[app_id])[index_next]]["start"].timestamp() - first_ts_worker)
+                    app_info[app_id][sorted(app_info[app_id])[index_next]][
+                        "start"].timestamp() - first_ts_worker)
                 cpus.append(0.0)
                 # start_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][0])
                 # end_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][-1])
                 #
-                # time_cpu = [t.timestamp() - first_ts_worker for t in worker_dict["time_cpu"][start_index:end_index]]
+                # time_cpu = [t.timestamp() - first_ts_worker for t in worker_dict["time_cpu"]
+                # [start_index:end_index]]
                 # ax2.plot(time_cpu,
                 #          worker_dict["cpu_real"][start_index:end_index], ".g-",
                 #          label='CPU REAL')
@@ -320,6 +348,15 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
 
 
 def plot_app_overview(app_id, app_dict, folder, config):
+    """
+    Plot only the application overview without the cpu data from the workers
+
+    :param app_id: the id of the application
+    :param app_dict: the data dictionary of the application
+    :param folder: the folder where to save the output image
+    :param config: the config dict of the application
+    :return: nothing; save the figure in the output folder
+    """
     print("Plotting APP Overview")
     if len(app_dict) > 0:
         timestamps = []
@@ -328,7 +365,8 @@ def plot_app_overview(app_id, app_dict, folder, config):
         first_ts = app_dict[PLOT_SID_STAGE]["start"].timestamp()
         for sid in sorted(app_dict):
             try:
-                app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(milliseconds=config["Deadline"])
+                app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(
+                    milliseconds=config["Deadline"])
                 app_deadline = app_deadline.replace(microsecond=0)
                 for timestamp in app_dict[sid]["tasktimestamps"]:
                     if first_ts == 0:
@@ -359,7 +397,8 @@ def plot_app_overview(app_id, app_dict, folder, config):
             milliseconds=((1 - float(config["Control"]["Alpha"])) * float(config["Deadline"])))
         app_alpha_deadline_ts = app_alpha_deadline.timestamp() - first_ts
         ax1.axvline(app_alpha_deadline_ts)
-        ax1.text(app_alpha_deadline_ts, ymax + 0.5, 'AD', weight="bold", horizontalalignment='center')
+        ax1.text(app_alpha_deadline_ts, ymax + 0.5, 'AD', weight="bold",
+                 horizontalalignment='center')
         ax1.set_xlabel('Time [s]')
         ax1.set_ylabel('App Progress [%]')
 
@@ -373,7 +412,8 @@ def plot_app_overview(app_id, app_dict, folder, config):
                 #     s_y = normalized[timestamps.index(start_ts)]
                 # except ValueError:
                 #     s_y = start_ts
-                # ax1.text(start_ts + 3, s_y - 2, 'S' + str(sid), style="italic",weight="bold", horizontalalignment='center')
+                # ax1.text(start_ts + 3, s_y - 2, 'S' + str(sid), style="italic",weight="bold",
+                # horizontalalignment='center')
                 end = app_dict[sid]["end"].timestamp()
                 end_ts = end - first_ts
                 #
@@ -381,9 +421,11 @@ def plot_app_overview(app_id, app_dict, folder, config):
                 # try:
                 #     index_t = timestamps.index(end_ts)
                 # except ValueError:
-                #     index_t = min(range(len(timestamps)), key=lambda i: abs(timestamps[i] - end_ts))
+                #     index_t = min(range(len(timestamps)), key=lambda i:
+                # abs(timestamps[i] - end_ts))
                 # e_y = normalized[index_t]
-                # ax1.text(end_ts, ymin - 3.5, 'E' + str(sid), style="italic", weight="bold", horizontalalignment='center', verticalalignment='bottom')
+                # ax1.text(end_ts, ymin - 3.5, 'E' + str(sid), style="italic", weight="bold",
+                # horizontalalignment='center', verticalalignment='bottom')
                 int_dead = app_dict[sid]["deadline"].timestamp()
                 dead_ts = int_dead - first_ts
                 if sid == sorted_sid[-1] and start_ts < app_alpha_deadline_ts:
@@ -394,7 +436,8 @@ def plot_app_overview(app_id, app_dict, folder, config):
                 None
 
         if TITLE:
-            plt.title(app_id + " " + str(config["Deadline"]) + " " + str(config["Control"]["Tsample"]) + " " + str(
+            plt.title(app_id + " " + str(config["Deadline"]) + " " + str(
+                config["Control"]["Tsample"]) + " " + str(
                 config["Control"]["Alpha"]) + " " + str(config["Control"]["K"]))
         folder_split = folder.split("/")
         name = folder_split[-4].lower() + "-overview-" + folder_split[-3].replace("%", "")
@@ -408,6 +451,13 @@ def plot_app_overview(app_id, app_dict, folder, config):
 
 
 def load_worker_data(worker_log, cpu_log):
+    """
+    Load the controller data from the worker_log and combine with the cpu_real data from cpu_log
+
+    :param worker_log: the path of the log of the worker
+    :param cpu_log:  the path of the cpu monitoring tool log of the worker
+    :return: worker_dict the dictionary of the worker's  data
+    """
     print(worker_log)
     print(cpu_log)
     worker_dict = {}
@@ -445,7 +495,8 @@ def load_worker_data(worker_log, cpu_log):
                         # print(l)
                         worker_dict[app_id][sid]["cpu"].append(float(line[-1].replace("\n", "")))
                     if line[4] == "Real:":
-                        worker_dict[app_id][sid]["sp_real"].append(float(line[-1].replace("\n", "")))
+                        worker_dict[app_id][sid]["sp_real"].append(
+                            float(line[-1].replace("\n", "")))
                     if line[4] == "SP":
                         worker_dict[app_id][sid]["time"].append(string_to_datetime(line[1]))
                         # print(l[-1].replace("\n", ""))
@@ -459,7 +510,8 @@ def load_worker_data(worker_log, cpu_log):
     with open(cpu_log) as cpulog:
         for line in cpulog:
             line = line.split("    ")
-            if not ("Linux" in line[0].split(" ") or "\n" in line[0].split(" ")) and line[1] != " CPU" and line[
+            if not ("Linux" in line[0].split(" ") or "\n" in line[0].split(" ")) and line[
+                1] != " CPU" and line[
                 0] != "Average:":
                 worker_dict["time_cpu"].append(
                     dt.strptime(line[0], '%I:%M:%S %p').replace(year=2016))
@@ -470,6 +522,17 @@ def load_worker_data(worker_log, cpu_log):
 
 
 def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
+    """
+    Function that plot the overview of the application aggregating the cpu data from all
+    the workers showing the application progress and the division by stage
+
+    :param app_id: the id of the application
+    :param app_info: the data dictionary of the application
+    :param workers_dict: the data dictionary of the workers
+    :param config: the dictionary of the config file
+    :param folder: the folder to output the image
+    :return: nothing only save the figure at the end in the folder
+    """
     print("Plotting APP Overview")
     if len(app_info[app_id]) > 0:
         folder_split = folder.split("/")
@@ -483,7 +546,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
             sorted_sid.remove(0)
         for sid in sorted_sid:
             try:
-                app_deadline = app_info[app_id][PLOT_SID_STAGE]["start"] + timedelta(milliseconds=config["Deadline"])
+                app_deadline = app_info[app_id][PLOT_SID_STAGE]["start"] + timedelta(
+                    milliseconds=config["Deadline"])
                 for timestamp in app_info[app_id][sid]["tasktimestamps"]:
                     if first_ts == 0:
                         first_ts = timestamp.timestamp()
@@ -532,7 +596,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         except KeyError:
             label_to_plot[tq_ts] = []
             label_to_plot[tq_ts].append("AD")
-        # ax1.text(app_alpha_deadline_ts, ymax + 0.5, 'AD', weight="bold", horizontalalignment='center')
+        # ax1.text(app_alpha_deadline_ts, ymax + 0.5, 'AD', weight="bold",
+        # horizontalalignment='center')
         ax1.set_xlabel('Time [s]')
         ax1.set_ylabel('App Progress [%]')
 
@@ -559,7 +624,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                     s_y = normalized[timestamps.index(start_ts)]
                 except ValueError:
                     s_y = start_ts
-                # ax1.text(start_ts + 3, s_y - 2, 'S' + str(sid), style="italic",weight="bold", horizontalalignment='center')
+                # ax1.text(start_ts + 3, s_y - 2, 'S' + str(sid), style="italic",weight="bold",
+                # horizontalalignment='center')
                 end = app_info[app_id][sid]["end"].timestamp()
                 end_ts = end - first_ts
                 tq_ts = math.floor(end_ts / TQ) * TQ
@@ -575,7 +641,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                 except ValueError:
                     index_t = min(range(len(timestamps)), key=lambda i: abs(timestamps[i] - end_ts))
                 e_y = normalized[index_t]
-                # ax1.text(end_ts, ymin - 3.5, 'E' + str(sid), style="italic", weight="bold", horizontalalignment='center', verticalalignment='bottom')
+                # ax1.text(end_ts, ymin - 3.5, 'E' + str(sid), style="italic", weight="bold",
+                # horizontalalignment='center', verticalalignment='bottom')
             except KeyError:
                 None
 
@@ -586,7 +653,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
             # Get the corrected text positions, then write the text.
             sorted_label_ts = [original_ts[ts] for ts in sorted(label_to_plot)]
             text_positions = get_text_positions(sorted_label_ts,
-                                                np.full(len(label_to_plot), ymax), txt_width, txt_height)
+                                                np.full(len(label_to_plot), ymax), txt_width,
+                                                txt_height)
             # print(text_positions)
             text_plotter(sorted_label_ts, np.full(len(label_to_plot), ymax), text_positions,
                          ax1, txt_width, txt_height,
@@ -616,7 +684,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
             worker_dict = workers_dict[worker_log]
             first_sid = sorted(worker_dict[app_id])[0]
             for sid in sorted(worker_dict[app_id]):
-                s_index = sid_len[sid_len_keys[sid_len_keys.index(sid) - 1]] if sid != first_sid else 0
+                s_index = sid_len[
+                    sid_len_keys[sid_len_keys.index(sid) - 1]] if sid != first_sid else 0
                 for i, (time_cpu, cpu) in enumerate(
                         zip(worker_dict[app_id][sid]["time"], worker_dict[app_id][sid]["cpu"])):
                     time_cpu_ts = time_cpu.replace(microsecond=0).timestamp()
@@ -631,9 +700,10 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                     try:
                         if ts_cpu[s_index] != (time_cpu_ts - first_ts) and abs(
                                         ts_cpu[s_index] - (time_cpu_ts - first_ts)) >= (
-                            config["Control"]["Tsample"] / 1000):
+                                    config["Control"]["Tsample"] / 1000):
                             # print(ts_cpu)
-                            # print([tixm.replace(microsecond=0).timestamp() - first_ts for tixm in worker_dict[app_id][sid]["time"]])
+                            # print([tixm.replace(microsecond=0).timestamp() -
+                            # first_ts for tixm in worker_dict[app_id][sid]["time"]])
                             # print("QUI", sid, (time_cpu_ts - first_ts),  ts_cpu[s_index])
                             index = ts_cpu.index(time_cpu_ts - first_ts)
                             cpus[index] += cpu
@@ -666,7 +736,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
             if sid != sorted_sid[-1]:
                 end = app_info[app_id][sid]["end"].replace(microsecond=100).timestamp() - first_ts
                 next_sid = sorted_sid[sorted_sid.index(sid) + 1]
-                next_start = app_info[app_id][next_sid]["start"].replace(microsecond=0).timestamp() - first_ts
+                next_start = app_info[app_id][next_sid]["start"].replace(
+                    microsecond=0).timestamp() - first_ts
                 if (next_start - end) > (config["Control"]["Tsample"] / 1000):
                     print("ERR ", sid)
                     ts_cpu.append(end)
@@ -695,7 +766,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         elif "sort" in name:
             ax1.xaxis.set_major_locator(plticker.MultipleLocator(base=Y_TICK_SORT))
         if TITLE:
-            plt.title(app_id + " " + str(config["Deadline"]) + " " + str(config["Control"]["Tsample"]) + " " + str(
+            plt.title(app_id + " " + str(config["Deadline"]) + " " + str(
+                config["Control"]["Tsample"]) + " " + str(
                 config["Control"]["Alpha"]) + " " + str(config["Control"]["K"]))
 
         ax1.set_zorder(ax2.get_zorder() + 1)
@@ -713,11 +785,19 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
 
 
 def find_first_ts_worker(app_id, workers_dict):
+    """
+    Find the first start ts of the stage PLOT_SID_STAGE of all the workers
+
+    :param app_id: the id of the application
+    :param workers_dict:  the dictionary data of the workers
+    :return: the timestamp of the first worker to start the PLOT_SID_STAGE
+    """
     first_ts_worker = float('inf')
     for worker_log in workers_dict:
         try:
             first_ts_worker = min(first_ts_worker,
-                                  workers_dict[worker_log][app_id][PLOT_SID_STAGE]["time"][0].timestamp())
+                                  workers_dict[worker_log][app_id][PLOT_SID_STAGE]["time"][
+                                      0].timestamp())
         except KeyError:
             None
     return first_ts_worker
@@ -754,8 +834,10 @@ def plot(folder):
         first_ts_worker = -1
         for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
             for app_id in app_info:
-                if first_ts_worker == -1: first_ts_worker = find_first_ts_worker(app_id, workers_dict)
-                plot_worker(app_id, app_info, worker_log, workers_dict[worker_log], config, first_ts_worker)
+                if first_ts_worker == -1: first_ts_worker = find_first_ts_worker(app_id,
+                                                                                 workers_dict)
+                plot_worker(app_id, app_info, worker_log, workers_dict[worker_log], config,
+                            first_ts_worker)
         for app_id in app_info:
             plot_overview_cpu(app_id, app_info, workers_dict, config, folder)
     else:

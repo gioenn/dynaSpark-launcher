@@ -53,7 +53,8 @@ def download_slave(i, output_folder, appid):
         worker_log = "" + SPARK_HOME + "logs/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-" + i.private_ip_address.replace(
             ".", "-") + ".out"
         print(worker_log)
-        ssh_client.run("screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
+        ssh_client.run(
+            "screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
         ssh_client.get_file(worker_log,
                             output_folder + "/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-" + i.private_ip_address + ".out")
         ssh_client.get_file("sar-" + i.private_ip_address + ".log",
@@ -73,7 +74,7 @@ def download_slave(i, output_folder, appid):
 @timing
 def download(logfolder, instances, master_dns, output_folder):
     # MASTER
-    print("Downloading log from Master: "+ master_dns)
+    print("Downloading log from Master: " + master_dns)
     master_instance = [i for i in instances if i.public_dns_name == master_dns][0]
     output_folder, appid = download_master(master_instance, output_folder, logfolder)
 

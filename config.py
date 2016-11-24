@@ -1,23 +1,29 @@
-import pprint
+"""
+
+"""
+
+# import pprint
 
 # AWS
-DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU", "price": "0.3"},
-            "us-west-2": {"ami": 'ami-7f5ff81f', "snapid": "snap-4f38bf1c", "az": 'us-west-2c', "keypair": "gazzetta",
+DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU",
+                          "price": "0.3"},
+            "us-west-2": {"ami": 'ami-7f5ff81f', "snapid": "snap-4f38bf1c", "az": 'us-west-2c',
+                          "keypair": "gazzetta",
                           "price": "0.4"}}
 
-CREDENTIAL_PROFILE = 'default'
+CREDENTIAL_PROFILE = 'matteo'
 REGION = "us-west-2"
 KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + DATA_AMI[REGION]["keypair"] + ".pem"
 SECURITY_GROUP = "spark-cluster"
 PRICE = DATA_AMI[REGION]["price"]
 INSTANCE_TYPE = "r3.4xlarge"
-NUMINSTANCE = 0
+NUMINSTANCE = 9
 EBS_OPTIMIZED = True if "r3" not in INSTANCE_TYPE else False
 REBOOT = 0
 KILL_JAVA = 1
 NUM_RUN = 1
 
-CLUSTER_ID = "0"
+CLUSTER_ID = "1"
 print("Cluster ID : " + str(CLUSTER_ID))
 TAG = [{
     "Key": "ClusterId",
@@ -25,7 +31,7 @@ TAG = [{
 }]
 
 # HDFS
-HDFS_MASTER = ""
+HDFS_MASTER = "ec2-35-160-124-233.us-west-2.compute.amazonaws.com"
 
 # Spark config
 SPARK_2 = "/opt/spark/"
@@ -57,8 +63,8 @@ if DISABLEHT:
     COREHTVM = COREVM
 
 # CONTROL
-ALPHA = 0.8
-DEADLINE = 304500
+ALPHA = 0.95
+DEADLINE = 239474
 # SVM
 # 0%  217500
 # 20% 261000
@@ -71,7 +77,7 @@ DEADLINE = 304500
 # 0%  209062
 # 20% 250874
 # 40% 284375
-MAXEXECUTOR = 14
+MAXEXECUTOR = 8
 OVERSCALE = 2
 K = 50
 TI = 12000
@@ -83,7 +89,7 @@ CPU_PERIOD = 100000
 # BENCHMARK
 RUN = 1
 SYNC_TIME = 1
-PREV_SCALE_FACTOR = 0
+PREV_SCALE_FACTOR = 1000
 BENCH_NUM_TRIALS = 1
 
 BENCHMARK_PERF = [
@@ -97,13 +103,14 @@ BENCHMARK_PERF = [
 ]
 
 BENCHMARK_BENCH = [
-    # "PageRank",
+    "PageRank",
     # "DecisionTree",
     # "KMeans",
     # "SVM"
 ]
 
-if len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) > 1 or len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) == 0:
+if len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) > 1 or len(BENCHMARK_PERF) + len(
+        BENCHMARK_BENCH) == 0:
     print("ERROR BENCHMARK SELECTION")
     exit(1)
 
@@ -173,7 +180,8 @@ else:
             INPUT_RECORD = BENCH_CONF[BENCHMARK_BENCH[0]]["NUM_OF_POINTS"][1]
         except KeyError:
             INPUT_RECORD = BENCH_CONF[BENCHMARK_BENCH[0]]["numV"][1]
-BENCH_CONF[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]["NumTrials"] = BENCH_NUM_TRIALS
+BENCH_CONF[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]][
+    "NumTrials"] = BENCH_NUM_TRIALS
 
 # Terminate istance after benchmark
 TERMINATE = 0
@@ -226,4 +234,4 @@ BENCH_LINES = {"scala-agg-by-key": ["226", "227"],
                "scala-count": ["243", "244"],
                "scala-count-w-fltr": ["246", "247"]}
 
-pprint.pprint(CONFIG_DICT)
+# pprint.pprint(CONFIG_DICT)
