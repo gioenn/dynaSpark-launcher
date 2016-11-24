@@ -1,0 +1,443 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>Plot Module &#8212; Spark Control Benchmark 0.0.1 documentation</title>
+
+    <link rel="stylesheet" href="_static/nature.css" type="text/css"/>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT: './',
+            VERSION: '0.0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE: true
+        };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html"/>
+    <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Spark Control Benchmark 0.0.1 documentation" href="index.html"/>
+    <link rel="next" title="Metrics Module" href="metrics.html"/>
+    <link rel="prev" title="Log Module" href="log.html"/>
+</head>
+<body role="document">
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="genindex.html" title="General Index"
+               accesskey="I">index</a></li>
+        <li class="right">
+            <a href="py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="right">
+            <a href="metrics.html" title="Metrics Module"
+               accesskey="N">next</a> |
+        </li>
+        <li class="right">
+            <a href="log.html" title="Log Module"
+               accesskey="P">previous</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+    </ul>
+</div>
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="bodywrapper">
+            <div class="body" role="main">
+
+                <div class="section" id="module-plot">
+                    <span id="plot-module"></span>
+                    <h1>Plot Module<a class="headerlink" href="#module-plot"
+                                      title="Permalink to this headline">¶</a></h1>
+                    <p>Plot module to generate figure from the log of the application and worker&#8217;s
+                        logs.</p>
+                    <dl class="docutils">
+                        <dt>This module can generate two type of figure: Overview, Worker. The
+                            Overview figure is the overview
+                        </dt>
+                        <dd>of the all application with the aggregated cpu metrics from the workers.
+                            The Worker figure is the
+                            detail of the execution of one worker in which each stage as its real
+                            progress and estimated progress
+                            including the allocation of cpu.
+                        </dd>
+                    </dl>
+                    <dl class="function">
+                        <dt id="plot.find_first_ts_worker">
+                            <code class="descclassname">plot.</code><code class="descname">find_first_ts_worker</code><span
+                                class="sig-paren">(</span><em>app_id</em>,
+                            <em>workers_dict</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/plot.html#find_first_ts_worker"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#plot.find_first_ts_worker"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Find the first start ts of the stage PLOT_SID_STAGE of all the
+                            workers</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>app_id</strong> &#8211; the id of the
+                                                application
+                                            </li>
+                                            <li><strong>workers_dict</strong> &#8211; the dictionary
+                                                data of the workers
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">the timestamp of
+                                        the first worker to start the PLOT_SID_STAGE</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="plot.load_app_data">
+                            <code class="descclassname">plot.</code><code class="descname">load_app_data</code><span
+                                class="sig-paren">(</span><em>app_log</em>, <em>hdfs</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/plot.html#load_app_data"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#plot.load_app_data"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Function that parse the application data like stage ids, start,
+                            deadline, end,
+                            tasktimestamps from the app_log</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>app_log</strong> &#8211; The log of the
+                                                application with log level INFO
+                                            </li>
+                                            <li><strong>hdfs</strong> &#8211; </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">app_info
+                                        dictionary</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="plot.load_config">
+                            <code class="descclassname">plot.</code><code class="descname">load_config</code><span
+                                class="sig-paren">(</span><em>folder</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/plot.html#load_config"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#plot.load_config"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Load the config from the folder if present otherwise load the config
+                            from config.py</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body"><strong>folder</strong> &#8211; the
+                                        folder path where find the config file
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body">the config dictionary</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="plot.load_worker_data">
+                            <code class="descclassname">plot.</code><code class="descname">load_worker_data</code><span
+                                class="sig-paren">(</span><em>worker_log</em>, <em>cpu_log</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/plot.html#load_worker_data"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#plot.load_worker_data"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Load the controller data from the worker_log and combine with the
+                            cpu_real data from cpu_log</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>worker_log</strong> &#8211; the path of the
+                                                log of the worker
+                                            </li>
+                                            <li><strong>cpu_log</strong> &#8211; the path of the cpu
+                                                monitoring tool log of the worker
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">worker_dict the
+                                        dictionary of the worker&#8217;s data</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="plot.plot_app_overview">
+                            <code class="descclassname">plot.</code><code class="descname">plot_app_overview</code><span
+                                class="sig-paren">(</span><em>app_id</em>, <em>app_dict</em>, <em>folder</em>,
+                            <em>config</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/plot.html#plot_app_overview"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#plot.plot_app_overview"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Plot only the application overview without the cpu data from the
+                            workers</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>app_id</strong> &#8211; the id of the
+                                                application
+                                            </li>
+                                            <li><strong>app_dict</strong> &#8211; the data
+                                                dictionary of the application
+                                            </li>
+                                            <li><strong>folder</strong> &#8211; the folder where to
+                                                save the output image
+                                            </li>
+                                            <li><strong>config</strong> &#8211; the config dict of
+                                                the application
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">nothing; save the
+                                        figure in the output folder</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="plot.plot_overview_cpu">
+                            <code class="descclassname">plot.</code><code class="descname">plot_overview_cpu</code><span
+                                class="sig-paren">(</span><em>app_id</em>, <em>app_info</em>, <em>workers_dict</em>,
+                            <em>config</em>, <em>folder</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/plot.html#plot_overview_cpu"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#plot.plot_overview_cpu"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Function that plot the overview of the application aggregating the
+                            cpu data from all
+                            the workers showing the application progress and the division by
+                            stage</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>app_id</strong> &#8211; the id of the
+                                                application
+                                            </li>
+                                            <li><strong>app_info</strong> &#8211; the data
+                                                dictionary of the application
+                                            </li>
+                                            <li><strong>workers_dict</strong> &#8211; the data
+                                                dictionary of the workers
+                                            </li>
+                                            <li><strong>config</strong> &#8211; the dictionary of
+                                                the config file
+                                            </li>
+                                            <li><strong>folder</strong> &#8211; the folder to output
+                                                the image
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">nothing only save
+                                        the figure at the end in the folder</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="plot.plot_worker">
+                            <code class="descclassname">plot.</code><code class="descname">plot_worker</code><span
+                                class="sig-paren">(</span><em>app_id</em>, <em>app_info</em>, <em>worker_log</em>,
+                            <em>worker_dict</em>, <em>config</em>, <em>first_ts_worker</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/plot.html#plot_worker"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#plot.plot_worker"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Plot the progress of each stage in the worker with the controller&#8217;s
+                            data</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>app_id</strong> &#8211; the id of the
+                                                application
+                                            </li>
+                                            <li><strong>app_info</strong> &#8211; the dictionary
+                                                with the application&#8217;s data
+                                            </li>
+                                            <li><strong>worker_log</strong> &#8211; the path of the
+                                                worker&#8217;s log file
+                                            </li>
+                                            <li><strong>worker_dict</strong> &#8211; the dictionary
+                                                with the worker&#8217;s data
+                                            </li>
+                                            <li><strong>config</strong> &#8211; the dictionary of
+                                                the config file
+                                            </li>
+                                            <li><strong>first_ts_worker</strong> &#8211; the first
+                                                start ts of PLOT_SID_STAGE
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">nothing; save the
+                                        figure in the output folder</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+    <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="log.html"
+                                  title="previous chapter">Log Module</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="metrics.html"
+                                  title="next chapter">Metrics Module</a></p>
+            <div role="note" aria-label="source link">
+                <h3>This Page</h3>
+                <ul class="this-page-menu">
+                    <li><a href="_sources/plot.txt"
+                           rel="nofollow">Show Source</a></li>
+                </ul>
+            </div>
+            <div id="searchbox" style="display: none" role="search">
+                <h3>Quick search</h3>
+                <form class="search" action="search.html" method="get">
+                    <div><input type="text" name="q"/></div>
+                    <div><input type="submit" value="Go"/></div>
+                    <input type="hidden" name="check_keywords" value="yes"/>
+                    <input type="hidden" name="area" value="default"/>
+                </form>
+            </div>
+            <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="genindex.html" title="General Index"
+            >index</a></li>
+        <li class="right">
+            <a href="py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="right">
+            <a href="metrics.html" title="Metrics Module"
+            >next</a> |
+        </li>
+        <li class="right">
+            <a href="log.html" title="Log Module"
+            >previous</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+    </ul>
+</div>
+<div class="footer" role="contentinfo">
+    &#169; Copyright 2016, Matteo Gazzetta.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+</div>
+</body>
+</html>

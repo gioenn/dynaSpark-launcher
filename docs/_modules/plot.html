@@ -1,0 +1,2399 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>plot &#8212; Spark Control Benchmark 0.0.1 documentation</title>
+
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css"/>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css"/>
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT: '../',
+            VERSION: '0.0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE: true
+        };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html"/>
+    <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Spark Control Benchmark 0.0.1 documentation" href="../index.html"/>
+    <link rel="up" title="Module code" href="index.html"/>
+</head>
+<body role="document">
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="../genindex.html" title="General Index"
+               accesskey="I">index</a></li>
+        <li class="right">
+            <a href="../py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+        <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;
+        </li>
+    </ul>
+</div>
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="bodywrapper">
+            <div class="body" role="main">
+
+                <h1>Source code for plot</h1>
+                <div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Plot module to generate figure from the log of the application and worker&#39;s logs.</span>
+
+<span class="sd">This module can generate two type of figure: Overview, Worker. The Overview figure is the overview</span>
+<span class="sd"> of the all application with the aggregated cpu metrics from the workers. The Worker figure is the</span>
+<span class="sd"> detail of the execution of one worker in which each stage as its real progress and estimated progress</span>
+<span class="sd"> including the allocation of cpu.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span
+                        class="n">datetime</span> <span class="k">as</span> <span
+                        class="n">dt</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span
+                        class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span
+                        class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">util.utils</span> <span class="k">import</span> <span
+                        class="n">timing</span><span class="p">,</span> <span class="n">string_to_datetime</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span
+                        class="p">(</span><span class="s1">&#39;PDF&#39;</span><span
+                        class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span
+                        class="k">as</span> <span class="nn">plticker</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span
+                        class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span
+                        class="n">COREVM</span><span class="p">,</span> <span
+                        class="n">COREHTVM</span>
+
+<span class="n">Y_TICK_AGG</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">Y_TICK_SORT</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">TITLE</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">PLOT_SID_STAGE</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PLOT_LABEL</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">LABEL_SIZE</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">TQ_MICRO</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">TQ_KMEANS</span> <span class="o">=</span> <span class="mi">9</span>
+<span class="n">PDF</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;axes.labelsize&#39;</span><span class="p">:</span> <span class="n">LABEL_SIZE</span><span
+                        class="p">,</span>  <span
+                        class="c1"># fontsize for x and y labels (was 10)</span>
+    <span class="s1">&#39;axes.titlesize&#39;</span><span class="p">:</span> <span
+                        class="mi">8</span><span class="p">,</span>
+    <span class="s1">&#39;font.size&#39;</span><span class="p">:</span> <span
+                        class="n">LABEL_SIZE</span><span class="p">,</span>  <span class="c1"># was 10</span>
+    <span class="s1">&#39;legend.fontsize&#39;</span><span class="p">:</span> <span
+                        class="mi">8</span><span class="p">,</span>  <span
+                        class="c1"># was 10</span>
+    <span class="s1">&#39;xtick.labelsize&#39;</span><span class="p">:</span> <span class="n">LABEL_SIZE</span><span
+                        class="p">,</span>
+    <span class="s1">&#39;ytick.labelsize&#39;</span><span class="p">:</span> <span class="n">LABEL_SIZE</span><span
+                        class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span
+                        class="o">.</span><span class="n">update</span><span class="p">(</span><span
+                        class="n">params</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="load_config"><a class="viewcode-back"
+                                                href="../plot.html#plot.load_config">[docs]</a><span
+        class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span
+        class="n">folder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load the config from the folder if present otherwise load the config from config.py</span>
+
+<span class="sd">    :param folder: the folder path where find the config file</span>
+<span class="sd">    :return: the config dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config_file</span> <span class="o">=</span> <span class="n">Path</span><span
+            class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span
+            class="s2">&quot;config.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config_file</span><span class="o">.</span><span
+            class="n">exists</span><span class="p">():</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span
+            class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span
+            class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span
+            class="s2">&quot;config.json&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">config</span><span class="p">)</span> <span class="o">==</span> <span
+            class="mi">0</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">csparkbench.config</span> <span class="k">import</span> <span
+            class="n">CONFIG_DICT</span>
+            <span class="k">return</span> <span class="n">CONFIG_DICT</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">config</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">csparkbench.config</span> <span class="k">import</span> <span
+            class="n">CONFIG_DICT</span>
+        <span class="k">return</span> <span class="n">CONFIG_DICT</span></div>
+
+
+<div class="viewcode-block" id="load_app_data"><a class="viewcode-back"
+                                                  href="../plot.html#plot.load_app_data">[docs]</a><span
+        class="k">def</span> <span class="nf">load_app_data</span><span class="p">(</span><span
+        class="n">app_log</span><span class="p">,</span> <span class="n">hdfs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that parse the application data like stage ids, start, deadline, end,</span>
+<span class="sd">    tasktimestamps from the app_log</span>
+
+<span class="sd">    :param app_log: The log of the application with log level INFO</span>
+<span class="sd">    :param hdfs:</span>
+<span class="sd">    :return: app_info dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading app data from log&quot;</span><span
+            class="p">)</span>
+    <span class="n">dict_to_plot</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">app_info</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">app_id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">app_log</span><span
+            class="p">)</span> <span class="k">as</span> <span class="n">applog</span><span
+            class="p">:</span>
+        <span class="n">stage_id</span> <span class="o">=</span> <span class="o">-</span><span
+            class="mi">1</span> <span class="k">if</span> <span class="n">hdfs</span> <span
+            class="k">else</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span
+            class="n">applog</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span
+            class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span
+            class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="mi">3</span> <span class="ow">and</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">3</span><span class="p">]</span> <span
+            class="o">==</span> <span class="s2">&quot;TaskSetManager:&quot;</span> <span
+            class="ow">and</span> <span class="n">line</span><span class="p">[</span><span
+            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Finished&quot;</span><span
+            class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="nb">int</span><span
+            class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
+            class="p">[</span><span class="mi">9</span><span class="p">]))][</span><span class="s2">&quot;tasktimestamps&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span>
+                        <span class="n">string_to_datetime</span><span class="p">(</span><span
+            class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">except</span> <span class="p">(</span><span
+            class="ne">KeyError</span><span class="p">,</span> <span
+            class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span
+            class="n">e</span><span class="p">:</span>
+                    <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="nb">int</span><span
+            class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
+            class="p">[</span><span class="mi">9</span><span class="p">]))][</span><span class="s2">&quot;tasktimestamps&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="nb">int</span><span
+            class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
+            class="p">[</span><span class="mi">9</span><span class="p">]))][</span><span class="s2">&quot;tasktimestamps&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span>
+                        <span class="n">string_to_datetime</span><span class="p">(</span><span
+            class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="mi">3</span> <span class="ow">and</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">3</span><span class="p">]</span> <span
+            class="o">==</span> <span
+            class="s2">&quot;StandaloneSchedulerBackend:&quot;</span> <span
+            class="ow">and</span> <span class="n">line</span><span class="p">[</span>
+                <span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span
+            class="s2">&quot;Connected&quot;</span><span class="p">:</span>
+                <span class="n">app_info</span><span class="p">[</span><span
+            class="n">line</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span
+            class="p">()]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">app_id</span> <span class="o">=</span> <span
+            class="n">line</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span
+            class="p">()</span>
+                <span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">]</span> <span class="o">=</span> <span
+            class="p">{}</span>
+                <span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;dealineTimeStages&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="mi">12</span> <span class="ow">and</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">3</span><span class="p">]</span> <span
+            class="o">==</span> <span class="s2">&quot;ControllerJob:&quot;</span><span
+            class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
+            class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;INIT&quot;</span><span
+            class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span
+            class="p">(</span><span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
+            class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span
+            class="p">(</span>
+                            <span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
+            class="p">]):</span>
+                        <span class="n">stage_id</span> <span class="o">=</span> <span class="nb">int</span><span
+            class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="mi">12</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span
+            class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">))</span>
+                        <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
+            class="s2">&quot;start&quot;</span><span class="p">]</span> <span
+            class="o">=</span> <span class="n">string_to_datetime</span><span
+            class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="mi">1</span><span class="p">])</span>
+                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span>
+                            <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
+            class="s2">&quot;start&quot;</span><span class="p">])</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;START: &quot;</span> <span
+            class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
+            class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]))</span>
+                        <span class="n">deadline_ms</span> <span class="o">=</span> <span
+            class="nb">float</span><span class="p">(</span><span class="n">line</span><span
+            class="p">[</span><span class="mi">16</span><span class="p">]</span><span
+            class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;,&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">deadline_ms</span><span
+            class="p">)</span>
+                        <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
+            class="s2">&quot;deadline&quot;</span><span class="p">]</span> <span class="o">=</span> \
+                            <span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
+            class="p">][</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span> \
+                            <span class="o">+</span> <span class="n">timedelta</span><span
+            class="p">(</span><span class="n">milliseconds</span><span class="o">=</span><span
+            class="n">deadline_ms</span><span class="p">)</span>
+                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="s2">&quot;dealineTimeStages&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
+            class="s2">&quot;deadline&quot;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
+            class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;NEEDED&quot;</span> <span
+            class="ow">and</span> <span class="n">line</span><span class="p">[</span><span
+            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;SEND&quot;</span><span
+            class="p">:</span>
+                    <span class="n">next_app_id</span> <span class="o">=</span> <span
+            class="n">line</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span
+            class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span
+            class="s2">&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">app_id</span> <span
+            class="o">!=</span> <span class="n">next_app_id</span><span class="p">:</span>
+                        <span class="n">app_id</span> <span class="o">=</span> <span class="n">next_app_id</span>
+                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="s2">&quot;dealineTimeStages&quot;</span><span class="p">]</span> <span
+            class="o">=</span> <span class="p">[]</span>
+                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="mi">3</span> <span class="ow">and</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">3</span><span class="p">]</span> <span
+            class="o">==</span> <span class="s2">&quot;DAGScheduler:&quot;</span><span
+            class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
+            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Submitting&quot;</span> <span
+            class="ow">and</span> <span class="n">line</span><span class="p">[</span><span
+            class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;missing&quot;</span><span
+            class="p">:</span>
+                    <span class="n">stage_id</span> <span class="o">=</span> <span
+            class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="mi">10</span><span class="p">])</span>
+                    <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
+            class="p">][</span><span class="s2">&quot;tasks&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span
+            class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="mi">5</span><span class="p">])</span>
+                    <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
+            class="p">][</span><span class="s2">&quot;start&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span
+            class="n">string_to_datetime</span><span class="p">(</span><span
+            class="n">line</span><span class="p">[</span><span class="mi">1</span><span
+            class="p">])</span>
+                <span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span
+            class="o">-</span><span class="mi">4</span><span class="p">]</span> <span
+            class="o">==</span> <span class="s2">&quot;finished&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">app_id</span> <span
+            class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                        <span class="n">stage_id</span> <span class="o">=</span> <span class="nb">int</span><span
+            class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="mi">5</span><span class="p">])</span>
+                        <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
+            class="s2">&quot;end&quot;</span><span class="p">]</span> <span class="o">=</span> <span
+            class="n">string_to_datetime</span><span class="p">(</span><span
+            class="n">line</span><span class="p">[</span><span class="mi">1</span><span
+            class="p">])</span>
+                        <span class="k">if</span> <span class="nb">len</span><span
+            class="p">(</span><span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
+            class="p">])</span> <span class="o">&gt;</span> <span class="nb">len</span><span
+            class="p">(</span>
+                                <span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
+            class="p">]):</span>
+                            <span class="n">dict_to_plot</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span>
+                                <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
+            class="p">][</span><span class="s2">&quot;end&quot;</span><span class="p">])</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;END: &quot;</span> <span
+            class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
+            class="p">][</span><span class="s2">&quot;end&quot;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">app_info</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_text_positions</span><span class="p">(</span><span
+                        class="n">x_data</span><span class="p">,</span> <span
+                        class="n">y_data</span><span class="p">,</span> <span
+                        class="n">txt_width</span><span class="p">,</span> <span class="n">txt_height</span><span
+                        class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span
+                        class="p">(</span><span class="nb">zip</span><span class="p">(</span><span
+                        class="n">y_data</span><span class="p">,</span> <span
+                        class="n">x_data</span><span class="p">))</span>
+    <span class="n">text_positions</span> <span class="o">=</span> <span
+                        class="n">y_data</span><span class="o">.</span><span
+                        class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span
+                        class="n">y</span><span class="p">,</span> <span class="n">x</span><span
+                        class="p">)</span> <span class="ow">in</span> <span
+                        class="nb">enumerate</span><span class="p">(</span><span
+                        class="n">a</span><span class="p">):</span>
+        <span class="n">local_text_positions</span> <span class="o">=</span> <span
+                        class="p">[</span><span class="n">i</span> <span class="k">for</span> <span
+                        class="n">i</span> <span class="ow">in</span> <span class="n">a</span> <span
+                        class="k">if</span> <span class="n">i</span><span class="p">[</span><span
+                        class="mi">0</span><span class="p">]</span> <span
+                        class="o">&gt;</span> <span class="p">(</span><span class="n">y</span> <span
+                        class="o">-</span> <span class="n">txt_height</span><span class="p">)</span>
+                                <span class="ow">and</span> <span class="p">(</span><span
+                        class="nb">abs</span><span class="p">(</span><span class="n">i</span><span
+                        class="p">[</span><span class="mi">1</span><span class="p">]</span> <span
+                        class="o">-</span> <span class="n">x</span><span class="p">)</span> <span
+                        class="o">&lt;</span> <span class="n">txt_width</span> <span
+                        class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span
+                        class="ow">and</span> <span class="n">i</span> <span
+                        class="o">!=</span> <span class="p">(</span><span class="n">y</span><span
+                        class="p">,</span> <span class="n">x</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">local_text_positions</span><span
+                        class="p">:</span>
+            <span class="n">sorted_ltp</span> <span class="o">=</span> <span
+                        class="nb">sorted</span><span class="p">(</span><span class="n">local_text_positions</span><span
+                        class="p">)</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span
+                        class="n">sorted_ltp</span><span class="p">[</span><span class="mi">0</span><span
+                        class="p">][</span><span class="mi">0</span><span class="p">]</span> <span
+                        class="o">-</span> <span class="n">y</span><span class="p">)</span> <span
+                        class="o">&lt;</span> <span class="n">txt_height</span><span
+                        class="p">:</span>  <span class="c1"># True == collision</span>
+                <span class="n">differ</span> <span class="o">=</span> <span
+                        class="n">np</span><span class="o">.</span><span class="n">diff</span><span
+                        class="p">(</span><span class="n">sorted_ltp</span><span class="p">,</span> <span
+                        class="n">axis</span><span class="o">=</span><span class="mi">0</span><span
+                        class="p">)</span>
+                <span class="n">a</span><span class="p">[</span><span class="n">index</span><span
+                        class="p">]</span> <span class="o">=</span> <span class="p">(</span><span
+                        class="n">sorted_ltp</span><span class="p">[</span><span
+                        class="o">-</span><span class="mi">1</span><span class="p">][</span><span
+                        class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span
+                        class="n">txt_height</span><span class="p">,</span> <span class="n">a</span><span
+                        class="p">[</span><span class="n">index</span><span class="p">][</span><span
+                        class="mi">1</span><span class="p">])</span>
+                <span class="n">text_positions</span><span class="p">[</span><span
+                        class="n">index</span><span class="p">]</span> <span
+                        class="o">=</span> <span class="n">sorted_ltp</span><span class="p">[</span><span
+                        class="o">-</span><span class="mi">1</span><span class="p">][</span><span
+                        class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span
+                        class="n">txt_height</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span
+                        class="p">(</span><span class="n">j</span><span class="p">,</span> <span
+                        class="n">m</span><span class="p">)</span> <span class="ow">in</span> <span
+                        class="nb">enumerate</span><span class="p">(</span><span
+                        class="n">differ</span><span class="p">):</span>
+                    <span class="c1"># j is the vertical distance between words</span>
+                    <span class="k">if</span> <span class="n">j</span> <span
+                        class="o">&gt;</span> <span class="n">txt_height</span> <span
+                        class="o">*</span> <span class="mi">2</span><span class="p">:</span>  <span
+                        class="c1"># if True then room to fit a word in</span>
+                        <span class="n">a</span><span class="p">[</span><span class="n">index</span><span
+                        class="p">]</span> <span class="o">=</span> <span class="p">(</span><span
+                        class="n">sorted_ltp</span><span class="p">[</span><span
+                        class="n">k</span><span class="p">][</span><span class="mi">0</span><span
+                        class="p">]</span> <span class="o">+</span> <span
+                        class="n">txt_height</span><span class="p">,</span> <span class="n">a</span><span
+                        class="p">[</span><span class="n">index</span><span class="p">][</span><span
+                        class="mi">1</span><span class="p">])</span>
+                        <span class="n">text_positions</span><span class="p">[</span><span
+                        class="n">index</span><span class="p">]</span> <span
+                        class="o">=</span> <span class="n">sorted_ltp</span><span class="p">[</span><span
+                        class="n">k</span><span class="p">][</span><span class="mi">0</span><span
+                        class="p">]</span> <span class="o">+</span> <span
+                        class="n">txt_height</span>
+                        <span class="k">break</span>
+    <span class="k">return</span> <span class="n">text_positions</span>
+
+
+<span class="k">def</span> <span class="nf">text_plotter</span><span class="p">(</span><span
+                        class="n">x_data</span><span class="p">,</span> <span
+                        class="n">y_data</span><span class="p">,</span> <span class="n">text_positions</span><span
+                        class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span
+                        class="n">txt_width</span><span class="p">,</span> <span class="n">txt_height</span><span
+                        class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span
+                        class="p">(</span><span class="n">x</span><span class="p">,</span> <span
+                        class="n">y</span><span class="p">,</span> <span class="n">t</span><span
+                        class="p">,</span> <span class="n">l</span><span class="p">)</span> <span
+                        class="ow">in</span> <span class="nb">enumerate</span><span
+                        class="p">(</span><span class="nb">zip</span><span class="p">(</span><span
+                        class="n">x_data</span><span class="p">,</span> <span
+                        class="n">y_data</span><span class="p">,</span> <span class="n">text_positions</span><span
+                        class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+                        class="n">x_data</span><span class="p">)</span> <span class="o">&gt;</span> <span
+                        class="mi">3</span><span class="p">:</span>
+            <span class="n">yt</span> <span class="o">=</span> <span class="mi">102</span> <span
+                        class="k">if</span> <span class="p">(</span><span class="n">i</span> <span
+                        class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span
+                        class="o">==</span> <span class="mi">1</span> <span
+                        class="k">else</span> <span class="mi">110</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">yt</span> <span class="o">=</span> <span class="mi">102</span>
+        <span class="n">axis</span><span class="o">.</span><span class="n">text</span><span
+                        class="p">(</span><span class="n">x</span><span class="p">,</span> <span
+                        class="n">yt</span><span class="p">,</span> <span class="n">l</span><span
+                        class="p">,</span> <span class="n">rotation</span><span
+                        class="o">=</span><span class="mi">0</span><span class="p">,</span> <span
+                        class="n">horizontalalignment</span><span class="o">=</span><span
+                        class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">size</span><span
+                        class="o">=</span><span class="n">LABEL_SIZE</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot_worker"><a class="viewcode-back"
+                                                href="../plot.html#plot.plot_worker">[docs]</a><span
+        class="k">def</span> <span class="nf">plot_worker</span><span class="p">(</span><span
+        class="n">app_id</span><span class="p">,</span> <span class="n">app_info</span><span
+        class="p">,</span> <span class="n">worker_log</span><span class="p">,</span> <span
+        class="n">worker_dict</span><span class="p">,</span> <span class="n">config</span><span
+        class="p">,</span> <span class="n">first_ts_worker</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the progress of each stage in the worker with the controller&#39;s data</span>
+
+<span class="sd">    :param app_id: the id of the application</span>
+<span class="sd">    :param app_info: the dictionary with the application&#39;s data</span>
+<span class="sd">    :param worker_log: the path of the worker&#39;s log file</span>
+<span class="sd">    :param worker_dict: the dictionary with the worker&#39;s data</span>
+<span class="sd">    :param config: the dictionary of the config file</span>
+<span class="sd">    :param first_ts_worker: the first start ts of PLOT_SID_STAGE</span>
+<span class="sd">    :return: nothing; save the figure in the output folder</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span
+            class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span
+            class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span
+            class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span
+            class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cpus</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">label_to_plot</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ts_to_plot</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sorted_sid</span> <span class="o">=</span> <span class="nb">sorted</span><span
+            class="p">(</span><span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;HDFS&quot;</span><span
+            class="p">]:</span>
+        <span class="n">sorted_sid</span><span class="o">.</span><span class="n">remove</span><span
+            class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="n">sorted_sid</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">start_ts</span> <span class="o">=</span> <span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;start&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts_worker</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span
+            class="p">(</span><span class="n">start_ts</span><span class="p">,</span> <span
+            class="n">ymin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span
+            class="n">ymax</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span> <span
+            class="n">color</span><span class="o">=</span><span
+            class="s2">&quot;green&quot;</span><span class="p">,</span> <span
+            class="n">zorder</span><span class="o">=</span><span class="mi">100</span><span
+            class="p">)</span>
+            <span class="c1"># try:</span>
+            <span class="c1">#     label_to_plot[tq_ts].append(&quot;S&quot; + str(sid))</span>
+            <span class="c1"># except KeyError:</span>
+            <span class="c1">#     label_to_plot[tq_ts] = []</span>
+            <span class="c1">#     label_to_plot[tq_ts].append(&quot;S&quot; + str(sid))</span>
+            <span class="c1"># ax1.text(start_ts, 105, &quot;S&quot; + str(sid), style=&quot;italic&quot;, weight=&quot;bold&quot;,</span>
+            <span class="c1"># horizontalalignment=&#39;center&#39;)</span>
+            <span class="n">end_ts</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;end&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts_worker</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span
+            class="p">(</span><span class="n">end_ts</span><span class="p">,</span> <span class="n">color</span><span
+            class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">label_to_plot</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span
+            class="s2">&quot;E&quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">sid</span><span class="p">))</span>
+            <span class="n">ts_to_plot</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">end_ts</span><span
+            class="p">)</span>
+            <span class="c1"># ax1.text(end_ts, -0.035, &quot;E&quot;+str(sid), style=&quot;italic&quot;, weight=&quot;bold&quot;,</span>
+            <span class="c1"># horizontalalignment=&#39;center&#39;)</span>
+            <span class="n">dead_ts</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;deadline&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts_worker</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span
+            class="p">(</span><span class="n">dead_ts</span><span class="p">,</span> <span
+            class="n">color</span><span class="o">=</span><span
+            class="s2">&quot;green&quot;</span><span class="p">,</span> <span
+            class="n">linestyle</span><span class="o">=</span><span
+            class="s1">&#39;--&#39;</span><span class="p">)</span>
+            <span class="c1"># try:</span>
+            <span class="c1">#     label_to_plot[tq_ts].append(&quot;D&quot; + str(sid))</span>
+            <span class="c1"># except KeyError:</span>
+            <span class="c1">#     label_to_plot[tq_ts] = []</span>
+            <span class="c1">#     label_to_plot[tq_ts].append(&quot;D&quot; + str(sid))</span>
+            <span class="c1"># ax1.text(dead_ts, 101, &quot;D&quot; + str(sid), style=&quot;italic&quot;, weight=&quot;bold&quot;,</span>
+            <span class="c1"># horizontalalignment=&#39;center&#39;)</span>
+            <span class="n">time_sp</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">t</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span
+            class="n">first_ts_worker</span> <span class="k">for</span> <span
+            class="n">t</span> <span class="ow">in</span> <span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]]</span>
+            <span class="n">time_sp_real</span> <span class="o">=</span> <span
+            class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span
+            class="n">first_ts_worker</span> <span class="k">for</span> <span
+            class="n">t</span> <span class="ow">in</span>
+                            <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]]</span>
+            <span class="n">sp_real</span> <span class="o">=</span> <span
+            class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span
+            class="p">]</span>
+            <span class="n">sp</span> <span class="o">=</span> <span
+            class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp&quot;</span><span
+            class="p">]</span>
+            <span class="k">if</span> <span class="n">sp</span><span class="p">[</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
+            class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">time_sp</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">dead_ts</span><span
+            class="p">)</span>
+                <span class="n">sp</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sp_real</span><span class="p">[</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
+            class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">next_time</span> <span class="o">=</span> <span class="n">time_sp_real</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">+</span> <span class="p">(</span><span
+            class="nb">int</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
+            class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">next_time</span> <span
+            class="o">&lt;=</span> <span class="n">end_ts</span><span class="p">:</span>
+                    <span class="n">time_sp_real</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">next_time</span><span class="p">)</span>
+                    <span class="n">sp_real</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span
+            class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">time_sp_real</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">end_ts</span><span class="p">)</span>
+                    <span class="n">sp_real</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span
+            class="p">)</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">x</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span
+            class="n">x</span> <span class="ow">in</span> <span class="n">sp</span><span
+            class="p">]</span>
+            <span class="n">sp_real</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">y</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span
+            class="n">y</span> <span class="ow">in</span> <span class="n">sp_real</span><span
+            class="p">]</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span
+            class="p">(</span><span class="n">time_sp</span><span class="p">,</span> <span
+            class="n">sp</span><span class="p">,</span> <span
+            class="s2">&quot;gray&quot;</span><span class="p">,</span> <span
+            class="n">label</span><span class="o">=</span><span class="s1">&#39;PROGRESS&#39;</span><span
+            class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span
+            class="mi">2</span><span class="p">)</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span
+            class="p">(</span><span class="n">time_sp_real</span><span class="p">,</span> <span
+            class="n">sp_real</span><span class="p">,</span> <span
+            class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">label</span><span
+            class="o">=</span><span class="s1">&#39;PROGRESS REAL&#39;</span><span
+            class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span
+            class="mi">2</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span
+            class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span
+            class="s2">&quot;SID &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">sid</span><span
+            class="p">)</span> <span class="o">+</span> <span class="s2">&quot; not executed by &quot;</span> <span
+            class="o">+</span> <span class="n">worker_log</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">PLOT_LABEL</span><span class="p">:</span>
+        <span class="c1"># set the bbox for the text. Increase txt_width for wider text.</span>
+        <span class="n">txt_height</span> <span class="o">=</span> <span class="mf">0.2</span> <span
+            class="o">*</span> <span class="p">(</span><span class="n">plt</span><span
+            class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">-</span> <span class="n">plt</span><span
+            class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span class="mi">0</span><span
+            class="p">])</span>
+        <span class="n">txt_width</span> <span class="o">=</span> <span class="mf">0.2</span> <span
+            class="o">*</span> <span class="p">(</span><span class="n">plt</span><span
+            class="o">.</span><span class="n">xlim</span><span class="p">()[</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">-</span> <span class="n">plt</span><span
+            class="o">.</span><span class="n">xlim</span><span class="p">()[</span><span class="mi">0</span><span
+            class="p">])</span>
+        <span class="c1"># Get the corrected text positions, then write the text.</span>
+        <span class="n">y_label</span> <span class="o">=</span> <span class="n">np</span><span
+            class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span
+            class="p">(</span><span class="n">label_to_plot</span><span class="p">),</span> <span
+            class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span
+            class="mi">1</span><span class="p">])</span>
+        <span class="n">text_positions</span> <span class="o">=</span> <span class="n">get_text_positions</span><span
+            class="p">(</span><span class="n">ts_to_plot</span><span class="p">,</span>
+                                            <span class="n">y_label</span><span
+            class="p">,</span> <span class="n">txt_width</span><span class="p">,</span> <span
+            class="n">txt_height</span><span class="p">)</span>
+        <span class="n">text_plotter</span><span class="p">(</span><span class="n">ts_to_plot</span><span
+            class="p">,</span> <span class="n">y_label</span><span class="p">,</span>
+                     <span class="n">text_positions</span><span class="p">,</span> <span class="n">ax1</span><span
+            class="p">,</span> <span class="n">txt_width</span><span class="p">,</span> <span
+            class="n">txt_height</span><span class="p">,</span> <span class="n">label_to_plot</span><span
+            class="p">)</span>
+
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span
+            class="p">(</span><span class="s1">&#39;Time [s]&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span
+            class="p">(</span><span class="s1">&#39;Stage Progress [%]&#39;</span><span
+            class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">spines</span><span
+            class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span
+            class="kc">False</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">spines</span><span
+            class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span
+            class="kc">False</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">get_xaxis</span><span
+            class="p">()</span><span class="o">.</span><span class="n">tick_bottom</span><span
+            class="p">()</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">get_yaxis</span><span
+            class="p">()</span><span class="o">.</span><span class="n">tick_left</span><span
+            class="p">()</span>
+
+    <span class="n">xlim</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlim</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xlim</span><span
+            class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span
+            class="p">)</span>
+
+    <span class="n">folder_split</span> <span class="o">=</span> <span
+            class="n">worker_log</span><span class="o">.</span><span class="n">split</span><span
+            class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">folder_split</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">3</span><span
+            class="p">]</span><span class="o">.</span><span class="n">lower</span><span
+            class="p">()</span> <span class="o">+</span> <span
+            class="s2">&quot;-worker-&quot;</span> <span class="o">+</span> <span class="n">folder_split</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">2</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;%&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span
+            class="s2">&quot;-&quot;</span> <span class="o">+</span> \
+           <span class="n">folder_split</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">]</span><span class="o">.</span><span
+            class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span
+            class="p">)[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;.out&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;agg&quot;</span> <span
+            class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span
+            class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
+            class="n">plticker</span><span class="o">.</span><span
+            class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
+            class="o">=</span><span class="n">Y_TICK_AGG</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="s2">&quot;sort&quot;</span> <span class="ow">in</span> <span
+            class="n">name</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span
+            class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
+            class="n">plticker</span><span class="o">.</span><span
+            class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
+            class="o">=</span><span class="n">Y_TICK_SORT</span><span class="p">))</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">yaxis</span><span
+            class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
+            class="n">plticker</span><span class="o">.</span><span
+            class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
+            class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+    <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="n">sorted_sid</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">t</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span
+            class="n">first_ts_worker</span> <span class="k">for</span> <span
+            class="n">t</span> <span class="ow">in</span> <span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]]</span>
+            <span class="n">times</span> <span class="o">+=</span> <span class="n">time</span>
+            <span class="n">cpus</span> <span class="o">+=</span> <span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]</span>
+
+            <span class="n">end_ts</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;end&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts_worker</span>
+            <span class="n">dead_ts</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;deadline&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts_worker</span>
+            <span class="k">if</span> <span class="n">sid</span> <span class="o">==</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">])[</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
+            class="ow">and</span> <span class="n">end_ts</span> <span class="o">&lt;</span> <span
+            class="n">dead_ts</span><span class="p">:</span>
+                <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">dead_ts</span><span
+            class="p">)</span>
+                <span class="n">cpus</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">cpus</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span
+            class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">next_time</span> <span class="o">=</span> <span
+            class="n">time</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span
+            class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
+            class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">next_time</span> <span
+            class="o">&lt;=</span> <span class="n">end_ts</span><span class="p">:</span>
+                    <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">next_time</span><span
+            class="p">)</span>
+                    <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">end_ts</span><span
+            class="p">)</span>
+                <span class="n">cpus</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span
+            class="p">)</span>
+                <span class="n">index_next</span> <span class="o">=</span> <span
+            class="nb">min</span><span class="p">(</span><span class="nb">sorted</span><span
+            class="p">(</span><span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">])</span><span class="o">.</span><span class="n">index</span><span
+            class="p">(</span><span class="n">sid</span><span class="p">)</span> <span
+            class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span
+            class="p">(</span><span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">])</span> <span class="o">-</span> <span
+            class="mi">1</span><span class="p">)</span>
+                <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span>
+                    <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="nb">sorted</span><span
+            class="p">(</span><span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">])[</span><span class="n">index_next</span><span
+            class="p">]][</span>
+                        <span class="s2">&quot;start&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span
+            class="o">-</span> <span class="n">first_ts_worker</span><span class="p">)</span>
+                <span class="n">cpus</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span
+            class="p">)</span>
+                <span class="c1"># start_index = worker_dict[&quot;time_cpu&quot;].index(worker_dict[app_id][sid][&quot;time&quot;][0])</span>
+                <span class="c1"># end_index = worker_dict[&quot;time_cpu&quot;].index(worker_dict[app_id][sid][&quot;time&quot;][-1])</span>
+                <span class="c1">#</span>
+                <span class="c1"># time_cpu = [t.timestamp() - first_ts_worker for t in worker_dict[&quot;time_cpu&quot;]</span>
+                <span class="c1"># [start_index:end_index]]</span>
+                <span class="c1"># ax2.plot(time_cpu,</span>
+                <span class="c1">#          worker_dict[&quot;cpu_real&quot;][start_index:end_index], &quot;.g-&quot;,</span>
+                <span class="c1">#          label=&#39;CPU REAL&#39;)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span
+            class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span
+            class="s2">&quot;SID &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">sid</span><span
+            class="p">)</span> <span class="o">+</span> <span class="s2">&quot; not executed by &quot;</span> <span
+            class="o">+</span> <span class="n">worker_log</span><span class="p">)</span>
+
+    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span
+            class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">cpus</span><span
+            class="p">,</span> <span class="s2">&quot;.b-&quot;</span><span class="p">,</span> <span
+            class="n">label</span><span class="o">=</span><span class="s1">&#39;CPU&#39;</span><span
+            class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">fill_between</span><span
+            class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="mf">0.0</span><span
+            class="p">,</span> <span class="n">cpus</span><span class="p">,</span> <span class="n">facecolor</span><span
+            class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span
+            class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span
+            class="p">)</span>
+    <span class="c1"># handles_ax1, labels_ax1 = ax1.get_legend_handles_labels()</span>
+    <span class="c1"># handles_ax2, labels_ax2 = ax2.get_legend_handles_labels()</span>
+    <span class="c1"># handles = handles_ax1[:2] + handles_ax2[:2]</span>
+    <span class="c1"># labels = labels_ax1[:2] + labels_ax2[:2]</span>
+    <span class="c1"># plt.legend(handles, labels, loc=&#39;best&#39;, prop={&#39;size&#39;: 6})</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span
+            class="p">(</span><span class="s1">&#39;Core [#]&#39;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span
+            class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">COREVM</span><span
+            class="p">)</span>
+    <span class="n">xlim</span> <span class="o">=</span> <span class="n">ax2</span><span
+            class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xlim</span><span
+            class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c1"># labels = ax1.get_xticklabels()</span>
+    <span class="c1"># plt.setp(labels, rotation=90, fontsize=10)</span>
+
+    <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span
+            class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
+            class="n">plticker</span><span class="o">.</span><span
+            class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
+            class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
+    <span class="c1"># locator = mpdate.SecondLocator(interval=SECONDLOCATOR)</span>
+    <span class="c1"># plt.gca().xaxis.set_major_locator(locator)</span>
+    <span class="c1"># plt.gca().xaxis.set_major_formatter(mpdate.DateFormatter(STRPTIME_FORMAT))</span>
+    <span class="c1"># plt.gcf().autofmt_xdate()</span>
+    <span class="k">if</span> <span class="n">TITLE</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span
+            class="p">(</span>
+            <span class="n">app_id</span> <span class="o">+</span> <span
+            class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span class="p">])</span> <span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
+            class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
+            class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;K&quot;</span><span class="p">]))</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_zorder</span><span
+            class="p">(</span><span class="n">ax2</span><span class="o">.</span><span class="n">get_zorder</span><span
+            class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span
+            class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">patch</span><span
+            class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span
+            class="kc">False</span><span class="p">)</span>
+    <span class="n">folder_split</span> <span class="o">=</span> <span
+            class="n">worker_log</span><span class="o">.</span><span class="n">split</span><span
+            class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">folder_split</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">3</span><span
+            class="p">]</span><span class="o">.</span><span class="n">lower</span><span
+            class="p">()</span> <span class="o">+</span> <span
+            class="s2">&quot;-worker-&quot;</span> <span class="o">+</span> <span class="n">folder_split</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">2</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;%&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span
+            class="s2">&quot;-&quot;</span> <span class="o">+</span> \
+           <span class="n">folder_split</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">]</span><span class="o">.</span><span
+            class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span
+            class="p">)[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;.out&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">folder</span> <span class="o">=</span> <span
+            class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span
+            class="p">(</span><span class="n">worker_log</span><span class="o">.</span><span
+            class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span
+            class="se">\\</span><span class="s2">&quot;</span><span class="p">)[:</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">get_xticklabels</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span
+            class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">rotation</span><span
+            class="o">=</span><span class="mi">45</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">PDF</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span
+            class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span
+            class="s2">&quot;/&quot;</span> <span class="o">+</span> <span
+            class="n">name</span> <span class="o">+</span> <span
+            class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span
+            class="n">bbox_inches</span><span class="o">=</span><span
+            class="s1">&#39;tight&#39;</span><span class="p">,</span> <span
+            class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span
+            class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span
+            class="s2">&quot;/&quot;</span> <span class="o">+</span> <span
+            class="n">name</span> <span class="o">+</span> <span
+            class="s1">&#39;.png&#39;</span><span class="p">,</span> <span
+            class="n">bbox_inches</span><span class="o">=</span><span
+            class="s1">&#39;tight&#39;</span><span class="p">,</span> <span
+            class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span
+            class="p">()</span></div>
+
+
+<div class="viewcode-block" id="plot_app_overview"><a class="viewcode-back"
+                                                      href="../plot.html#plot.plot_app_overview">[docs]</a><span
+        class="k">def</span> <span class="nf">plot_app_overview</span><span class="p">(</span><span
+        class="n">app_id</span><span class="p">,</span> <span class="n">app_dict</span><span
+        class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">config</span><span
+        class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot only the application overview without the cpu data from the workers</span>
+
+<span class="sd">    :param app_id: the id of the application</span>
+<span class="sd">    :param app_dict: the data dictionary of the application</span>
+<span class="sd">    :param folder: the folder where to save the output image</span>
+<span class="sd">    :param config: the config dict of the application</span>
+<span class="sd">    :return: nothing; save the figure in the output folder</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Plotting APP Overview&quot;</span><span
+            class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">app_dict</span><span
+            class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">timestamps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">app_deadline</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">first_ts</span> <span class="o">=</span> <span
+            class="n">app_dict</span><span class="p">[</span><span
+            class="n">PLOT_SID_STAGE</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">app_dict</span><span
+            class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">app_deadline</span> <span class="o">=</span> <span class="n">app_dict</span><span
+            class="p">[</span><span class="n">PLOT_SID_STAGE</span><span class="p">][</span><span
+            class="s2">&quot;start&quot;</span><span class="p">]</span> <span
+            class="o">+</span> <span class="n">timedelta</span><span class="p">(</span>
+                    <span class="n">milliseconds</span><span class="o">=</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span class="p">])</span>
+                <span class="n">app_deadline</span> <span class="o">=</span> <span class="n">app_deadline</span><span
+            class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span
+            class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">timestamp</span> <span
+            class="ow">in</span> <span class="n">app_dict</span><span class="p">[</span><span
+            class="n">sid</span><span class="p">][</span><span
+            class="s2">&quot;tasktimestamps&quot;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">first_ts</span> <span
+            class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">timestamps</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                        <span class="n">first_ts</span> <span class="o">=</span> <span class="n">timestamp</span><span
+            class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">timestamps</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">timestamp</span><span class="o">.</span><span
+            class="n">timestamp</span><span class="p">()</span> <span class="o">-</span> <span
+            class="n">first_ts</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span
+            class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">==</span> <span
+            class="mi">0</span><span class="p">:</span>
+                        <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">times</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span
+            class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="kc">None</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span
+            class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span
+            class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span
+            class="mi">16</span><span class="p">,</span> <span class="mi">9</span><span
+            class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+        <span class="c1"># PLOT NORMALIZED TASK PROGRESS</span>
+        <span class="n">min_times</span> <span class="o">=</span> <span class="nb">min</span><span
+            class="p">(</span><span class="n">times</span><span class="p">)</span>
+        <span class="n">max_times</span> <span class="o">=</span> <span class="nb">max</span><span
+            class="p">(</span><span class="n">times</span><span class="p">)</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="p">[(</span><span
+            class="n">z</span> <span class="o">-</span> <span class="n">min_times</span><span
+            class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_times</span> <span
+            class="o">-</span> <span class="n">min_times</span><span class="p">)</span> <span
+            class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span
+            class="n">z</span> <span class="ow">in</span> <span class="n">times</span><span
+            class="p">]</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span
+            class="p">(</span><span class="n">timestamps</span><span class="p">,</span> <span
+            class="n">normalized</span><span class="p">,</span> <span
+            class="s2">&quot;.k-&quot;</span><span class="p">)</span>
+        <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span
+            class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">get_ylim</span><span
+            class="p">()</span>
+        <span class="c1"># PLOT DEADLINE</span>
+        <span class="n">app_dead_ts</span> <span class="o">=</span> <span
+            class="n">app_deadline</span><span class="o">.</span><span
+            class="n">timestamp</span><span class="p">()</span> <span class="o">-</span> <span
+            class="n">first_ts</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span
+            class="p">(</span><span class="n">app_dead_ts</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">text</span><span
+            class="p">(</span><span class="n">app_dead_ts</span><span class="p">,</span> <span
+            class="n">ymax</span> <span class="o">+</span> <span class="mf">0.5</span><span
+            class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span
+            class="n">weight</span><span class="o">=</span><span
+            class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">horizontalalignment</span><span
+            class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+        <span class="c1"># PLOT ALPHA DEADLINE</span>
+        <span class="n">app_alpha_deadline</span> <span class="o">=</span> <span class="n">app_deadline</span> <span
+            class="o">-</span> <span class="n">timedelta</span><span class="p">(</span>
+            <span class="n">milliseconds</span><span class="o">=</span><span
+            class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">float</span><span
+            class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
+            class="p">]))</span> <span class="o">*</span> <span class="nb">float</span><span
+            class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span
+            class="p">])))</span>
+        <span class="n">app_alpha_deadline_ts</span> <span class="o">=</span> <span class="n">app_alpha_deadline</span><span
+            class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span
+            class="o">-</span> <span class="n">first_ts</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span
+            class="p">(</span><span class="n">app_alpha_deadline_ts</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">text</span><span
+            class="p">(</span><span class="n">app_alpha_deadline_ts</span><span
+            class="p">,</span> <span class="n">ymax</span> <span class="o">+</span> <span
+            class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;AD&#39;</span><span
+            class="p">,</span> <span class="n">weight</span><span class="o">=</span><span
+            class="s2">&quot;bold&quot;</span><span class="p">,</span>
+                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span
+            class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span
+            class="p">(</span><span class="s1">&#39;Time [s]&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span
+            class="p">(</span><span class="s1">&#39;App Progress [%]&#39;</span><span
+            class="p">)</span>
+
+        <span class="c1"># PLOT VERTICAL LINES DEAD, START, END</span>
+        <span class="n">sorted_sid</span> <span class="o">=</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">app_dict</span><span
+            class="p">)</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="n">sorted_sid</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">start_ts</span> <span class="o">=</span> <span
+            class="n">app_dict</span><span class="p">[</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;start&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="c1"># ax1.axvline(start_ts, color=&quot;black&quot;)</span>
+                <span class="c1"># try:</span>
+                <span class="c1">#     s_y = normalized[timestamps.index(start_ts)]</span>
+                <span class="c1"># except ValueError:</span>
+                <span class="c1">#     s_y = start_ts</span>
+                <span class="c1"># ax1.text(start_ts + 3, s_y - 2, &#39;S&#39; + str(sid), style=&quot;italic&quot;,weight=&quot;bold&quot;,</span>
+                <span class="c1"># horizontalalignment=&#39;center&#39;)</span>
+                <span class="n">end</span> <span class="o">=</span> <span
+            class="n">app_dict</span><span class="p">[</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;end&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+                <span class="n">end_ts</span> <span class="o">=</span> <span
+            class="n">end</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="c1">#</span>
+                <span class="n">ax1</span><span class="o">.</span><span
+            class="n">axvline</span><span class="p">(</span><span class="n">end_ts</span><span
+            class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span
+            class="p">)</span>
+                <span class="c1"># try:</span>
+                <span class="c1">#     index_t = timestamps.index(end_ts)</span>
+                <span class="c1"># except ValueError:</span>
+                <span class="c1">#     index_t = min(range(len(timestamps)), key=lambda i:</span>
+                <span class="c1"># abs(timestamps[i] - end_ts))</span>
+                <span class="c1"># e_y = normalized[index_t]</span>
+                <span class="c1"># ax1.text(end_ts, ymin - 3.5, &#39;E&#39; + str(sid), style=&quot;italic&quot;, weight=&quot;bold&quot;,</span>
+                <span class="c1"># horizontalalignment=&#39;center&#39;, verticalalignment=&#39;bottom&#39;)</span>
+                <span class="n">int_dead</span> <span class="o">=</span> <span
+            class="n">app_dict</span><span class="p">[</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;deadline&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span>
+                <span class="n">dead_ts</span> <span class="o">=</span> <span
+            class="n">int_dead</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="k">if</span> <span class="n">sid</span> <span class="o">==</span> <span
+            class="n">sorted_sid</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">start_ts</span> <span
+            class="o">&lt;</span> <span class="n">app_alpha_deadline_ts</span><span
+            class="p">:</span>
+                    <span class="n">dead_ts</span> <span class="o">=</span> <span class="n">app_alpha_deadline_ts</span>
+                <span class="c1"># print(dead_ts)</span>
+                <span class="n">ax1</span><span class="o">.</span><span
+            class="n">axvline</span><span class="p">(</span><span class="n">dead_ts</span><span
+            class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span
+            class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span
+            class="s1">&#39;--&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">TITLE</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span
+            class="p">(</span><span class="n">app_id</span> <span class="o">+</span> <span
+            class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span class="p">])</span> <span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
+            class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
+            class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;K&quot;</span><span class="p">]))</span>
+        <span class="n">folder_split</span> <span class="o">=</span> <span
+            class="n">folder</span><span class="o">.</span><span class="n">split</span><span
+            class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span
+            class="n">folder_split</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">4</span><span class="p">]</span><span class="o">.</span><span
+            class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span
+            class="s2">&quot;-overview-&quot;</span> <span class="o">+</span> <span class="n">folder_split</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">3</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;%&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">get_xticklabels</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span
+            class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">rotation</span><span
+            class="o">=</span><span class="mi">45</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">PDF</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span
+            class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span
+            class="n">name</span> <span class="o">+</span> <span
+            class="s2">&quot;.png&quot;</span><span class="p">,</span> <span
+            class="n">bbox_inches</span><span class="o">=</span><span
+            class="s1">&#39;tight&#39;</span><span class="p">,</span> <span
+            class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span
+            class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span
+            class="n">name</span> <span class="o">+</span> <span
+            class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span
+            class="n">bbox_inches</span><span class="o">=</span><span
+            class="s1">&#39;tight&#39;</span><span class="p">,</span> <span
+            class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span
+            class="p">()</span></div>
+
+
+<div class="viewcode-block" id="load_worker_data"><a class="viewcode-back"
+                                                     href="../plot.html#plot.load_worker_data">[docs]</a><span
+        class="k">def</span> <span class="nf">load_worker_data</span><span class="p">(</span><span
+        class="n">worker_log</span><span class="p">,</span> <span class="n">cpu_log</span><span
+        class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load the controller data from the worker_log and combine with the cpu_real data from cpu_log</span>
+
+<span class="sd">    :param worker_log: the path of the log of the worker</span>
+<span class="sd">    :param cpu_log:  the path of the cpu monitoring tool log of the worker</span>
+<span class="sd">    :return: worker_dict the dictionary of the worker&#39;s  data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">worker_log</span><span
+            class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">cpu_log</span><span
+            class="p">)</span>
+    <span class="n">worker_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">worker_log</span><span
+            class="p">)</span> <span class="k">as</span> <span class="n">wlog</span><span class="p">:</span>
+        <span class="n">app_id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">worker_dict</span><span class="p">[</span><span class="s2">&quot;cpu_real&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">worker_dict</span><span class="p">[</span><span class="s2">&quot;time_cpu&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sid</span> <span class="o">=</span> <span class="o">-</span><span
+            class="mi">1</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span
+            class="n">wlog</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span
+            class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span
+            class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="mi">3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
+            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Created&quot;</span> <span
+            class="ow">and</span> <span class="n">app_id</span> <span class="o">!=</span> <span
+            class="s2">&quot;&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">sid</span> <span
+            class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span
+            class="p">[</span><span class="mi">8</span><span class="p">]):</span>
+                        <span class="n">sid</span> <span class="o">=</span> <span
+            class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="mi">8</span><span class="p">])</span>
+                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">]</span> <span
+            class="o">=</span> <span class="p">{}</span>
+                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;cpu&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;time&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp&quot;</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span
+            class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">]</span><span
+            class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span
+            class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">string_to_datetime</span><span
+            class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="mi">1</span><span class="p">]))</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;sp&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span
+            class="p">)</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
+            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Scaled&quot;</span><span
+            class="p">:</span>
+                    <span class="c1"># print(l)</span>
+                    <span class="k">if</span> <span class="n">app_id</span> <span
+            class="o">==</span> <span class="s2">&quot;&quot;</span> <span
+            class="ow">or</span> <span class="n">app_id</span> <span class="o">!=</span> <span
+            class="n">line</span><span class="p">[</span><span class="mi">10</span><span class="p">]:</span>
+                        <span class="n">next_app_id</span> <span class="o">=</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">10</span><span class="p">]</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">next_app_id</span><span class="p">]</span> <span class="o">=</span> <span
+            class="p">{}</span>
+                            <span class="n">app_id</span> <span class="o">=</span> <span class="n">next_app_id</span>
+                        <span class="k">except</span> <span class="ne">KeyError</span><span
+            class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="n">next_app_id</span> <span
+            class="o">+</span> <span
+            class="s2">&quot; NOT FOUND BEFORE IN BENCHMARK LOGS&quot;</span><span
+            class="p">)</span>
+                <span class="k">if</span> <span class="n">app_id</span> <span
+            class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">4</span><span class="p">]</span> <span
+            class="o">==</span> <span class="s2">&quot;CoreToAllocate:&quot;</span><span
+            class="p">:</span>
+                        <span class="c1"># print(l)</span>
+                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;cpu&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span
+            class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                    <span class="k">if</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">4</span><span class="p">]</span> <span
+            class="o">==</span> <span class="s2">&quot;Real:&quot;</span><span class="p">:</span>
+                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span>
+                            <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span
+            class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                    <span class="k">if</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">4</span><span class="p">]</span> <span
+            class="o">==</span> <span class="s2">&quot;SP&quot;</span><span class="p">:</span>
+                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;time&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">string_to_datetime</span><span class="p">(</span><span
+            class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                        <span class="c1"># print(l[-1].replace(&quot;\n&quot;, &quot;&quot;))</span>
+                        <span class="n">progress</span> <span class="o">=</span> <span class="nb">float</span><span
+            class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">]</span><span
+            class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span
+            class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+                        <span class="c1"># print(sp)</span>
+                        <span class="k">if</span> <span class="n">progress</span> <span class="o">&lt;</span> <span
+            class="mf">0.0</span><span class="p">:</span>
+                            <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;sp&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span
+            class="p">(</span><span class="n">progress</span><span class="p">)</span> <span
+            class="o">/</span> <span class="mi">100</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;sp&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">progress</span><span
+            class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cpu_log</span><span
+            class="p">)</span> <span class="k">as</span> <span class="n">cpulog</span><span
+            class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span
+            class="n">cpulog</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span
+            class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;    &quot;</span><span
+            class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span
+            class="s2">&quot;Linux&quot;</span> <span class="ow">in</span> <span
+            class="n">line</span><span class="p">[</span><span class="mi">0</span><span
+            class="p">]</span><span class="o">.</span><span class="n">split</span><span
+            class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span
+            class="ow">or</span> <span class="s2">&quot;</span><span class="se">\n</span><span
+            class="s2">&quot;</span> <span class="ow">in</span> <span class="n">line</span><span
+            class="p">[</span><span class="mi">0</span><span class="p">]</span><span
+            class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span
+            class="p">))</span> <span class="ow">and</span> <span class="n">line</span><span
+            class="p">[</span>
+                <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span
+            class="s2">&quot; CPU&quot;</span> <span class="ow">and</span> <span
+            class="n">line</span><span class="p">[</span>
+                <span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span
+            class="s2">&quot;Average:&quot;</span><span class="p">:</span>
+                <span class="n">worker_dict</span><span class="p">[</span><span class="s2">&quot;time_cpu&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span>
+                    <span class="n">dt</span><span class="o">.</span><span class="n">strptime</span><span
+            class="p">(</span><span class="n">line</span><span class="p">[</span><span
+            class="mi">0</span><span class="p">],</span> <span
+            class="s1">&#39;%I:%M:%S %p&#39;</span><span class="p">)</span><span
+            class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">year</span><span
+            class="o">=</span><span class="mi">2016</span><span class="p">))</span>
+                <span class="n">cpuint</span> <span class="o">=</span> <span class="nb">float</span><span
+            class="p">(</span><span class="s1">&#39;</span><span class="si">{0:.2f}</span><span
+            class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span
+            class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
+            class="p">[</span><span class="mi">2</span><span class="p">])</span> <span
+            class="o">*</span> <span class="n">COREHTVM</span><span class="p">)</span> <span
+            class="o">/</span> <span class="mi">100</span><span class="p">))</span>
+                <span class="n">worker_dict</span><span class="p">[</span><span class="s2">&quot;cpu_real&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">cpuint</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span
+            class="p">(</span><span class="n">worker_dict</span><span class="o">.</span><span
+            class="n">keys</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">worker_dict</span></div>
+
+
+<div class="viewcode-block" id="plot_overview_cpu"><a class="viewcode-back"
+                                                      href="../plot.html#plot.plot_overview_cpu">[docs]</a><span
+        class="k">def</span> <span class="nf">plot_overview_cpu</span><span class="p">(</span><span
+        class="n">app_id</span><span class="p">,</span> <span class="n">app_info</span><span
+        class="p">,</span> <span class="n">workers_dict</span><span class="p">,</span> <span
+        class="n">config</span><span class="p">,</span> <span class="n">folder</span><span
+        class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that plot the overview of the application aggregating the cpu data from all</span>
+<span class="sd">    the workers showing the application progress and the division by stage</span>
+
+<span class="sd">    :param app_id: the id of the application</span>
+<span class="sd">    :param app_info: the data dictionary of the application</span>
+<span class="sd">    :param workers_dict: the data dictionary of the workers</span>
+<span class="sd">    :param config: the dictionary of the config file</span>
+<span class="sd">    :param folder: the folder to output the image</span>
+<span class="sd">    :return: nothing only save the figure at the end in the folder</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Plotting APP Overview&quot;</span><span
+            class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">])</span> <span
+            class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">folder_split</span> <span class="o">=</span> <span
+            class="n">folder</span><span class="o">.</span><span class="n">split</span><span
+            class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span
+            class="n">folder_split</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">4</span><span class="p">]</span><span class="o">.</span><span
+            class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span
+            class="s2">&quot;-overview-&quot;</span> <span class="o">+</span> <span class="n">folder_split</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">3</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="s2">&quot;%&quot;</span><span class="p">,</span> <span
+            class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">timestamps</span> <span class="o">=</span> <span class="p">[</span><span
+            class="mi">0</span><span class="p">]</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span
+            class="mi">0</span><span class="p">]</span>
+        <span class="n">app_deadline</span> <span class="o">=</span> <span class="n">dt</span><span
+            class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">first_ts</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">PLOT_SID_STAGE</span><span class="p">][</span><span
+            class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span
+            class="n">timestamp</span><span class="p">()</span>
+        <span class="n">sorted_sid</span> <span class="o">=</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;HDFS&quot;</span><span class="p">]:</span>
+            <span class="n">sorted_sid</span><span class="o">.</span><span
+            class="n">remove</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="n">sorted_sid</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">app_deadline</span> <span class="o">=</span> <span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">PLOT_SID_STAGE</span><span
+            class="p">][</span><span class="s2">&quot;start&quot;</span><span
+            class="p">]</span> <span class="o">+</span> <span class="n">timedelta</span><span
+            class="p">(</span>
+                    <span class="n">milliseconds</span><span class="o">=</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">timestamp</span> <span
+            class="ow">in</span> <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;tasktimestamps&quot;</span><span
+            class="p">]:</span>
+                    <span class="k">if</span> <span class="n">first_ts</span> <span
+            class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">first_ts</span> <span class="o">=</span> <span class="n">timestamp</span><span
+            class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">timestamps</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">timestamp</span><span class="o">.</span><span
+            class="n">timestamp</span><span class="p">()</span> <span class="o">-</span> <span
+            class="n">first_ts</span><span class="p">)</span>
+                        <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">times</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span
+            class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="kc">None</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span
+            class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span
+            class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span
+            class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span
+            class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+        <span class="c1"># PLOT NORMALIZED TASK PROGRESS</span>
+        <span class="n">min_times</span> <span class="o">=</span> <span class="nb">min</span><span
+            class="p">(</span><span class="n">times</span><span class="p">)</span>
+        <span class="n">max_times</span> <span class="o">=</span> <span class="nb">max</span><span
+            class="p">(</span><span class="n">times</span><span class="p">)</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="p">[(</span><span
+            class="n">z</span> <span class="o">-</span> <span class="n">min_times</span><span
+            class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_times</span> <span
+            class="o">-</span> <span class="n">min_times</span><span class="p">)</span> <span
+            class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span
+            class="n">z</span> <span class="ow">in</span> <span class="n">times</span><span
+            class="p">]</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span
+            class="p">(</span><span class="n">timestamps</span><span class="p">,</span> <span
+            class="n">normalized</span><span class="p">,</span> <span
+            class="s2">&quot;black&quot;</span><span class="p">,</span> <span
+            class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span
+            class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span
+            class="mi">10</span><span class="p">)</span>
+        <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span
+            class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">get_ylim</span><span
+            class="p">()</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span
+            class="p">)</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span
+            class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">get_xlim</span><span
+            class="p">()</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlim</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xmax</span><span
+            class="p">)</span>
+        <span class="c1"># PLOT DEADLINE</span>
+        <span class="n">label_to_plot</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">original_ts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">app_dead_ts</span> <span class="o">=</span> <span
+            class="n">app_deadline</span><span class="o">.</span><span
+            class="n">timestamp</span><span class="p">()</span> <span class="o">-</span> <span
+            class="n">first_ts</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span
+            class="p">(</span><span class="n">app_dead_ts</span><span class="p">,</span> <span
+            class="n">color</span><span class="o">=</span><span
+            class="s2">&quot;green&quot;</span><span class="p">,</span> <span
+            class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span
+            class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;agg&quot;</span> <span class="ow">in</span> <span
+            class="n">name</span> <span class="ow">or</span> <span
+            class="s2">&quot;sort&quot;</span> <span class="ow">in</span> <span
+            class="n">name</span><span class="p">:</span>
+            <span class="n">TQ</span> <span class="o">=</span> <span class="n">TQ_MICRO</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">TQ</span> <span class="o">=</span> <span class="n">TQ_KMEANS</span>
+        <span class="c1"># tq_ts = math.floor(app_dead_ts / TQ) * TQ</span>
+        <span class="c1"># original_ts[tq_ts] = app_dead_ts</span>
+        <span class="c1"># try:</span>
+        <span class="c1">#     label_to_plot[tq_ts].append(&quot;D&quot;)</span>
+        <span class="c1"># except KeyError:</span>
+        <span class="c1">#     label_to_plot[tq_ts] = []</span>
+        <span class="c1">#     label_to_plot[tq_ts].append(&quot;D&quot;)</span>
+        <span class="c1"># ax1.text(app_dead_ts, ymax + 0.5, &#39;D&#39;, weight=&quot;bold&quot;, horizontalalignment=&#39;center&#39;)</span>
+        <span class="c1"># PLOT ALPHA DEADLINE</span>
+        <span class="n">app_alpha_deadline</span> <span class="o">=</span> <span class="n">app_deadline</span> <span
+            class="o">-</span> <span class="n">timedelta</span><span class="p">(</span>
+            <span class="n">milliseconds</span><span class="o">=</span><span
+            class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">float</span><span
+            class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
+            class="p">]))</span> <span class="o">*</span> <span class="nb">float</span><span
+            class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span
+            class="p">])))</span>
+        <span class="n">app_alpha_deadline_ts</span> <span class="o">=</span> <span class="n">app_alpha_deadline</span><span
+            class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span
+            class="o">-</span> <span class="n">first_ts</span>
+        <span class="n">tq_ts</span> <span class="o">=</span> <span class="n">math</span><span
+            class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">app_alpha_deadline_ts</span> <span
+            class="o">/</span> <span class="n">TQ</span><span class="p">)</span> <span
+            class="o">*</span> <span class="n">TQ</span>
+        <span class="n">original_ts</span><span class="p">[</span><span class="n">tq_ts</span><span
+            class="p">]</span> <span class="o">=</span> <span class="n">app_alpha_deadline_ts</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span
+            class="p">(</span><span class="n">app_alpha_deadline_ts</span><span
+            class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span
+            class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span
+            class="mi">3</span><span class="p">,</span> <span class="n">zorder</span><span
+            class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">label_to_plot</span><span class="p">[</span><span class="n">tq_ts</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="s2">&quot;AD&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">label_to_plot</span><span class="p">[</span><span class="n">tq_ts</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">label_to_plot</span><span class="p">[</span><span class="n">tq_ts</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="s2">&quot;AD&quot;</span><span class="p">)</span>
+        <span class="c1"># ax1.text(app_alpha_deadline_ts, ymax + 0.5, &#39;AD&#39;, weight=&quot;bold&quot;,</span>
+        <span class="c1"># horizontalalignment=&#39;center&#39;)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span
+            class="p">(</span><span class="s1">&#39;Time [s]&#39;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span
+            class="p">(</span><span class="s1">&#39;App Progress [%]&#39;</span><span
+            class="p">)</span>
+
+        <span class="c1"># PLOT VERTICAL LINES DEAD, START, END</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="n">sorted_sid</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">int_dead</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;deadline&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span>
+                <span class="n">dead_ts</span> <span class="o">=</span> <span
+            class="n">int_dead</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="c1"># tq_ts = math.floor(dead_ts / TQ) * TQ</span>
+                <span class="c1"># original_ts[tq_ts] = dead_ts</span>
+                <span class="c1"># if sid == sorted(app_info[app_id])[-1] and dead_ts &lt; app_alpha_deadline_ts:</span>
+                <span class="c1">#     original_ts[tq_ts] = app_alpha_deadline_ts</span>
+                <span class="c1">#     ax1.axvline(app_alpha_deadline_ts, color=&quot;mediumseagreen&quot;, linestyle=&#39;--&#39;)</span>
+                <span class="c1"># else:</span>
+                <span class="c1">#     ax1.axvline(dead_ts, color=&quot;mediumseagreen&quot;, linestyle=&#39;--&#39;)</span>
+                <span class="c1"># try:</span>
+                <span class="c1">#     label_to_plot[tq_ts].append(&#39;D&#39; + str(sid))</span>
+                <span class="c1"># except KeyError:</span>
+                <span class="c1">#     label_to_plot[tq_ts] = []</span>
+                <span class="c1">#     label_to_plot[tq_ts].append(&#39;D&#39; + str(sid))</span>
+                <span class="n">start_ts</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="c1"># ax1.axvline(start_ts, color=&quot;black&quot;)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">s_y</span> <span class="o">=</span> <span
+            class="n">normalized</span><span class="p">[</span><span
+            class="n">timestamps</span><span class="o">.</span><span class="n">index</span><span
+            class="p">(</span><span class="n">start_ts</span><span class="p">)]</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span
+            class="p">:</span>
+                    <span class="n">s_y</span> <span class="o">=</span> <span
+            class="n">start_ts</span>
+                <span class="c1"># ax1.text(start_ts + 3, s_y - 2, &#39;S&#39; + str(sid), style=&quot;italic&quot;,weight=&quot;bold&quot;,</span>
+                <span class="c1"># horizontalalignment=&#39;center&#39;)</span>
+                <span class="n">end</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;end&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span>
+                <span class="n">end_ts</span> <span class="o">=</span> <span
+            class="n">end</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="n">tq_ts</span> <span class="o">=</span> <span
+            class="n">math</span><span class="o">.</span><span class="n">floor</span><span
+            class="p">(</span><span class="n">end_ts</span> <span class="o">/</span> <span
+            class="n">TQ</span><span class="p">)</span> <span class="o">*</span> <span
+            class="n">TQ</span>
+                <span class="n">original_ts</span><span class="p">[</span><span
+            class="n">tq_ts</span><span class="p">]</span> <span class="o">=</span> <span class="n">end_ts</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">label_to_plot</span><span class="p">[</span><span class="n">tq_ts</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="s2">&quot;E&quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">sid</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span
+            class="p">:</span>
+                    <span class="n">label_to_plot</span><span class="p">[</span><span class="n">tq_ts</span><span
+            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">label_to_plot</span><span class="p">[</span><span class="n">tq_ts</span><span
+            class="p">]</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="s2">&quot;E&quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">sid</span><span class="p">))</span>
+                <span class="n">ax1</span><span class="o">.</span><span
+            class="n">axvline</span><span class="p">(</span><span class="n">end_ts</span><span
+            class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span
+            class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">index_t</span> <span class="o">=</span> <span class="n">timestamps</span><span
+            class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">end_ts</span><span
+            class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span
+            class="p">:</span>
+                    <span class="n">index_t</span> <span class="o">=</span> <span
+            class="nb">min</span><span class="p">(</span><span class="nb">range</span><span
+            class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">timestamps</span><span
+            class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span
+            class="n">i</span><span class="p">:</span> <span class="nb">abs</span><span
+            class="p">(</span><span class="n">timestamps</span><span class="p">[</span><span
+            class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">end_ts</span><span
+            class="p">))</span>
+                <span class="n">e_y</span> <span class="o">=</span> <span
+            class="n">normalized</span><span class="p">[</span><span class="n">index_t</span><span
+            class="p">]</span>
+                <span class="c1"># ax1.text(end_ts, ymin - 3.5, &#39;E&#39; + str(sid), style=&quot;italic&quot;, weight=&quot;bold&quot;,</span>
+                <span class="c1"># horizontalalignment=&#39;center&#39;, verticalalignment=&#39;bottom&#39;)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">PLOT_LABEL</span><span class="p">:</span>
+            <span class="c1"># set the bbox for the text. Increase txt_width for wider text.</span>
+            <span class="n">txt_height</span> <span class="o">=</span> <span class="mf">0.05</span> <span
+            class="o">*</span> <span class="p">(</span><span class="n">plt</span><span
+            class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">-</span> <span class="n">plt</span><span
+            class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span class="mi">0</span><span
+            class="p">])</span>
+            <span class="n">txt_width</span> <span class="o">=</span> <span class="mf">0.025</span> <span
+            class="o">*</span> <span class="p">(</span><span class="n">plt</span><span
+            class="o">.</span><span class="n">xlim</span><span class="p">()[</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">-</span> <span class="n">plt</span><span
+            class="o">.</span><span class="n">xlim</span><span class="p">()[</span><span class="mi">0</span><span
+            class="p">])</span>
+            <span class="c1"># Get the corrected text positions, then write the text.</span>
+            <span class="n">sorted_label_ts</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">original_ts</span><span class="p">[</span><span class="n">ts</span><span
+            class="p">]</span> <span class="k">for</span> <span class="n">ts</span> <span
+            class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span
+            class="n">label_to_plot</span><span class="p">)]</span>
+            <span class="n">text_positions</span> <span class="o">=</span> <span class="n">get_text_positions</span><span
+            class="p">(</span><span class="n">sorted_label_ts</span><span class="p">,</span>
+                                                <span class="n">np</span><span
+            class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span
+            class="p">(</span><span class="n">label_to_plot</span><span class="p">),</span> <span
+            class="n">ymax</span><span class="p">),</span> <span class="n">txt_width</span><span
+            class="p">,</span>
+                                                <span class="n">txt_height</span><span
+            class="p">)</span>
+            <span class="c1"># print(text_positions)</span>
+            <span class="n">text_plotter</span><span class="p">(</span><span class="n">sorted_label_ts</span><span
+            class="p">,</span> <span class="n">np</span><span class="o">.</span><span
+            class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span
+            class="n">label_to_plot</span><span class="p">),</span> <span class="n">ymax</span><span
+            class="p">),</span> <span class="n">text_positions</span><span class="p">,</span>
+                         <span class="n">ax1</span><span class="p">,</span> <span class="n">txt_width</span><span
+            class="p">,</span> <span class="n">txt_height</span><span class="p">,</span>
+                         <span class="p">[</span><span class="s2">&quot;/&quot;</span><span
+            class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">label_to_plot</span><span
+            class="p">[</span><span class="n">ts</span><span class="p">])</span> <span
+            class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span
+            class="nb">sorted</span><span class="p">(</span><span
+            class="n">label_to_plot</span><span class="p">)])</span>
+
+        <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span
+            class="p">(</span><span class="s2">&quot;Core [#]&quot;</span><span class="p">)</span>
+        <span class="n">ts_cpu</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cpus</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sid_len</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">worker_log</span> <span
+            class="ow">in</span> <span class="n">workers_dict</span><span class="p">:</span>
+            <span class="n">worker_dict</span> <span class="o">=</span> <span
+            class="n">workers_dict</span><span class="p">[</span><span
+            class="n">worker_log</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">]):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">sid_len</span><span class="p">[</span><span class="n">sid</span><span
+            class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span
+            class="p">(</span><span class="n">sid_len</span><span class="p">[</span><span class="n">sid</span><span
+            class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]))</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span
+            class="p">:</span>
+                    <span class="n">sid_len</span><span class="p">[</span><span class="n">sid</span><span
+            class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span
+            class="p">(</span><span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">sid_len</span><span
+            class="p">):</span>
+            <span class="k">if</span> <span class="n">sid</span> <span class="o">&gt;</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">sid_len</span><span
+            class="o">.</span><span class="n">keys</span><span class="p">())[</span><span
+            class="mi">0</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sid</span><span
+            class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span
+            class="n">sid_len</span><span class="p">)[</span><span class="mi">0</span><span
+            class="p">])</span>
+                <span class="n">sid_len</span><span class="p">[</span><span
+            class="n">sid</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sid_len</span><span
+            class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span
+            class="p">(</span><span class="n">sid_len</span><span class="p">))[</span><span
+            class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span
+            class="p">(</span><span class="n">sid_len</span><span class="p">))</span><span
+            class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">sid</span><span
+            class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span
+            class="p">]]</span>
+        <span class="n">sid_len_keys</span> <span class="o">=</span> <span
+            class="nb">list</span><span class="p">(</span><span class="n">sid_len</span><span
+            class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">max_cpu</span> <span class="o">=</span> <span class="p">(</span><span
+            class="nb">len</span><span class="p">(</span><span class="nb">list</span><span
+            class="p">(</span><span class="n">workers_dict</span><span class="o">.</span><span
+            class="n">keys</span><span class="p">()))</span> <span class="o">*</span> <span
+            class="n">COREVM</span><span class="p">)</span>
+        <span class="c1"># first_ts = app_info[app_id][PLOT_SID_STAGE][&quot;start&quot;].replace(microsecond=0).timestamp()</span>
+        <span class="k">for</span> <span class="n">worker_log</span> <span
+            class="ow">in</span> <span class="n">workers_dict</span><span class="o">.</span><span
+            class="n">keys</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span
+            class="n">worker_log</span><span class="p">)</span>
+            <span class="n">worker_dict</span> <span class="o">=</span> <span
+            class="n">workers_dict</span><span class="p">[</span><span
+            class="n">worker_log</span><span class="p">]</span>
+            <span class="n">first_sid</span> <span class="o">=</span> <span class="nb">sorted</span><span
+            class="p">(</span><span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">])[</span><span class="mi">0</span><span
+            class="p">]</span>
+            <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">]):</span>
+                <span class="n">s_index</span> <span class="o">=</span> <span
+            class="n">sid_len</span><span class="p">[</span>
+                    <span class="n">sid_len_keys</span><span class="p">[</span><span class="n">sid_len_keys</span><span
+            class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">sid</span><span
+            class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span
+            class="p">]]</span> <span class="k">if</span> <span class="n">sid</span> <span
+            class="o">!=</span> <span class="n">first_sid</span> <span class="k">else</span> <span
+            class="mi">0</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span
+            class="p">(</span><span class="n">time_cpu</span><span class="p">,</span> <span
+            class="n">cpu</span><span class="p">)</span> <span class="ow">in</span> <span
+            class="nb">enumerate</span><span class="p">(</span>
+                        <span class="nb">zip</span><span class="p">(</span><span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span
+            class="p">],</span> <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">])):</span>
+                    <span class="n">time_cpu_ts</span> <span class="o">=</span> <span class="n">time_cpu</span><span
+            class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span
+            class="o">=</span><span class="mi">0</span><span class="p">)</span><span
+            class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+                    <span class="k">if</span> <span
+            class="s2">&quot;2016-10-02_16-43-31&quot;</span> <span class="ow">in</span> <span
+            class="n">worker_log</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s2">&quot;74.out&quot;</span> <span
+            class="ow">in</span> <span class="n">worker_log</span> <span class="ow">and</span> <span
+            class="n">sid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                            <span class="n">time_cpu_ts</span> <span class="o">-=</span> <span
+            class="mi">6</span>
+                        <span class="k">if</span> <span class="s2">&quot;100.out&quot;</span> <span
+            class="ow">in</span> <span class="n">worker_log</span> <span class="ow">and</span> <span
+            class="n">sid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                            <span class="n">time_cpu_ts</span> <span class="o">-=</span> <span
+            class="mi">2</span>
+                        <span class="k">elif</span> <span
+            class="s2">&quot;2016-10-03_08-01-39&quot;</span> <span class="ow">in</span> <span
+            class="n">worker_log</span><span class="p">:</span>
+                            <span class="k">if</span> <span
+            class="s2">&quot;38.out&quot;</span> <span class="ow">in</span> <span class="n">worker_log</span> <span
+            class="ow">and</span> <span class="n">sid</span> <span class="o">==</span> <span
+            class="mi">1</span><span class="p">:</span>
+                                <span class="n">time_cpu_ts</span> <span class="o">-=</span> <span
+            class="mi">1</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">ts_cpu</span><span
+            class="p">[</span><span class="n">s_index</span><span class="p">]</span> <span
+            class="o">!=</span> <span class="p">(</span><span class="n">time_cpu_ts</span> <span
+            class="o">-</span> <span class="n">first_ts</span><span class="p">)</span> <span
+            class="ow">and</span> <span class="nb">abs</span><span class="p">(</span>
+                                        <span class="n">ts_cpu</span><span class="p">[</span><span
+            class="n">s_index</span><span class="p">]</span> <span class="o">-</span> <span
+            class="p">(</span><span class="n">time_cpu_ts</span> <span class="o">-</span> <span
+            class="n">first_ts</span><span class="p">))</span> <span class="o">&gt;=</span> <span
+            class="p">(</span>
+                                    <span class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">):</span>
+                            <span class="c1"># print(ts_cpu)</span>
+                            <span class="c1"># print([tixm.replace(microsecond=0).timestamp() -</span>
+                            <span class="c1"># first_ts for tixm in worker_dict[app_id][sid][&quot;time&quot;]])</span>
+                            <span class="c1"># print(&quot;QUI&quot;, sid, (time_cpu_ts - first_ts),  ts_cpu[s_index])</span>
+                            <span class="n">index</span> <span class="o">=</span> <span class="n">ts_cpu</span><span
+            class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">time_cpu_ts</span> <span
+            class="o">-</span> <span class="n">first_ts</span><span class="p">)</span>
+                            <span class="n">cpus</span><span class="p">[</span><span
+            class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span
+            class="n">cpu</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="p">(</span><span
+            class="n">cpus</span><span class="p">[</span><span class="n">s_index</span><span
+            class="p">]</span> <span class="o">+</span> <span class="n">cpu</span><span
+            class="p">)</span> <span class="o">&gt;</span> <span class="n">max_cpu</span><span
+            class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span
+            class="s2">&quot;+0 ERR&quot;</span><span class="p">)</span>
+                                <span class="k">if</span> <span class="p">(</span><span class="n">cpus</span><span
+            class="p">[</span><span class="n">s_index</span> <span class="o">+</span> <span
+            class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span
+            class="n">cpu</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="n">max_cpu</span><span class="p">:</span>
+                                    <span class="nb">print</span><span class="p">(</span><span
+            class="s2">&quot;+1 ERR&quot;</span><span class="p">)</span>
+                                    <span class="k">if</span> <span class="p">(</span><span
+            class="n">cpus</span><span class="p">[</span><span class="n">s_index</span> <span
+            class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span
+            class="o">+</span> <span class="n">cpu</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="n">max_cpu</span><span class="p">:</span> <span class="nb">print</span><span
+            class="p">(</span><span class="s2">&quot;+2 ERR&quot;</span><span class="p">)</span>
+                                    <span class="n">cpus</span><span class="p">[</span><span
+            class="n">s_index</span> <span class="o">+</span> <span class="mi">2</span><span
+            class="p">]</span> <span class="o">+=</span> <span class="n">cpu</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">cpus</span><span class="p">[</span><span
+            class="n">s_index</span> <span class="o">+</span> <span class="mi">1</span><span
+            class="p">]</span> <span class="o">+=</span> <span class="n">cpu</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">cpus</span><span class="p">[</span><span class="n">s_index</span><span
+            class="p">]</span> <span class="o">+=</span> <span class="n">cpu</span>
+                            <span class="k">if</span> <span class="n">ts_cpu</span><span
+            class="p">[</span><span class="n">s_index</span><span class="p">]</span> <span
+            class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span
+            class="n">time_cpu_ts</span> <span class="o">-</span> <span
+            class="n">first_ts</span><span class="p">)</span>
+                                <span class="n">ts_cpu</span><span class="p">[</span><span
+            class="n">s_index</span><span class="p">]</span> <span class="o">=</span> <span
+            class="n">time_cpu_ts</span> <span class="o">-</span> <span class="n">first_ts</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span
+            class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                        <span class="n">ts_cpu</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">time_cpu_ts</span> <span
+            class="o">-</span> <span class="n">first_ts</span><span class="p">)</span>
+                        <span class="n">cpus</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">cpu</span><span
+            class="p">)</span>
+                    <span class="n">s_index</span> <span class="o">+=</span> <span
+            class="mi">1</span>
+                <span class="n">padding</span> <span class="o">=</span> <span
+            class="n">sid_len</span><span class="p">[</span><span class="n">sid</span><span
+            class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span
+            class="p">(</span><span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">ts_cpu</span><span class="p">)</span> <span class="o">&lt;</span> <span
+            class="n">sid_len</span><span class="p">[</span><span class="n">sid</span><span
+            class="p">]</span> <span class="ow">and</span> <span class="n">padding</span> <span
+            class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">i</span> <span
+            class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span
+            class="n">padding</span><span class="p">):</span>
+                        <span class="n">next_ts</span> <span class="o">=</span> <span class="n">ts_cpu</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">next_ts</span> <span class="o">&lt;=</span> <span
+            class="p">(</span><span class="n">end_ts</span> <span class="o">-</span> <span
+            class="n">first_ts</span><span class="p">):</span>
+                            <span class="n">ts_cpu</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">next_ts</span><span class="p">)</span>
+                            <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
+            class="n">sorted_sid</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sid</span> <span class="o">!=</span> <span
+            class="n">sorted_sid</span><span class="p">[</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">]:</span>
+                <span class="n">end</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;end&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
+            class="n">microsecond</span><span class="o">=</span><span class="mi">100</span><span
+            class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="n">next_sid</span> <span class="o">=</span> <span
+            class="n">sorted_sid</span><span class="p">[</span><span
+            class="n">sorted_sid</span><span class="o">.</span><span class="n">index</span><span
+            class="p">(</span><span class="n">sid</span><span class="p">)</span> <span
+            class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">next_start</span> <span class="o">=</span> <span
+            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">next_sid</span><span class="p">][</span><span
+            class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span
+            class="n">replace</span><span class="p">(</span>
+                    <span class="n">microsecond</span><span class="o">=</span><span
+            class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">next_start</span> <span
+            class="o">-</span> <span class="n">end</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERR &quot;</span><span
+            class="p">,</span> <span class="n">sid</span><span class="p">)</span>
+                    <span class="n">ts_cpu</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">end</span><span
+            class="p">)</span>
+                    <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                    <span class="n">ts_cpu</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">next_start</span><span
+            class="p">)</span>
+                    <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">ts_cpu</span><span class="p">,</span> <span class="n">cpus</span> <span
+            class="o">=</span> <span class="p">(</span><span class="nb">list</span><span
+            class="p">(</span><span class="n">t</span><span class="p">)</span> <span
+            class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span
+            class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span
+            class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">ts_cpu</span><span
+            class="p">,</span> <span class="n">cpus</span><span class="p">))))</span>
+        <span class="n">ts_cpu</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">end_ts</span><span class="p">)</span>
+        <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">cpus</span><span class="p">[</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
+            class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span
+            class="mi">3</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span
+            class="p">(</span><span class="n">ts_cpu</span><span class="p">,</span> <span class="n">cpus</span><span
+            class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span
+            class="mi">0</span><span class="p">)</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span
+            class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">get_xlim</span><span
+            class="p">()</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xmax</span><span
+            class="p">)</span>
+        <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span
+            class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">get_ylim</span><span
+            class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">ymax</span><span
+            class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">len</span><span
+            class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">workers_dict</span><span
+            class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span
+            class="o">*</span> <span class="n">COREVM</span><span class="p">)</span>
+
+        <span class="n">ax2</span><span class="o">.</span><span class="n">fill_between</span><span
+            class="p">(</span><span class="n">ts_cpu</span><span class="p">,</span> <span
+            class="mf">0.0</span><span class="p">,</span> <span class="n">cpus</span><span
+            class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span
+            class="s2">&quot;b&quot;</span><span class="p">,</span> <span
+            class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span
+            class="p">)</span>
+        <span class="n">yaxis_multiplier</span> <span class="o">=</span> <span
+            class="nb">float</span><span class="p">(</span><span class="n">COREVM</span><span
+            class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">workers_dict</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="mi">11</span><span class="p">:</span>
+            <span class="n">yaxis_multiplier</span> <span class="o">=</span> <span
+            class="nb">float</span><span class="p">(</span><span class="n">COREVM</span><span
+            class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span
+            class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
+            class="n">plticker</span><span class="o">.</span><span
+            class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
+            class="o">=</span><span class="n">yaxis_multiplier</span><span class="p">))</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">yaxis</span><span
+            class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
+            class="n">plticker</span><span class="o">.</span><span
+            class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
+            class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="s2">&quot;agg&quot;</span> <span class="ow">in</span> <span
+            class="n">name</span><span class="p">:</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span
+            class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
+            class="n">plticker</span><span class="o">.</span><span
+            class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
+            class="o">=</span><span class="n">Y_TICK_AGG</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="s2">&quot;sort&quot;</span> <span
+            class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span
+            class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
+            class="n">plticker</span><span class="o">.</span><span
+            class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
+            class="o">=</span><span class="n">Y_TICK_SORT</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">TITLE</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span
+            class="p">(</span><span class="n">app_id</span> <span class="o">+</span> <span
+            class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span class="p">])</span> <span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
+            class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
+            class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;K&quot;</span><span class="p">]))</span>
+
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_zorder</span><span
+            class="p">(</span><span class="n">ax2</span><span class="o">.</span><span class="n">get_zorder</span><span
+            class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span
+            class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">patch</span><span
+            class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span
+            class="kc">False</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">get_xticklabels</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span
+            class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">rotation</span><span
+            class="o">=</span><span class="mi">45</span><span class="p">)</span>
+        <span class="c1"># latexify(columns=1)</span>
+        <span class="c1"># format_axes(ax1)</span>
+        <span class="c1"># format_axes(ax2)</span>
+        <span class="k">if</span> <span class="n">PDF</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span
+            class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span
+            class="n">name</span> <span class="o">+</span> <span
+            class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span
+            class="n">bbox_inches</span><span class="o">=</span><span
+            class="s1">&#39;tight&#39;</span><span class="p">,</span> <span
+            class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span
+            class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span
+            class="n">name</span> <span class="o">+</span> <span
+            class="s2">&quot;.png&quot;</span><span class="p">,</span> <span
+            class="n">bbox_inches</span><span class="o">=</span><span
+            class="s1">&#39;tight&#39;</span><span class="p">,</span> <span
+            class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span
+            class="p">()</span></div>
+
+
+<div class="viewcode-block" id="find_first_ts_worker"><a class="viewcode-back"
+                                                         href="../plot.html#plot.find_first_ts_worker">[docs]</a><span
+        class="k">def</span> <span class="nf">find_first_ts_worker</span><span
+        class="p">(</span><span class="n">app_id</span><span class="p">,</span> <span class="n">workers_dict</span><span
+        class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the first start ts of the stage PLOT_SID_STAGE of all the workers</span>
+
+<span class="sd">    :param app_id: the id of the application</span>
+<span class="sd">    :param workers_dict:  the dictionary data of the workers</span>
+<span class="sd">    :return: the timestamp of the first worker to start the PLOT_SID_STAGE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">first_ts_worker</span> <span class="o">=</span> <span
+            class="nb">float</span><span class="p">(</span><span
+            class="s1">&#39;inf&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">worker_log</span> <span class="ow">in</span> <span
+            class="n">workers_dict</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">first_ts_worker</span> <span class="o">=</span> <span
+            class="nb">min</span><span class="p">(</span><span class="n">first_ts_worker</span><span
+            class="p">,</span>
+                                  <span class="n">workers_dict</span><span class="p">[</span><span
+            class="n">worker_log</span><span class="p">][</span><span class="n">app_id</span><span
+            class="p">][</span><span class="n">PLOT_SID_STAGE</span><span class="p">][</span><span
+            class="s2">&quot;time&quot;</span><span class="p">][</span>
+                                      <span class="mi">0</span><span class="p">]</span><span
+            class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">first_ts_worker</span></div>
+
+
+<span class="nd">@timing</span>
+<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">folder</span><span
+                        class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">folder</span><span
+                        class="p">)</span>
+    <span class="k">if</span> <span class="n">folder</span><span class="p">[</span><span
+                        class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
+                        class="o">!=</span> <span class="s2">&quot;/&quot;</span><span
+                        class="p">:</span>
+        <span class="n">folder</span> <span class="o">+=</span> <span
+                        class="s2">&quot;/&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span
+                        class="p">(</span><span class="n">folder</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">config</span><span
+                        class="p">)</span>
+
+    <span class="k">global</span> <span class="n">PLOT_SID_STAGE</span>
+    <span class="n">PLOT_SID_STAGE</span> <span class="o">=</span> <span class="mi">1</span> <span
+                        class="k">if</span> <span class="n">config</span><span
+                        class="p">[</span><span class="s2">&quot;HDFS&quot;</span><span
+                        class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="n">app_logs</span> <span class="o">=</span> <span class="n">glob</span><span
+                        class="o">.</span><span class="n">glob</span><span class="p">(</span><span
+                        class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;*.err&quot;</span><span
+                        class="p">)</span> <span class="o">+</span> <span class="n">glob</span><span
+                        class="o">.</span><span class="n">glob</span><span class="p">(</span><span
+                        class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;*.dat&quot;</span><span
+                        class="p">)</span>
+    <span class="n">app_info</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">app_log</span> <span class="ow">in</span> <span
+                        class="nb">sorted</span><span class="p">(</span><span
+                        class="n">app_logs</span><span class="p">):</span>
+        <span class="n">app_info</span> <span class="o">=</span> <span
+                        class="n">load_app_data</span><span class="p">(</span><span class="n">app_log</span><span
+                        class="p">,</span> <span class="n">config</span><span
+                        class="p">[</span><span class="s2">&quot;HDFS&quot;</span><span
+                        class="p">])</span>
+
+        <span class="k">for</span> <span class="n">app_id</span> <span class="ow">in</span> <span
+                        class="n">app_info</span><span class="p">:</span>
+            <span class="n">plot_app_overview</span><span class="p">(</span><span
+                        class="n">app_id</span><span class="p">,</span> <span
+                        class="n">app_info</span><span class="p">[</span><span
+                        class="n">app_id</span><span class="p">],</span> <span
+                        class="n">folder</span><span class="p">,</span> <span
+                        class="n">config</span><span class="p">)</span>
+
+    <span class="n">worker_logs</span> <span class="o">=</span> <span class="n">glob</span><span
+                        class="o">.</span><span class="n">glob</span><span class="p">(</span><span
+                        class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;*worker*.out&quot;</span><span
+                        class="p">)</span>
+    <span class="n">cpu_logs</span> <span class="o">=</span> <span class="n">glob</span><span
+                        class="o">.</span><span class="n">glob</span><span class="p">(</span><span
+                        class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;sar*.log&quot;</span><span
+                        class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">worker_logs</span><span
+                        class="p">)</span> <span class="o">==</span> <span
+                        class="nb">len</span><span class="p">(</span><span class="n">cpu_logs</span><span
+                        class="p">):</span>
+        <span class="n">workers_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">worker_log</span><span class="p">,</span> <span
+                        class="n">cpu_log</span> <span class="ow">in</span> <span
+                        class="nb">zip</span><span class="p">(</span><span
+                        class="nb">sorted</span><span class="p">(</span><span
+                        class="n">worker_logs</span><span class="p">),</span> <span class="nb">sorted</span><span
+                        class="p">(</span><span class="n">cpu_logs</span><span class="p">)):</span>
+            <span class="n">worker_dict</span> <span class="o">=</span> <span class="n">load_worker_data</span><span
+                        class="p">(</span><span class="n">worker_log</span><span class="p">,</span> <span
+                        class="n">cpu_log</span><span class="p">)</span>
+            <span class="n">workers_dict</span><span class="p">[</span><span
+                        class="n">worker_log</span><span class="p">]</span> <span class="o">=</span> <span
+                        class="n">worker_dict</span>
+
+        <span class="n">first_ts_worker</span> <span class="o">=</span> <span
+                        class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">worker_log</span><span class="p">,</span> <span
+                        class="n">cpu_log</span> <span class="ow">in</span> <span
+                        class="nb">zip</span><span class="p">(</span><span
+                        class="nb">sorted</span><span class="p">(</span><span
+                        class="n">worker_logs</span><span class="p">),</span> <span class="nb">sorted</span><span
+                        class="p">(</span><span class="n">cpu_logs</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">app_id</span> <span
+                        class="ow">in</span> <span class="n">app_info</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">first_ts_worker</span> <span
+                        class="o">==</span> <span class="o">-</span><span class="mi">1</span><span
+                        class="p">:</span> <span class="n">first_ts_worker</span> <span
+                        class="o">=</span> <span class="n">find_first_ts_worker</span><span
+                        class="p">(</span><span class="n">app_id</span><span class="p">,</span>
+                                                                                 <span class="n">workers_dict</span><span
+                        class="p">)</span>
+                <span class="n">plot_worker</span><span class="p">(</span><span
+                        class="n">app_id</span><span class="p">,</span> <span
+                        class="n">app_info</span><span class="p">,</span> <span
+                        class="n">worker_log</span><span class="p">,</span> <span class="n">workers_dict</span><span
+                        class="p">[</span><span class="n">worker_log</span><span class="p">],</span> <span
+                        class="n">config</span><span class="p">,</span>
+                            <span class="n">first_ts_worker</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">app_id</span> <span class="ow">in</span> <span
+                        class="n">app_info</span><span class="p">:</span>
+            <span class="n">plot_overview_cpu</span><span class="p">(</span><span
+                        class="n">app_id</span><span class="p">,</span> <span
+                        class="n">app_info</span><span class="p">,</span> <span class="n">workers_dict</span><span
+                        class="p">,</span> <span class="n">config</span><span
+                        class="p">,</span> <span class="n">folder</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: SAR != WORKER LOGS&quot;</span><span
+                        class="p">)</span>
+</pre>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <div id="searchbox" style="display: none" role="search">
+                <h3>Quick search</h3>
+                <form class="search" action="../search.html" method="get">
+                    <div><input type="text" name="q"/></div>
+                    <div><input type="submit" value="Go"/></div>
+                    <input type="hidden" name="check_keywords" value="yes"/>
+                    <input type="hidden" name="area" value="default"/>
+                </form>
+            </div>
+            <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="../genindex.html" title="General Index"
+            >index</a></li>
+        <li class="right">
+            <a href="../py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+        <li class="nav-item nav-item-1"><a href="index.html">Module code</a> &#187;</li>
+    </ul>
+</div>
+<div class="footer" role="contentinfo">
+    &#169; Copyright 2016, Matteo Gazzetta.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+</div>
+</body>
+</html>

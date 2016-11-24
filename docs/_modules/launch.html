@@ -1,0 +1,573 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>launch &#8212; Spark Control Benchmark 0.0.1 documentation</title>
+
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css"/>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css"/>
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT: '../',
+            VERSION: '0.0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE: true
+        };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html"/>
+    <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Spark Control Benchmark 0.0.1 documentation" href="../index.html"/>
+    <link rel="up" title="Module code" href="index.html"/>
+</head>
+<body role="document">
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="../genindex.html" title="General Index"
+               accesskey="I">index</a></li>
+        <li class="right">
+            <a href="../py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+        <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;
+        </li>
+    </ul>
+</div>
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="bodywrapper">
+            <div class="body" role="main">
+
+                <h1>Source code for launch</h1>
+                <div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Launch the instance with spot request</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">errno</span> <span class="k">import</span> <span
+                        class="n">ECONNREFUSED</span>
+<span class="kn">from</span> <span class="nn">errno</span> <span class="k">import</span> <span
+                        class="n">ETIMEDOUT</span>
+
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span
+                        class="n">DATA_AMI</span><span class="p">,</span> <span class="n">INSTANCE_TYPE</span><span
+                        class="p">,</span> <span class="n">REGION</span><span
+                        class="p">,</span> <span class="n">PRICE</span><span
+                        class="p">,</span> <span class="n">SECURITY_GROUP</span><span
+                        class="p">,</span> <span class="n">EBS_OPTIMIZED</span>
+
+<div class="viewcode-block" id="query_yes_no"><a class="viewcode-back"
+                                                 href="../launch.html#launch.query_yes_no">[docs]</a><span
+        class="k">def</span> <span class="nf">query_yes_no</span><span class="p">(</span><span
+        class="n">question</span><span class="p">,</span> <span class="n">default</span><span
+        class="o">=</span><span class="s2">&quot;yes&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Ask a yes/no question via raw_input() and return their answer.</span>
+
+<span class="sd">    :param question: is a string that is presented to the user.</span>
+<span class="sd">    :param default:  is the presumed answer if the user just hits &lt;Enter&gt;.</span>
+<span class="sd">        It must be &quot;yes&quot; (the default), &quot;no&quot; or None (meaning</span>
+<span class="sd">        an answer is required of the user).</span>
+
+<span class="sd">    :return: The &quot;answer&quot; return value is True for &quot;yes&quot; or False for &quot;no&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;yes&quot;</span><span
+            class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span
+            class="s2">&quot;y&quot;</span><span class="p">:</span> <span
+            class="kc">True</span><span class="p">,</span> <span
+            class="s2">&quot;ye&quot;</span><span class="p">:</span> <span
+            class="kc">True</span><span class="p">,</span>
+             <span class="s2">&quot;no&quot;</span><span class="p">:</span> <span
+            class="kc">False</span><span class="p">,</span> <span
+            class="s2">&quot;n&quot;</span><span class="p">:</span> <span
+            class="kc">False</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span
+            class="kc">None</span><span class="p">:</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span
+            class="s2">&quot; [y/n] &quot;</span>
+    <span class="k">elif</span> <span class="n">default</span> <span class="o">==</span> <span
+            class="s2">&quot;yes&quot;</span><span class="p">:</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span
+            class="s2">&quot; [Y/n] &quot;</span>
+    <span class="k">elif</span> <span class="n">default</span> <span class="o">==</span> <span
+            class="s2">&quot;no&quot;</span><span class="p">:</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span
+            class="s2">&quot; [y/N] &quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span
+            class="s2">&quot;invalid default answer: &#39;</span><span class="si">%s</span><span
+            class="s2">&#39;&quot;</span> <span class="o">%</span> <span
+            class="n">default</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span
+            class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">question</span> <span
+            class="o">+</span> <span class="n">prompt</span><span class="p">)</span>
+        <span class="n">choice</span> <span class="o">=</span> <span class="nb">input</span><span
+            class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span
+            class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span
+            class="n">choice</span> <span class="o">==</span> <span
+            class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">valid</span><span class="p">[</span><span
+            class="n">default</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">choice</span> <span class="ow">in</span> <span
+            class="n">valid</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">valid</span><span class="p">[</span><span
+            class="n">choice</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span
+            class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Please respond with &#39;yes&#39; or &#39;no&#39; &quot;</span>
+                             <span class="s2">&quot;(or &#39;y&#39; or &#39;n&#39;).</span><span
+            class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ping"><a class="viewcode-back" href="../launch.html#launch.ping">[docs]</a><span
+        class="k">def</span> <span class="nf">ping</span><span class="p">(</span><span class="n">host</span><span
+        class="p">,</span> <span class="n">port</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ping the port of the host</span>
+
+<span class="sd">    :param host: the host to ping</span>
+<span class="sd">    :param port: the port of the host to ping</span>
+<span class="sd">    :return: the port if the port is open or False if there is a connection error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span
+            class="p">()</span><span class="o">.</span><span class="n">connect</span><span
+            class="p">((</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span
+            class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span
+            class="p">(</span><span class="n">port</span><span class="p">)</span> <span
+            class="o">+</span> <span class="s2">&quot; Open&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">port</span>
+    <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span
+            class="n">error</span> <span class="k">as</span> <span class="n">err</span><span
+            class="p">:</span>
+        <span class="k">if</span> <span class="n">err</span><span class="o">.</span><span class="n">errno</span> <span
+            class="o">==</span> <span class="n">ECONNREFUSED</span> <span class="ow">or</span> <span
+            class="n">err</span><span class="o">.</span><span class="n">errno</span> <span
+            class="o">==</span> <span class="n">ETIMEDOUT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">raise</span></div>
+
+
+<div class="viewcode-block" id="wait_ping"><a class="viewcode-back"
+                                              href="../launch.html#launch.wait_ping">[docs]</a><span
+        class="k">def</span> <span class="nf">wait_ping</span><span class="p">(</span><span
+        class="n">client</span><span class="p">,</span> <span class="n">instance_ids</span><span
+        class="p">,</span> <span class="n">pending_instance_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wait that all the instance have open the ssh port (22)</span>
+
+<span class="sd">    :param client: the ec2 client</span>
+<span class="sd">    :param instance_ids: id of all the instance to ping</span>
+<span class="sd">    :param pending_instance_ids: id of the remaining instance to ping</span>
+<span class="sd">    :return: Exit when all the instance are reachable on port 22</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span
+            class="o">.</span><span class="n">describe_instances</span><span class="p">(</span><span
+            class="n">InstanceIds</span><span class="o">=</span><span
+            class="n">pending_instance_ids</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span
+            class="n">results</span><span class="p">[</span><span class="s2">&quot;Reservations&quot;</span><span
+            class="p">]:</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span
+            class="n">result</span><span class="p">[</span><span
+            class="s2">&quot;Instances&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">ping</span><span class="p">(</span><span
+            class="n">instance</span><span class="p">[</span><span class="s2">&quot;PublicDnsName&quot;</span><span
+            class="p">],</span> <span class="mi">22</span><span class="p">)</span> <span class="o">==</span> <span
+            class="mi">22</span><span class="p">:</span>
+                <span class="n">pending_instance_ids</span><span class="o">.</span><span class="n">pop</span><span
+            class="p">(</span><span class="n">pending_instance_ids</span><span
+            class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span
+            class="p">[</span><span class="s2">&quot;InstanceId&quot;</span><span
+            class="p">]))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;instance `</span><span
+            class="si">{}</span><span class="s2">` ping ok!&quot;</span><span
+            class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">instance</span><span
+            class="p">[</span><span class="s2">&quot;InstanceId&quot;</span><span
+            class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pinging on `</span><span
+            class="si">{}</span><span class="s2">`&quot;</span><span class="o">.</span><span
+            class="n">format</span><span class="p">(</span><span class="n">instance</span><span
+            class="p">[</span><span class="s2">&quot;InstanceId&quot;</span><span
+            class="p">]))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending_instance_ids</span><span
+            class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span
+            class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;all instances running!&quot;</span><span
+            class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span
+            class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">wait_ping</span><span class="p">(</span><span class="n">client</span><span
+            class="p">,</span> <span class="n">instance_ids</span><span class="p">,</span> <span
+            class="n">pending_instance_ids</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="wait_for_running"><a class="viewcode-back"
+                                                     href="../launch.html#launch.wait_for_running">[docs]</a><span
+        class="k">def</span> <span class="nf">wait_for_running</span><span class="p">(</span><span
+        class="n">client</span><span class="p">,</span> <span class="n">instance_ids</span><span
+        class="p">,</span> <span class="n">pending_instance_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wait that all the instance are in running state</span>
+
+<span class="sd">    :param client: the ec2 client</span>
+<span class="sd">    :param instance_ids: id of all the instance to check running</span>
+<span class="sd">    :param pending_instance_ids: id of the remaining instance to check running</span>
+<span class="sd">    :return: Exit when all the instance are running</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span
+            class="o">.</span><span class="n">describe_instances</span><span class="p">(</span><span
+            class="n">InstanceIds</span><span class="o">=</span><span
+            class="n">pending_instance_ids</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span
+            class="n">results</span><span class="p">[</span><span class="s2">&quot;Reservations&quot;</span><span
+            class="p">]:</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span
+            class="n">result</span><span class="p">[</span><span
+            class="s2">&quot;Instances&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">instance</span><span class="p">[</span><span
+            class="s2">&quot;State&quot;</span><span class="p">][</span><span class="s2">&quot;Name&quot;</span><span
+            class="p">]</span> <span class="o">==</span> <span
+            class="s1">&#39;running&#39;</span><span class="p">:</span>
+                <span class="n">pending_instance_ids</span><span class="o">.</span><span class="n">pop</span><span
+            class="p">(</span><span class="n">pending_instance_ids</span><span
+            class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">instance</span><span
+            class="p">[</span><span class="s2">&quot;InstanceId&quot;</span><span
+            class="p">]))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;instance `</span><span
+            class="si">{}</span><span class="s2">` running!&quot;</span><span
+            class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">instance</span><span
+            class="p">[</span><span class="s2">&quot;InstanceId&quot;</span><span
+            class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;waiting on `</span><span
+            class="si">{}</span><span class="s2">`&quot;</span><span class="o">.</span><span
+            class="n">format</span><span class="p">(</span><span class="n">instance</span><span
+            class="p">[</span><span class="s2">&quot;InstanceId&quot;</span><span
+            class="p">]))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending_instance_ids</span><span
+            class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span
+            class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;all instances running!&quot;</span><span
+            class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span
+            class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">wait_for_running</span><span class="p">(</span><span class="n">client</span><span
+            class="p">,</span> <span class="n">instance_ids</span><span class="p">,</span> <span
+            class="n">pending_instance_ids</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="wait_for_fulfillment"><a class="viewcode-back"
+                                                         href="../launch.html#launch.wait_for_fulfillment">[docs]</a><span
+        class="k">def</span> <span class="nf">wait_for_fulfillment</span><span
+        class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">request_ids</span><span
+        class="p">,</span> <span class="n">pending_request_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wait that all the spot instance request are fulfilled</span>
+
+<span class="sd">    :param client: the ec2 client</span>
+<span class="sd">    :param request_ids: id of all the spot instance request to fulfill</span>
+<span class="sd">    :param pending_request_ids: id of the remaining spot instance request to fulfill</span>
+<span class="sd">    :return: Exit when all the spot request are fulfilled</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span
+            class="o">.</span><span class="n">describe_spot_instance_requests</span><span class="p">(</span><span
+            class="n">SpotInstanceRequestIds</span><span class="o">=</span><span class="n">pending_request_ids</span><span
+            class="p">)</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span
+            class="n">results</span><span class="p">[</span><span class="s2">&quot;SpotInstanceRequests&quot;</span><span
+            class="p">]:</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span
+            class="s2">&quot;Status&quot;</span><span class="p">][</span><span class="s2">&quot;Code&quot;</span><span
+            class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fulfilled&#39;</span><span
+            class="p">:</span>
+            <span class="n">pending_request_ids</span><span class="o">.</span><span
+            class="n">pop</span><span class="p">(</span><span
+            class="n">pending_request_ids</span><span class="o">.</span><span class="n">index</span><span
+            class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;SpotInstanceRequestId&quot;</span><span
+            class="p">]))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;spot request `</span><span
+            class="si">{}</span><span class="s2">` fulfilled!&quot;</span><span
+            class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span
+            class="p">[</span><span class="s2">&quot;SpotInstanceRequestId&quot;</span><span
+            class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span
+            class="s2">&quot;waiting on `</span><span class="si">{}</span><span
+            class="s2">`&quot;</span><span class="o">.</span><span class="n">format</span><span
+            class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;SpotInstanceRequestId&quot;</span><span
+            class="p">]))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending_request_ids</span><span
+            class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span
+            class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;all spots fulfilled!&quot;</span><span
+            class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span
+            class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">wait_for_fulfillment</span><span class="p">(</span><span
+            class="n">client</span><span class="p">,</span> <span class="n">request_ids</span><span
+            class="p">,</span> <span class="n">pending_request_ids</span><span
+            class="p">)</span></div>
+
+
+<div class="viewcode-block" id="terminate"><a class="viewcode-back"
+                                              href="../launch.html#launch.terminate">[docs]</a><span
+        class="k">def</span> <span class="nf">terminate</span><span class="p">(</span><span
+        class="n">client</span><span class="p">,</span> <span class="n">spot_request_ids</span><span
+        class="p">,</span> <span class="n">instance_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Delete all the spot_request_ids and terminate al the instance_ids</span>
+
+<span class="sd">    :param client:  the ec2 client</span>
+<span class="sd">    :param spot_request_ids: id of all the spot instance request to delete</span>
+<span class="sd">    :param instance_ids: id of all the instance to terminate</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># DELETE SPOT REQUEST</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">cancel_spot_instance_requests</span><span
+            class="p">(</span><span class="n">SpotInstanceRequestIds</span><span
+            class="o">=</span><span class="n">spot_request_ids</span><span class="p">)</span>
+
+    <span class="c1"># TERMINATE INSTANCE</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">instances</span><span
+            class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">InstanceIds</span><span
+            class="o">=</span><span class="n">instance_ids</span><span class="p">)</span><span
+            class="o">.</span><span class="n">stop</span><span class="p">()</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">instances</span><span
+            class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">InstanceIds</span><span
+            class="o">=</span><span class="n">instance_ids</span><span class="p">)</span><span
+            class="o">.</span><span class="n">terminate</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="check_spot_price"><a class="viewcode-back"
+                                                     href="../launch.html#launch.check_spot_price">[docs]</a><span
+        class="k">def</span> <span class="nf">check_spot_price</span><span class="p">(</span><span
+        class="n">client</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check the current spot price on the selected amazon region of the instance type choosen</span>
+<span class="sd">        and compare with the one provided by the user</span>
+
+<span class="sd">    :param client: the ec2 client</span>
+<span class="sd">    :return: Exit if the spot price of the user is too low (&lt; current price + 20%)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">spot_price_history_response</span> <span class="o">=</span> <span class="n">client</span><span
+            class="o">.</span><span class="n">describe_spot_price_history</span><span
+            class="p">(</span><span class="n">InstanceTypes</span><span class="o">=</span><span
+            class="p">[</span><span class="n">INSTANCE_TYPE</span><span class="p">],</span>
+                                                                     <span class="n">ProductDescriptions</span><span
+            class="o">=</span><span class="p">[</span>
+                                                                         <span class="s1">&#39;Linux/UNIX&#39;</span><span
+            class="p">],</span>
+                                                                     <span class="n">AvailabilityZone</span><span
+            class="o">=</span>
+                                                                     <span class="n">DATA_AMI</span><span
+            class="p">[</span><span class="n">REGION</span><span class="p">][</span><span
+            class="s2">&quot;az&quot;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span
+            class="n">spot_price_history_response</span><span class="p">[</span><span class="s1">&#39;SpotPriceHistory&#39;</span><span
+            class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">last_spot_price</span> <span class="o">=</span> <span class="p">[</span><span
+            class="nb">float</span><span class="p">(</span><span class="n">x</span><span
+            class="p">[</span><span class="s1">&#39;SpotPrice&#39;</span><span
+            class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span
+            class="ow">in</span>
+                       <span class="n">spot_price_history_response</span><span
+            class="p">[</span><span class="s1">&#39;SpotPriceHistory&#39;</span><span
+            class="p">][:</span><span class="mi">10</span><span class="p">]]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">last_spot_price</span><span
+            class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of responses:&quot;</span><span
+            class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">spot_price_history_response</span><span
+            class="p">[</span><span class="s1">&#39;SpotPriceHistory&#39;</span><span
+            class="p">]))</span>
+    <span class="n">spot_price</span> <span class="o">=</span> <span class="nb">float</span><span
+            class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">last_spot_price</span><span
+            class="p">))</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span
+            class="nb">len</span><span class="p">(</span><span class="n">last_spot_price</span><span
+            class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">spot_price</span> <span class="o">+=</span> <span class="p">(</span><span
+            class="n">spot_price</span> <span class="o">*</span> <span class="mf">0.2</span><span
+            class="p">)</span>
+    <span class="n">spot_price</span> <span class="o">=</span> <span class="nb">float</span><span
+            class="p">(</span><span class="s2">&quot;</span><span class="si">{0:.2f}</span><span
+            class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span
+            class="p">(</span><span class="n">spot_price</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;LAST 10 SPOT PRICE + 20%: &quot;</span> <span
+            class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spot_price</span><span
+            class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span
+            class="s2">&quot;YOUR PRICE: &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">PRICE</span><span
+            class="p">))</span>
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">PRICE</span><span
+            class="p">)</span> <span class="o">&lt;</span> <span class="n">spot_price</span><span
+            class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR PRICE&quot;</span><span
+            class="p">)</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="launch"><a class="viewcode-back"
+                                           href="../launch.html#launch.launch">[docs]</a><span
+        class="k">def</span> <span class="nf">launch</span><span class="p">(</span><span class="n">client</span><span
+        class="p">,</span> <span class="n">num_instance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Launch num_instance on Amazon EC2 with spot request</span>
+
+<span class="sd">    :param client: the ec2 client</span>
+<span class="sd">    :param num_instance: number of instance to launch</span>
+<span class="sd">    :return: the list of spot request&#39;s ids</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">query_yes_no</span><span class="p">(</span><span
+            class="s2">&quot;Are you sure to launch &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">num_instance</span><span
+            class="p">)</span> <span class="o">+</span> <span
+            class="s2">&quot; new instance?&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span
+            class="p">):</span>
+        <span class="n">check_spot_price</span><span class="p">(</span><span class="n">client</span><span
+            class="p">)</span>
+        <span class="n">spot_request_response</span> <span class="o">=</span> <span
+            class="n">client</span><span class="o">.</span><span
+            class="n">request_spot_instances</span><span class="p">(</span>
+            <span class="n">SpotPrice</span><span class="o">=</span><span
+            class="n">PRICE</span><span class="p">,</span>
+            <span class="n">InstanceCount</span><span class="o">=</span><span
+            class="n">num_instance</span><span class="p">,</span>
+            <span class="n">Type</span><span class="o">=</span><span
+            class="s1">&#39;one-time&#39;</span><span class="p">,</span>
+            <span class="n">AvailabilityZoneGroup</span><span class="o">=</span>
+            <span class="n">DATA_AMI</span><span class="p">[</span><span
+            class="n">REGION</span><span class="p">][</span><span
+            class="s2">&quot;az&quot;</span><span class="p">],</span>
+            <span class="n">LaunchSpecification</span><span class="o">=</span><span
+            class="p">{</span>
+                <span class="s2">&quot;ImageId&quot;</span><span class="p">:</span> <span class="n">DATA_AMI</span><span
+            class="p">[</span><span class="n">REGION</span><span class="p">][</span><span
+            class="s2">&quot;ami&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;KeyName&quot;</span><span class="p">:</span> <span class="n">DATA_AMI</span><span
+            class="p">[</span><span class="n">REGION</span><span class="p">][</span><span
+            class="s2">&quot;keypair&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;SecurityGroups&quot;</span><span class="p">:</span> <span
+            class="p">[</span>
+                    <span class="n">SECURITY_GROUP</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="s1">&#39;Placement&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s1">&#39;AvailabilityZone&#39;</span><span class="p">:</span>
+                        <span class="n">DATA_AMI</span><span class="p">[</span><span class="n">REGION</span><span
+            class="p">][</span><span class="s2">&quot;az&quot;</span><span class="p">],</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;InstanceType&quot;</span><span class="p">:</span> <span
+            class="n">INSTANCE_TYPE</span><span class="p">,</span>
+                <span class="s2">&quot;EbsOptimized&quot;</span><span class="p">:</span> <span
+            class="n">EBS_OPTIMIZED</span><span class="p">,</span>
+                <span class="s2">&quot;BlockDeviceMappings&quot;</span><span
+            class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;DeviceName&quot;</span><span class="p">:</span> <span
+            class="s2">&quot;/dev/sda1&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;Ebs&quot;</span><span class="p">:</span> <span
+            class="p">{</span>
+                            <span class="s2">&quot;DeleteOnTermination&quot;</span><span
+            class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                            <span class="s2">&quot;VolumeType&quot;</span><span
+            class="p">:</span> <span class="s2">&quot;gp2&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;VolumeSize&quot;</span><span
+            class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+                            <span class="s2">&quot;SnapshotId&quot;</span><span class="p">:</span>
+                                <span class="n">DATA_AMI</span><span class="p">[</span><span
+            class="n">REGION</span><span class="p">][</span><span
+            class="s2">&quot;snapid&quot;</span><span class="p">]</span>
+                        <span class="p">}</span>
+                    <span class="p">},</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;DeviceName&quot;</span><span class="p">:</span> <span
+            class="s2">&quot;/dev/sdb&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;VirtualName&quot;</span><span
+            class="p">:</span> <span class="s2">&quot;ephemeral0&quot;</span>
+                    <span class="p">}</span>
+                <span class="p">],</span>
+            <span class="p">})</span>
+
+        <span class="nb">print</span><span class="p">([</span><span class="n">req</span><span
+            class="p">[</span><span class="s2">&quot;SpotInstanceRequestId&quot;</span><span
+            class="p">]</span> <span class="k">for</span> <span class="n">req</span> <span
+            class="ow">in</span>
+               <span class="n">spot_request_response</span><span class="p">[</span><span class="s2">&quot;SpotInstanceRequests&quot;</span><span
+            class="p">]])</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">req</span><span
+            class="p">[</span><span class="s2">&quot;SpotInstanceRequestId&quot;</span><span
+            class="p">]</span> <span class="k">for</span> <span class="n">req</span> <span
+            class="ow">in</span>
+                <span class="n">spot_request_response</span><span class="p">[</span><span
+            class="s2">&quot;SpotInstanceRequests&quot;</span><span class="p">]]</span></div>
+</pre>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <div id="searchbox" style="display: none" role="search">
+                <h3>Quick search</h3>
+                <form class="search" action="../search.html" method="get">
+                    <div><input type="text" name="q"/></div>
+                    <div><input type="submit" value="Go"/></div>
+                    <input type="hidden" name="check_keywords" value="yes"/>
+                    <input type="hidden" name="area" value="default"/>
+                </form>
+            </div>
+            <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="../genindex.html" title="General Index"
+            >index</a></li>
+        <li class="right">
+            <a href="../py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+        <li class="nav-item nav-item-1"><a href="index.html">Module code</a> &#187;</li>
+    </ul>
+</div>
+<div class="footer" role="contentinfo">
+    &#169; Copyright 2016, Matteo Gazzetta.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+</div>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>Run Module &#8212; Spark Control Benchmark 0.0.1 documentation</title>
+
+    <link rel="stylesheet" href="_static/nature.css" type="text/css"/>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT: './',
+            VERSION: '0.0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE: true
+        };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html"/>
+    <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Spark Control Benchmark 0.0.1 documentation" href="index.html"/>
+    <link rel="next" title="Log Module" href="log.html"/>
+    <link rel="prev" title="Launch Module" href="launch.html"/>
+</head>
+<body role="document">
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="genindex.html" title="General Index"
+               accesskey="I">index</a></li>
+        <li class="right">
+            <a href="py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="right">
+            <a href="log.html" title="Log Module"
+               accesskey="N">next</a> |
+        </li>
+        <li class="right">
+            <a href="launch.html" title="Launch Module"
+               accesskey="P">previous</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+    </ul>
+</div>
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="bodywrapper">
+            <div class="body" role="main">
+
+                <div class="section" id="module-run">
+                    <span id="run-module"></span>
+                    <h1>Run Module<a class="headerlink" href="#module-run"
+                                     title="Permalink to this headline">¶</a></h1>
+                    <p>This module handle the configuration of the instances and the execution of
+                        the benchmark on the cluster</p>
+                    <dl class="function">
+                        <dt id="run.common_setup">
+                            <code class="descclassname">run.</code><code class="descname">common_setup</code><span
+                                class="sig-paren">(</span><em>ssh_client</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/run.html#common_setup"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#run.common_setup"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Common setup of the instance of the cluster with ssh_client is
+                            connected</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body"><strong>ssh_client</strong> &#8211; the
+                                        ssh client to launch command on the instance
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body">nothing</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="run.rsync_folder">
+                            <code class="descclassname">run.</code><code class="descname">rsync_folder</code><span
+                                class="sig-paren">(</span><em>ssh_client</em>, <em>slave</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/run.html#rsync_folder"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#run.rsync_folder"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>ssh_client</strong> &#8211; </li>
+                                            <li><strong>slave</strong> &#8211; </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last"></p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="run.write_config">
+                            <code class="descclassname">run.</code><code class="descname">write_config</code><span
+                                class="sig-paren">(</span><em>output_folder</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/run.html#write_config"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#run.write_config"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body"><strong>output_folder</strong> &#8211;
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+    <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="launch.html"
+                                  title="previous chapter">Launch Module</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="log.html"
+                                  title="next chapter">Log Module</a></p>
+            <div role="note" aria-label="source link">
+                <h3>This Page</h3>
+                <ul class="this-page-menu">
+                    <li><a href="_sources/run.txt"
+                           rel="nofollow">Show Source</a></li>
+                </ul>
+            </div>
+            <div id="searchbox" style="display: none" role="search">
+                <h3>Quick search</h3>
+                <form class="search" action="search.html" method="get">
+                    <div><input type="text" name="q"/></div>
+                    <div><input type="submit" value="Go"/></div>
+                    <input type="hidden" name="check_keywords" value="yes"/>
+                    <input type="hidden" name="area" value="default"/>
+                </form>
+            </div>
+            <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="genindex.html" title="General Index"
+            >index</a></li>
+        <li class="right">
+            <a href="py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="right">
+            <a href="log.html" title="Log Module"
+            >next</a> |
+        </li>
+        <li class="right">
+            <a href="launch.html" title="Launch Module"
+            >previous</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+    </ul>
+</div>
+<div class="footer" role="contentinfo">
+    &#169; Copyright 2016, Matteo Gazzetta.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+</div>
+</body>
+</html>

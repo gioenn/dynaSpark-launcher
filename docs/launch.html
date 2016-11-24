@@ -1,0 +1,443 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>Launch Module &#8212; Spark Control Benchmark 0.0.1 documentation</title>
+
+    <link rel="stylesheet" href="_static/nature.css" type="text/css"/>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT: './',
+            VERSION: '0.0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE: true
+        };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html"/>
+    <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Spark Control Benchmark 0.0.1 documentation" href="index.html"/>
+    <link rel="next" title="Run Module" href="run.html"/>
+    <link rel="prev" title="Config Module" href="config.html"/>
+</head>
+<body role="document">
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="genindex.html" title="General Index"
+               accesskey="I">index</a></li>
+        <li class="right">
+            <a href="py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="right">
+            <a href="run.html" title="Run Module"
+               accesskey="N">next</a> |
+        </li>
+        <li class="right">
+            <a href="config.html" title="Config Module"
+               accesskey="P">previous</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+    </ul>
+</div>
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="bodywrapper">
+            <div class="body" role="main">
+
+                <div class="section" id="module-launch">
+                    <span id="launch-module"></span>
+                    <h1>Launch Module<a class="headerlink" href="#module-launch"
+                                        title="Permalink to this headline">¶</a></h1>
+                    <p>Launch the instance with spot request</p>
+                    <dl class="function">
+                        <dt id="launch.check_spot_price">
+                            <code class="descclassname">launch.</code><code class="descname">check_spot_price</code><span
+                                class="sig-paren">(</span><em>client</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/launch.html#check_spot_price"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#launch.check_spot_price"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd>
+                            <dl class="docutils">
+                                <dt>Check the current spot price on the selected amazon region of
+                                    the instance type choosen
+                                </dt>
+                                <dd>and compare with the one provided by the user</dd>
+                            </dl>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body"><strong>client</strong> &#8211; the ec2
+                                        client
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body">Exit if the spot price of the user is too
+                                        low (&lt; current price + 20%)
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="launch.launch">
+                            <code class="descclassname">launch.</code><code
+                                class="descname">launch</code><span class="sig-paren">(</span><em>client</em>,
+                            <em>num_instance</em><span class="sig-paren">)</span><a
+                                class="reference internal" href="_modules/launch.html#launch"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#launch.launch"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Launch num_instance on Amazon EC2 with spot request</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>client</strong> &#8211; the ec2 client</li>
+                                            <li><strong>num_instance</strong> &#8211; number of
+                                                instance to launch
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">the list of spot
+                                        request&#8217;s ids</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="launch.ping">
+                            <code class="descclassname">launch.</code><code
+                                class="descname">ping</code><span
+                                class="sig-paren">(</span><em>host</em>, <em>port</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/launch.html#ping"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#launch.ping"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Ping the port of the host</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>host</strong> &#8211; the host to ping</li>
+                                            <li><strong>port</strong> &#8211; the port of the host
+                                                to ping
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">the port if the
+                                        port is open or False if there is a connection error</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="launch.query_yes_no">
+                            <code class="descclassname">launch.</code><code class="descname">query_yes_no</code><span
+                                class="sig-paren">(</span><em>question</em>,
+                            <em>default='yes'</em><span class="sig-paren">)</span><a
+                                class="reference internal" href="_modules/launch.html#query_yes_no"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#launch.query_yes_no"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Ask a yes/no question via raw_input() and return their answer.</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>question</strong> &#8211; is a string that
+                                                is presented to the user.
+                                            </li>
+                                            <li><strong>default</strong> &#8211; is the presumed
+                                                answer if the user just hits &lt;Enter&gt;.
+                                                It must be &#8220;yes&#8221; (the default), &#8220;no&#8221;
+                                                or None (meaning
+                                                an answer is required of the user).
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">The &#8220;answer&#8221;
+                                        return value is True for &#8220;yes&#8221; or False for
+                                        &#8220;no&#8221;.</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="launch.terminate">
+                            <code class="descclassname">launch.</code><code class="descname">terminate</code><span
+                                class="sig-paren">(</span><em>client</em>, <em>spot_request_ids</em>,
+                            <em>instance_ids</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/launch.html#terminate"><span class="viewcode-link">[source]</span></a><a
+                                class="headerlink" href="#launch.terminate"
+                                title="Permalink to this definition">¶</a></dt>
+                        <dd><p>Delete all the spot_request_ids and terminate al the instance_ids</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>client</strong> &#8211; the ec2 client</li>
+                                            <li><strong>spot_request_ids</strong> &#8211; id of all
+                                                the spot instance request to delete
+                                            </li>
+                                            <li><strong>instance_ids</strong> &#8211; id of all the
+                                                instance to terminate
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last"></p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="launch.wait_for_fulfillment">
+                            <code class="descclassname">launch.</code><code class="descname">wait_for_fulfillment</code><span
+                                class="sig-paren">(</span><em>client</em>, <em>request_ids</em>,
+                            <em>pending_request_ids</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/launch.html#wait_for_fulfillment"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#launch.wait_for_fulfillment"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Wait that all the spot instance request are fulfilled</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>client</strong> &#8211; the ec2 client</li>
+                                            <li><strong>request_ids</strong> &#8211; id of all the
+                                                spot instance request to fulfill
+                                            </li>
+                                            <li><strong>pending_request_ids</strong> &#8211; id of
+                                                the remaining spot instance request to fulfill
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">Exit when all the
+                                        spot request are fulfilled</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="launch.wait_for_running">
+                            <code class="descclassname">launch.</code><code class="descname">wait_for_running</code><span
+                                class="sig-paren">(</span><em>client</em>, <em>instance_ids</em>,
+                            <em>pending_instance_ids</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/launch.html#wait_for_running"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#launch.wait_for_running"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Wait that all the instance are in running state</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>client</strong> &#8211; the ec2 client</li>
+                                            <li><strong>instance_ids</strong> &#8211; id of all the
+                                                instance to check running
+                                            </li>
+                                            <li><strong>pending_instance_ids</strong> &#8211; id of
+                                                the remaining instance to check running
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">Exit when all the
+                                        instance are running</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="launch.wait_ping">
+                            <code class="descclassname">launch.</code><code class="descname">wait_ping</code><span
+                                class="sig-paren">(</span><em>client</em>, <em>instance_ids</em>,
+                            <em>pending_instance_ids</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/launch.html#wait_ping"><span class="viewcode-link">[source]</span></a><a
+                                class="headerlink" href="#launch.wait_ping"
+                                title="Permalink to this definition">¶</a></dt>
+                        <dd><p>Wait that all the instance have open the ssh port (22)</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>client</strong> &#8211; the ec2 client</li>
+                                            <li><strong>instance_ids</strong> &#8211; id of all the
+                                                instance to ping
+                                            </li>
+                                            <li><strong>pending_instance_ids</strong> &#8211; id of
+                                                the remaining instance to ping
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">Exit when all the
+                                        instance are reachable on port 22</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+    <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="config.html"
+                                  title="previous chapter">Config Module</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="run.html"
+                                  title="next chapter">Run Module</a></p>
+            <div role="note" aria-label="source link">
+                <h3>This Page</h3>
+                <ul class="this-page-menu">
+                    <li><a href="_sources/launch.txt"
+                           rel="nofollow">Show Source</a></li>
+                </ul>
+            </div>
+            <div id="searchbox" style="display: none" role="search">
+                <h3>Quick search</h3>
+                <form class="search" action="search.html" method="get">
+                    <div><input type="text" name="q"/></div>
+                    <div><input type="submit" value="Go"/></div>
+                    <input type="hidden" name="check_keywords" value="yes"/>
+                    <input type="hidden" name="area" value="default"/>
+                </form>
+            </div>
+            <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="genindex.html" title="General Index"
+            >index</a></li>
+        <li class="right">
+            <a href="py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="right">
+            <a href="run.html" title="Run Module"
+            >next</a> |
+        </li>
+        <li class="right">
+            <a href="config.html" title="Config Module"
+            >previous</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+    </ul>
+</div>
+<div class="footer" role="contentinfo">
+    &#169; Copyright 2016, Matteo Gazzetta.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+</div>
+</body>
+</html>
