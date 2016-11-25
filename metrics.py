@@ -12,10 +12,10 @@ from pathlib import Path
 import numpy as np
 
 from config import COREVM, COREHTVM
+from log import load_app_data
 from util.utils import timing, string_to_datetime
 
 PLOT_SID_STAGE = 0
-
 
 def load_config(folder):
     """
@@ -28,84 +28,25 @@ def load_config(folder):
     if config_file.exists():
         config = json.load(open(folder + "config.json"))
         if len(config) == 0:
-            from csparkbench.config import CONFIG_DICT
+            from config import CONFIG_DICT
             return CONFIG_DICT
         else:
             return config
     else:
-        from csparkbench.config import CONFIG_DICT
+        from config import CONFIG_DICT
         return CONFIG_DICT
 
 
-def load_app_data(app_log, hdfs):
-    
-    print("Loading app data from log")
-    dict_to_plot = {}
-    app_info = {}
-    app_id = ""
-    with open(app_log) as applog:
-        stage_id = -1 if hdfs else 0
-        for line in applog:
-            line = line.split(" ")
-            if len(line) > 3 and line[3] == "TaskSetManager:" and line[4] == "Finished":
-                try:
-                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
-                        string_to_datetime(line[1]))
-                except (KeyError, ValueError) as e:
-                    app_info[app_id][int(float(line[9]))]["tasktimestamps"] = []
-                    app_info[app_id][int(float(line[9]))]["tasktimestamps"].append(
-                        string_to_datetime(line[1]))
-            if len(line) > 3 and line[3] == "StandaloneSchedulerBackend:" and line[
-                4] == "Connected":
-                app_info[line[-1].rstrip()] = {}
-                app_id = line[-1].rstrip()
-                dict_to_plot[app_id] = {}
-                dict_to_plot[app_id]["dealineTimeStages"] = []
-                dict_to_plot[app_id]["startTimeStages"] = []
-                dict_to_plot[app_id]["finishTimeStages"] = []
-            elif len(line) > 12 and line[3] == "ControllerJob:":
-                if line[5] == "INIT":
-                    if len(dict_to_plot[app_id]["startTimeStages"]) == len(
-                            dict_to_plot[app_id]["finishTimeStages"]):
-                        stage_id = int(line[12].replace(",", ""))
-                        app_info[app_id][stage_id]["start"] = string_to_datetime(line[1])
-                        dict_to_plot[app_id]["startTimeStages"].append(
-                            app_info[app_id][stage_id]["start"])
-                        print("START: " + str(app_info[app_id][stage_id]["start"]))
-                        deadline_ms = float(line[16].replace(",", ""))
-                        print(deadline_ms)
-                        app_info[app_id][stage_id]["deadline"] = \
-                            dict_to_plot[app_id]["startTimeStages"][-1] \
-                            + timedelta(milliseconds=deadline_ms)
-                        dict_to_plot[app_id]["dealineTimeStages"].append(
-                            app_info[app_id][stage_id]["deadline"])
-                if line[5] == "NEEDED" and line[4] == "SEND":
-                    next_app_id = line[-1].replace("\n", "")
-                    if app_id != next_app_id:
-                        app_id = next_app_id
-                        dict_to_plot[app_id] = {}
-                        dict_to_plot[app_id]["dealineTimeStages"] = []
-                        dict_to_plot[app_id]["startTimeStages"] = []
-                        dict_to_plot[app_id]["finishTimeStages"] = []
-            elif len(line) > 3 and line[3] == "DAGScheduler:":
-                if line[4] == "Submitting" and line[6] == "missing":
-                    stage_id = int(line[10])
-                    app_info[app_id][stage_id] = {}
-                    app_info[app_id][stage_id]["tasks"] = int(line[5])
-                    app_info[app_id][stage_id]["start"] = string_to_datetime(line[1])
-                elif line[-4] == "finished":
-                    if app_id != "":
-                        stage_id = int(line[5])
-                        app_info[app_id][stage_id]["end"] = string_to_datetime(line[1])
-                        if len(dict_to_plot[app_id]["startTimeStages"]) > len(
-                                dict_to_plot[app_id]["finishTimeStages"]):
-                            dict_to_plot[app_id]["finishTimeStages"].append(
-                                app_info[app_id][stage_id]["end"])
-                            print("END: " + str(app_info[app_id][stage_id]["end"]))
-        return app_info
+def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
+    """
 
-
-def compute_cputime(app_id, app_info, workers_dict, config, folder):
+    :param app_id:
+    :param app_info:
+    :param workers_dict:
+    :param config:
+    :param folder:
+    :return:
+    """
     cpu_time = 0
     cpu_time_max = 0
     cpus = 0.0
@@ -165,6 +106,14 @@ def compute_cputime(app_id, app_info, workers_dict, config, folder):
 
 
 def save_deadline_errors(folder, deadline_error, stage_errors):
+    """Save the error of the application's stages in the folder
+        with some statistics (mean, stddev, median, max, min)
+
+    :param folder: the output folder
+    :param deadline_error: the application's deadline error
+    :param stage_errors: the list of the stages errors
+    :return: Nothing
+    """
     with open(folder + "ERROR.txt", "w") as error_f:
         error_f.write("DEADLINE_ERROR " + str(abs(deadline_error)) + "\n")
         if len(stage_errors) > 0:
@@ -307,8 +256,11 @@ def compute_errors(app_id, app_dict, folder, config):
 
 @timing
 def compute_metrics(folder):
-    global STRPTIME_FORMAT
-    STRPTIME_FORMAT = '%H:%M:%S.%f'
+    """
+
+    :param folder:
+    :return:
+    """
     print(folder)
     if folder[-1] != "/":
         folder += "/"
@@ -335,6 +287,6 @@ def compute_metrics(folder):
             worker_dict = load_worker_data(worker_log, cpu_log)
             workers_dict[worker_log] = worker_dict
         for app_id in app_info:
-            compute_cputime(app_id, app_info, workers_dict, config, folder)
+            compute_cpu_time(app_id, app_info, workers_dict, config, folder)
     else:
         print("ERROR: SAR != WORKER LOGS")

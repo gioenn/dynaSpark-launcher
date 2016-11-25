@@ -51,14 +51,13 @@ def common_setup(ssh_client):
     ssh_client.run('ssh-keygen -f "/home/ubuntu/.ssh/known_hosts" -R localhost')
 
     print("   Stop Spark Slave/Master")
-    ssh_client.run('export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-slave.sh')
-    ssh_client.run(
-        'export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/stop-master.sh')
+    ssh_client.run('export SPARK_HOME="{s}" && {s}sbin/stop-slave.sh'.format(s=SPARK_HOME))
+    ssh_client.run('export SPARK_HOME="{s}" && {s}sbin/stop-master.sh'.format(s=SPARK_HOME))
 
     print("   Set Log Level")
     ssh_client.run(
-        "sed -i '31s{.*{log4j.rootCategory=" + str(
-            LOG_LEVEL) + ", console {' " + SPARK_HOME + "conf/log4j.properties")
+        "sed -i '19s/.*/log4j.rootCategory={}, console /' {}conf/log4j.properties".format(LOG_LEVEL,
+                                                                                          SPARK_HOME))
 
     if KILL_JAVA:
         print("   Killing Java")
@@ -92,7 +91,9 @@ def setup_slave(instance, master_dns):
     if UPDATE_SPARK:
         print("   Updating Spark...")
         ssh_client.run(
-            "cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package")
+            """cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn
+            -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests
+             -Dmaven.test.skip=true package""")
 
     # CLEAN UP EXECUTORS APP LOGS
     ssh_client.run("rm -r " + SPARK_HOME + "work/*")
@@ -102,33 +103,30 @@ def setup_slave(instance, master_dns):
         ssh_client.put_file("./disable-ht-v2.sh", "./disable-ht-v2.sh")
         ssh_client.run("chmod +x disable-ht-v2.sh")
         status, stdout, stderr = ssh_client.run('sudo ./disable-ht-v2.sh')
-        # status, stdout, stderr = ssh_client.run('sudo ./disable-ht.sh')
-        print("   Disabled HyperThreading")
+        print("   Disabled HyperThreading {}".format(status))
 
-    # ssh_client.run("sed -i '47d' "+ SPARK_HOME + "conf/spark-defaults.conf")
-    # ssh_client.run("sed -i '47d' " + SPARK_HOME + "conf/spark-defaults.conf")
     ssh_client.run(
-        "sed -i '47s{.*{spark.shuffle.service.enabled " + ENABLE_EXTERNAL_SHUFFLE + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        "sed -i '47s/.*/spark.shuffle.service.enabled {0}/' {1}conf/spark-defaults.conf".format(
+            ENABLE_EXTERNAL_SHUFFLE, SPARK_HOME))
 
     # ssh_client.run('echo "spark.local.dir /mnt/hdfs" >> '+ SPARK_HOME + 'conf/spark-defaults.conf')
 
     ssh_client.run(
-        "sed -i '31s{.*{spark.memory.offHeap.enabled " + str(
-            OFF_HEAP) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        "sed -i '31s/.*/spark.memory.offHeap.enabled {0}/' {1}conf/spark-defaults.conf".format(
+            OFF_HEAP, SPARK_HOME))
     ssh_client.run(
-        "sed -i '32s{.*{spark.memory.offHeap.size " + str(
-            OFF_HEAP_BYTES) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        "sed -i '32s/.*/spark.memory.offHeap.size {0}/' {1}conf/spark-defaults.conf".format(
+            OFF_HEAP_BYTES, SPARK_HOME))
 
-    ssh_client.run("sed -i '42s{.*{spark.control.k " + str(
-        K) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+    ssh_client.run("sed -i '42s/.*/spark.control.k {0}/' {1}conf/spark-defaults.conf".format(
+        K, SPARK_HOME))
 
     # SAMPLING RATE LINE 43
-    ssh_client.run(
-        "sed -i '43s{.*{spark.control.tsample " + str(
-            TSAMPLE) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+    ssh_client.run("sed -i '43s/.*/spark.control.tsample {0}/' {1}conf/spark-defaults.conf".format(
+        TSAMPLE, SPARK_HOME))
 
-    ssh_client.run("sed -i '44s{.*{spark.control.ti " + str(
-        TI) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+    ssh_client.run("sed -i '44s/.*/spark.control.ti {0}/' {1}conf/spark-defaults.conf".format(
+        TI, SPARK_HOME))
 
     ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
         COREQUANTUM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
@@ -142,15 +140,14 @@ def setup_slave(instance, master_dns):
     if HDFS == 0:
         print("   Starting Spark Slave")
         ssh_client.run(
-            'export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/start-slave.sh ' + master_dns + ':7077 -h ' +
-            instance.public_dns_name + ' --port 9999 -c ' + str(
-                COREVM))
+            'export SPARK_HOME="{s}" && {s}sbin/start-slave.sh {0}:7077 -h {1}  --port 9999 -c {2}'.format(
+                master_dns, instance.public_dns_name, COREVM, s=SPARK_HOME))
 
         # REAL CPU LOG
-        logcpucommand = 'screen -d -m -S "' + instance.private_ip_address + '" bash -c "sar -u 1 > sar-' + instance.private_ip_address + '.log"'
-        # print(logcpucommand)
+        log_cpu_command = 'screen -d -m -S "{0}" bash -c "sar -u 1 > sar-{1}.log"'.format(
+            instance.private_ip_address, instance.private_ip_address)
         print("   Start SAR CPU Logging")
-        ssh_client.run(logcpucommand)
+        ssh_client.run(log_cpu_command)
 
 
 @timing
@@ -169,7 +166,8 @@ def setup_master(instance):
     if UPDATE_SPARK_MASTER:
         print("   Updating Spark...")
         ssh_client.run(
-            "cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package")
+            """cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7
+            -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
 
     print("   Remove Logs")
     ssh_client.run("rm " + SPARK_HOME + "spark-events/*")
@@ -178,7 +176,8 @@ def setup_master(instance):
 
     # SHUFFLE SERVICE EXTERNAL
     ssh_client.run(
-        "sed -i '31s{.*{spark.shuffle.service.enabled " + ENABLE_EXTERNAL_SHUFFLE + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        "sed -i '31s/.*/spark.shuffle.service.enabled {0}/' {1}conf/spark-defaults.conf".format(
+            ENABLE_EXTERNAL_SHUFFLE, SPARK_HOME))
 
     # OFF HEAP
     ssh_client.run(
@@ -192,15 +191,14 @@ def setup_master(instance):
     # DEADLINE LINE 35
     ssh_client.run("sed -i '35s{.*{spark.control.deadline " + str(
         DEADLINE) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
-    # SED "sed -i 's/^\(spark\.control\.deadline*\).*$/\1 140000/' "+SPARK_HOME+"conf/spark-defaults.conf"
+
     # MAX EXECUTOR LINE 39
     ssh_client.run("sed -i '39s{.*{spark.control.maxexecutor " + str(
         MAXEXECUTOR) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
-    # SED "sed -i 's/^\(spark\.control\.maxexecutor*\).*$/\1 4/' "+SPARK_HOME+"conf/spark-defaults.conf"
+
     # CORE FOR VM LINE 40
     ssh_client.run("sed -i '40s{.*{spark.control.coreforvm " + str(
         COREVM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
-    # SED "sed -i 's/^\(spark\.control\.coreforvm*\).*$/\1 8/' "+SPARK_HOME+"conf/spark-defaults.conf"
 
     # ALPHA LINE 36
     ssh_client.run("sed -i '36s{.*{spark.control.alpha " + str(
@@ -294,7 +292,7 @@ def setup_master(instance):
             ssh_client.run(sed_command_line)
 
     # DISABLE BENCHMARK
-    for bench in BENCH_LINES.keys():
+    for bench in BENCH_LINES:
         if bench not in BENCHMARK_PERF:
             for line_number in BENCH_LINES[bench]:
                 ssh_client.run("sed -i '" + line_number + " s/^/#/' ./spark-perf/config/config.py")
@@ -304,20 +302,25 @@ def setup_master(instance):
     print("   Enabling HDFS in benchmarks")
     ssh_client.run("sed -i '180s%memory%hdfs%g' ./spark-perf/config/config.py")
     ssh_client.run(
-        """sed -i  '50s%.*%HDFS_URL = "hdfs://""" + instance.public_dns_name + """:9000/test/"%' ./spark-perf/config/config.py""")
+        """sed -i  '50s%.*%HDFS_URL = "hdfs://{0}:9000/test/"%' ./spark-perf/config/config.py""".format(
+            instance.public_dns_name))
     if HDFS_MASTER != "":
         ssh_client.run(
-            """sed -i  '50s%.*%HDFS_URL = "hdfs://""" + HDFS_MASTER + """:9000/test/"%' ./spark-perf/config/config.py""")
+            """sed -i  '50s%.*%HDFS_URL = "hdfs://{0}:9000/test/"%' ./spark-perf/config/config.py""".format(
+                HDFS_MASTER))
         ssh_client.run(
-            """sed -i  '10s%.*%HDFS_URL="hdfs://""" + HDFS_MASTER + """:9000"%' ./spark-bench/conf/env.sh""")
+            """sed -i  '10s%.*%HDFS_URL="hdfs://{0}:9000"%' ./spark-bench/conf/env.sh""".format(
+                HDFS_MASTER))
         ssh_client.run(
-            """sed -i  '14s%.*%DATA_HDFS="hdfs://""" + HDFS_MASTER + """:9000/SparkBench"%' ./spark-bench/conf/env.sh""")
+            """sed -i  '14s%.*%DATA_HDFS="hdfs://{0}:9000/SparkBench"%' ./spark-bench/conf/env.sh""".format(
+                HDFS_MASTER))
 
     # START MASTER
     if HDFS == 0:
         print("   Starting Spark Master")
         ssh_client.run(
-            'export SPARK_HOME="' + SPARK_HOME + '" && ' + SPARK_HOME + 'sbin/start-master.sh -h ' + instance.public_dns_name)
+            'export SPARK_HOME="{d}" && {d}sbin/start-master.sh -h {0}'.format(
+                instance.public_dns_name, d=SPARK_HOME))
 
     return instance.public_dns_name, instance
 
@@ -331,7 +334,8 @@ def setup_hdfs_ssd(instance):
     """
     ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
     status, out, err = ssh_client.run(
-        "test -d /mnt/hdfs/namenode || sudo mkdir --parents /mnt/hdfs/namenode && sudo mkdir --parents /mnt/hdfs/datanode")
+        """test -d /mnt/hdfs/namenode || sudo mkdir --parents /mnt/hdfs/namenode &&
+        sudo mkdir --parents /mnt/hdfs/datanode""")
     if status != 0:
         print(out, err)
     ssh_client.run("sudo chown ubuntu:hadoop /mnt/hdfs && sudo chown ubuntu:hadoop /mnt/hdfs/*")
@@ -432,6 +436,11 @@ def write_config(output_folder):
 
 
 def check_slave_connected_master(ssh_client):
+    """
+
+    :param ssh_client:
+    :return:
+    """
     pass
 
 
@@ -445,8 +454,7 @@ def run_benchmark():
     ec2 = session.resource('ec2', region_name=REGION)
     instances = ec2.instances.filter(
         Filters=[{'Name': 'instance-state-name', 'Values': ['running']},
-                 {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}
-                 ])
+                 {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}])
 
     instance_list = list(instances)
     print("Instance Found: " + str(len(instance_list)))
@@ -507,13 +515,12 @@ def run_benchmark():
         for bench in BENCHMARK_BENCH:
             ssh_client.run('rm -r ./spark-bench/num/*')
 
-            for config in BENCH_CONF[bench].keys():
+            for config in BENCH_CONF[bench]:
                 if config != "NumTrials":
                     ssh_client.run(
-                        """sed -i '""" + str(
-                            BENCH_CONF[bench][config][0]) + """s{.*{""" + config + """=""" + str(
-                            BENCH_CONF[bench][config][1]) +
-                        """{' ./spark-bench/""" + bench + """/conf/env.sh""")
+                        "sed -i '{0}s/.*/{1}={2}/' ./spark-bench/{3}/conf/env.sh""".format(
+                            BENCH_CONF[bench][config][0], config, BENCH_CONF[bench][config][1],
+                            bench))
 
             if DELETE_HDFS:
                 print("Generating Data Benchmark " + bench)

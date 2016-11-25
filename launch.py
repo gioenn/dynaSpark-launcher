@@ -10,6 +10,7 @@ from errno import ETIMEDOUT
 
 from config import DATA_AMI, INSTANCE_TYPE, REGION, PRICE, SECURITY_GROUP, EBS_OPTIMIZED
 
+
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
 

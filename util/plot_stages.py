@@ -9,8 +9,7 @@ for folder in [parent + d for d in os.listdir(parent) if os.path.isdir(os.path.j
                         os.path.isdir(os.path.join(fold, d))]:
                 print(app)
                 if "sort" in app:
-                    from csparkbench import plot
-
+                    import plot
                     plot.plot(app)
 
 # import plot

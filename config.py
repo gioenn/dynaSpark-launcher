@@ -192,10 +192,11 @@ HADOOP_CONF = "/usr/local/lib/hadoop-2.7.2/etc/hadoop/"
 DELETE_HDFS = 1 if SCALE_FACTOR != PREV_SCALE_FACTOR else 0
 
 # CONFIG JSON
-CONFIG_DICT = {"Benchmark": {
-    "Name": BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0],
-    "Config": BENCH_CONF[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]
-},
+CONFIG_DICT = {
+    "Benchmark": {
+        "Name": BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0],
+        "Config": BENCH_CONF[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]
+    },
     "Deadline": DEADLINE,
     "Control": {
         "Alpha": ALPHA,
@@ -223,7 +224,8 @@ CONFIG_DICT = {"Benchmark": {
         "LocalityWaitRack": LOCALITY_WAIT_RACK,
         "CPUtask": CPU_TASK
     },
-    "HDFS": bool(HDFS)}
+    "HDFS": bool(HDFS)
+}
 
 # Line needed for enabling/disabling benchmark in spark-perf config.py
 BENCH_LINES = {"scala-agg-by-key": ["226", "227"],

@@ -1,10 +1,12 @@
-import launch
-import boto3
-import time
 import copy
-import run
+import time
 
-from config import NUMINSTANCE, REGION, TAG, REBOOT, CLUSTER_ID, TERMINATE, RUN, NUM_RUN, CREDENTIAL_PROFILE
+import boto3
+
+import launch
+import run
+from config import NUMINSTANCE, REGION, TAG, REBOOT, CLUSTER_ID, TERMINATE, RUN, NUM_RUN, \
+    CREDENTIAL_PROFILE
 
 
 def main():
