@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>main &#8212; Spark Control Benchmark 0.0.1 documentation</title>
+
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css"/>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css"/>
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT: '../',
+            VERSION: '0.0.1',
+            COLLAPSE_INDEX: false,
+            FILE_SUFFIX: '.html',
+            HAS_SOURCE: true
+        };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html"/>
+    <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Spark Control Benchmark 0.0.1 documentation" href="../index.html"/>
+    <link rel="up" title="Module code" href="index.html"/>
+</head>
+<body role="document">
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="../genindex.html" title="General Index"
+               accesskey="I">index</a></li>
+        <li class="right">
+            <a href="../py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+        <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;
+        </li>
+    </ul>
+</div>
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="bodywrapper">
+            <div class="body" role="main">
+
+                <h1>Source code for main</h1>
+                <div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">boto3</span>
+
+<span class="kn">import</span> <span class="nn">launch</span>
+<span class="kn">import</span> <span class="nn">run</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span
+                        class="n">NUMINSTANCE</span><span class="p">,</span> <span
+                        class="n">REGION</span><span class="p">,</span> <span
+                        class="n">TAG</span><span class="p">,</span> <span
+                        class="n">REBOOT</span><span class="p">,</span> <span
+                        class="n">CLUSTER_ID</span><span class="p">,</span> <span class="n">TERMINATE</span><span
+                        class="p">,</span> <span class="n">RUN</span><span class="p">,</span> <span
+                        class="n">NUM_RUN</span><span class="p">,</span> \
+    <span class="n">CREDENTIAL_PROFILE</span>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back"
+                                         href="../main.html#main.main">[docs]</a><span
+        class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Main function;</span>
+<span class="sd">    - Launch spot request of NUMINSTANCE</span>
+<span class="sd">    - Run Benchmark</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span
+            class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">profile_name</span><span
+            class="o">=</span><span class="n">CREDENTIAL_PROFILE</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">session</span><span
+            class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s1">&#39;ec2&#39;</span><span
+            class="p">,</span> <span class="n">region_name</span><span class="o">=</span><span
+            class="n">REGION</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">NUMINSTANCE</span> <span class="o">&gt;</span> <span
+            class="mi">0</span><span class="p">:</span>
+        <span class="n">spot_request_ids</span> <span class="o">=</span> <span
+            class="n">launch</span><span class="o">.</span><span class="n">launch</span><span
+            class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">NUMINSTANCE</span><span
+            class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CHECK SECURITY GROUP ALLOWED IP SETTINGS!!!&quot;</span><span
+            class="p">)</span>
+
+        <span class="c1"># Wait for our spots to fulfill</span>
+        <span class="n">launch</span><span class="o">.</span><span
+            class="n">wait_for_fulfillment</span><span class="p">(</span><span
+            class="n">client</span><span class="p">,</span> <span
+            class="n">spot_request_ids</span><span class="p">,</span> <span
+            class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span
+            class="p">(</span><span class="n">spot_request_ids</span><span class="p">))</span>
+
+        <span class="n">spot_instance_response</span> <span class="o">=</span> <span class="n">client</span><span
+            class="o">.</span><span class="n">describe_spot_instance_requests</span><span class="p">(</span>
+            <span class="n">SpotInstanceRequestIds</span><span class="o">=</span><span class="n">spot_request_ids</span><span
+            class="p">)</span>
+        <span class="n">instance_ids</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">result</span><span class="p">[</span><span
+            class="s2">&quot;InstanceId&quot;</span><span class="p">]</span> <span
+            class="k">for</span> <span class="n">result</span> <span class="ow">in</span>
+                        <span class="n">spot_instance_response</span><span class="p">[</span><span
+            class="s2">&quot;SpotInstanceRequests&quot;</span><span class="p">]]</span>
+
+        <span class="n">client</span><span class="o">.</span><span class="n">create_tags</span><span
+            class="p">(</span><span class="n">Resources</span><span class="o">=</span><span
+            class="n">instance_ids</span><span class="p">,</span> <span class="n">Tags</span><span
+            class="o">=</span><span class="n">TAG</span><span class="p">)</span>
+
+        <span class="c1"># Wait Running</span>
+        <span class="n">launch</span><span class="o">.</span><span class="n">wait_for_running</span><span
+            class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">instance_ids</span><span
+            class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span
+            class="p">(</span><span class="n">instance_ids</span><span class="p">))</span>
+
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span
+            class="p">(</span><span class="mi">15</span><span class="p">)</span>
+
+        <span class="n">launch</span><span class="o">.</span><span class="n">wait_ping</span><span
+            class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">instance_ids</span><span
+            class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span
+            class="p">(</span><span class="n">instance_ids</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">REBOOT</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rebooting instances...&quot;</span><span
+            class="p">)</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="n">client</span><span
+            class="o">.</span><span class="n">instances</span><span class="o">.</span><span
+            class="n">filter</span><span class="p">(</span>
+            <span class="n">Filters</span><span class="o">=</span><span class="p">[{</span><span
+            class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="s1">&#39;instance-state-name&#39;</span><span
+            class="p">,</span> <span class="s1">&#39;Values&#39;</span><span
+            class="p">:</span> <span class="p">[</span><span
+            class="s1">&#39;running&#39;</span><span class="p">]},</span>
+                     <span class="p">{</span><span class="s1">&#39;Name&#39;</span><span
+            class="p">:</span> <span class="s1">&#39;tag:ClusterId&#39;</span><span
+            class="p">,</span> <span class="s1">&#39;Values&#39;</span><span
+            class="p">:</span> <span class="p">[</span><span class="n">CLUSTER_ID</span><span
+            class="p">]}])</span>
+        <span class="n">instance_ids</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">x</span><span class="o">.</span><span class="n">id</span> <span
+            class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span
+            class="n">instances</span><span class="p">]</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">reboot_instances</span><span
+            class="p">(</span><span class="n">InstanceIds</span><span class="o">=</span><span
+            class="n">instance_ids</span><span class="p">)</span>
+        <span class="n">launch</span><span class="o">.</span><span class="n">wait_ping</span><span
+            class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">instance_ids</span><span
+            class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span
+            class="p">(</span><span class="n">instance_ids</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">RUN</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span
+            class="nb">range</span><span class="p">(</span><span class="n">NUM_RUN</span><span
+            class="p">):</span>
+            <span class="n">run</span><span class="o">.</span><span
+            class="n">run_benchmark</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">TERMINATE</span><span class="p">:</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="n">client</span><span
+            class="o">.</span><span class="n">instances</span><span class="o">.</span><span
+            class="n">filter</span><span class="p">(</span>
+            <span class="n">Filters</span><span class="o">=</span><span class="p">[{</span><span
+            class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="s1">&#39;instance-state-name&#39;</span><span
+            class="p">,</span> <span class="s1">&#39;Values&#39;</span><span
+            class="p">:</span> <span class="p">[</span><span
+            class="s1">&#39;running&#39;</span><span class="p">]},</span>
+                     <span class="p">{</span><span class="s1">&#39;Name&#39;</span><span
+            class="p">:</span> <span class="s1">&#39;tag:ClusterId&#39;</span><span
+            class="p">,</span> <span class="s1">&#39;Values&#39;</span><span
+            class="p">:</span> <span class="p">[</span><span class="n">CLUSTER_ID</span><span
+            class="p">]}])</span>
+        <span class="n">instance_ids</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">x</span><span class="o">.</span><span class="n">id</span> <span
+            class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span
+            class="n">instances</span><span class="p">]</span>
+        <span class="c1"># TODO get spot_request_ids</span>
+        <span class="n">launch</span><span class="o">.</span><span class="n">terminate</span><span
+            class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">spot_request_ids</span><span
+            class="p">,</span> <span class="n">instance_ids</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span
+                        class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <div id="searchbox" style="display: none" role="search">
+                <h3>Quick search</h3>
+                <form class="search" action="../search.html" method="get">
+                    <div><input type="text" name="q"/></div>
+                    <div><input type="submit" value="Go"/></div>
+                    <input type="hidden" name="check_keywords" value="yes"/>
+                    <input type="hidden" name="area" value="default"/>
+                </form>
+            </div>
+            <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="related" role="navigation" aria-label="related navigation">
+    <h3>Navigation</h3>
+    <ul>
+        <li class="right" style="margin-right: 10px">
+            <a href="../genindex.html" title="General Index"
+            >index</a></li>
+        <li class="right">
+            <a href="../py-modindex.html" title="Python Module Index"
+            >modules</a> |
+        </li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Spark Control Benchmark 0.0.1
+            documentation</a> &#187;</li>
+        <li class="nav-item nav-item-1"><a href="index.html">Module code</a> &#187;</li>
+    </ul>
+</div>
+<div class="footer" role="contentinfo">
+    &#169; Copyright 2016, Matteo Gazzetta.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+</div>
+</body>
+</html>

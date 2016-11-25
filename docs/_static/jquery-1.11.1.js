@@ -3053,6 +3053,7 @@
     var rnotwhite = (/\S+/g);
 
 
+
 // String to Object options format cache
     var optionsCache = {};
 
@@ -3543,6 +3544,7 @@
 
 
     var strundefined = typeof undefined;
+
 
 
 // Support: IE<9
@@ -4100,6 +4102,7 @@
         elem = el || elem;
         return jQuery.css(elem, "display") === "none" || !jQuery.contains(elem.ownerDocument, elem);
     };
+
 
 
 // Multifunctional method to get and set values of a collection
@@ -9713,6 +9716,8 @@
         } catch (e) {
         }
     }
+
+
 
 
 // Install script dataType

@@ -162,28 +162,29 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Stop Spark Slave/Master&quot;</span><span
             class="p">)</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
-            class="p">(</span><span class="s1">&#39;export SPARK_HOME=&quot;&#39;</span> <span
-            class="o">+</span> <span class="n">SPARK_HOME</span> <span class="o">+</span> <span
-            class="s1">&#39;&quot; &amp;&amp; &#39;</span> <span class="o">+</span> <span class="n">SPARK_HOME</span> <span
-            class="o">+</span> <span class="s1">&#39;sbin/stop-slave.sh&#39;</span><span
-            class="p">)</span>
+            class="p">(</span><span class="s1">&#39;export SPARK_HOME=&quot;</span><span class="si">{s}</span><span
+            class="s1">&quot; &amp;&amp; </span><span class="si">{s}</span><span class="s1">sbin/stop-slave.sh&#39;</span><span
+            class="o">.</span><span class="n">format</span><span class="p">(</span><span
+            class="n">s</span><span class="o">=</span><span class="n">SPARK_HOME</span><span
+            class="p">))</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
-            class="p">(</span>
-        <span class="s1">&#39;export SPARK_HOME=&quot;&#39;</span> <span class="o">+</span> <span
-            class="n">SPARK_HOME</span> <span class="o">+</span> <span class="s1">&#39;&quot; &amp;&amp; &#39;</span> <span
-            class="o">+</span> <span class="n">SPARK_HOME</span> <span class="o">+</span> <span
-            class="s1">&#39;sbin/stop-master.sh&#39;</span><span class="p">)</span>
+            class="p">(</span><span class="s1">&#39;export SPARK_HOME=&quot;</span><span class="si">{s}</span><span
+            class="s1">&quot; &amp;&amp; </span><span class="si">{s}</span><span class="s1">sbin/stop-master.sh&#39;</span><span
+            class="o">.</span><span class="n">format</span><span class="p">(</span><span
+            class="n">s</span><span class="o">=</span><span class="n">SPARK_HOME</span><span
+            class="p">))</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Set Log Level&quot;</span><span
             class="p">)</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
             class="p">(</span>
-        <span class="s2">&quot;sed -i &#39;31s{.*{log4j.rootCategory=&quot;</span> <span
-            class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="n">LOG_LEVEL</span><span class="p">)</span> <span class="o">+</span> <span
-            class="s2">&quot;, console {&#39; &quot;</span> <span class="o">+</span> <span
-            class="n">SPARK_HOME</span> <span class="o">+</span> <span class="s2">&quot;conf/log4j.properties&quot;</span><span
-            class="p">)</span>
+        <span class="s2">&quot;sed -i &#39;19s/.*/log4j.rootCategory=</span><span
+            class="si">{}</span><span class="s2">, console /&#39; </span><span
+            class="si">{}</span><span class="s2">conf/log4j.properties&quot;</span><span
+            class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">LOG_LEVEL</span><span
+            class="p">,</span>
+                                                                                          <span class="n">SPARK_HOME</span><span
+            class="p">))</span>
 
     <span class="k">if</span> <span class="n">KILL_JAVA</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Killing Java&quot;</span><span
@@ -242,7 +243,9 @@
                         class="p">)</span>
         <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-            <span class="s2">&quot;cd /usr/local/spark &amp;&amp; git pull &amp;&amp;  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package&quot;</span><span
+            <span class="sd">&quot;&quot;&quot;cd /usr/local/spark &amp;&amp; git pull &amp;&amp;  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn</span>
+<span class="sd">            -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests</span>
+<span class="sd">             -Dmaven.test.skip=true package&quot;&quot;&quot;</span><span
                         class="p">)</span>
 
     <span class="c1"># CLEAN UP EXECUTORS APP LOGS</span>
@@ -267,70 +270,67 @@
                         class="o">=</span> <span class="n">ssh_client</span><span class="o">.</span><span
                         class="n">run</span><span class="p">(</span><span class="s1">&#39;sudo ./disable-ht-v2.sh&#39;</span><span
                         class="p">)</span>
-        <span class="c1"># status, stdout, stderr = ssh_client.run(&#39;sudo ./disable-ht.sh&#39;)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Disabled HyperThreading&quot;</span><span
-                        class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Disabled HyperThreading </span><span
+                        class="si">{}</span><span class="s2">&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span><span
+                        class="n">status</span><span class="p">))</span>
 
-    <span class="c1"># ssh_client.run(&quot;sed -i &#39;47d&#39; &quot;+ SPARK_HOME + &quot;conf/spark-defaults.conf&quot;)</span>
-    <span class="c1"># ssh_client.run(&quot;sed -i &#39;47d&#39; &quot; + SPARK_HOME + &quot;conf/spark-defaults.conf&quot;)</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-        <span class="s2">&quot;sed -i &#39;47s{.*{spark.shuffle.service.enabled &quot;</span> <span
-                        class="o">+</span> <span class="n">ENABLE_EXTERNAL_SHUFFLE</span> <span
-                        class="o">+</span> <span class="s2">&quot;{&#39; &quot;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
-                        class="p">)</span>
+        <span class="s2">&quot;sed -i &#39;47s/.*/spark.shuffle.service.enabled </span><span
+                        class="si">{0}</span><span class="s2">/&#39; </span><span
+                        class="si">{1}</span><span
+                        class="s2">conf/spark-defaults.conf&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">ENABLE_EXTERNAL_SHUFFLE</span><span class="p">,</span> <span class="n">SPARK_HOME</span><span
+                        class="p">))</span>
 
     <span class="c1"># ssh_client.run(&#39;echo &quot;spark.local.dir /mnt/hdfs&quot; &gt;&gt; &#39;+ SPARK_HOME + &#39;conf/spark-defaults.conf&#39;)</span>
 
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-        <span class="s2">&quot;sed -i &#39;31s{.*{spark.memory.offHeap.enabled &quot;</span> <span
-                        class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="n">OFF_HEAP</span><span class="p">)</span> <span class="o">+</span> <span
-                        class="s2">&quot;{&#39; &quot;</span> <span class="o">+</span> <span
-                        class="n">SPARK_HOME</span> <span class="o">+</span> <span class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
-                        class="p">)</span>
+        <span class="s2">&quot;sed -i &#39;31s/.*/spark.memory.offHeap.enabled </span><span
+                        class="si">{0}</span><span class="s2">/&#39; </span><span
+                        class="si">{1}</span><span
+                        class="s2">conf/spark-defaults.conf&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">OFF_HEAP</span><span class="p">,</span> <span
+                        class="n">SPARK_HOME</span><span class="p">))</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-        <span class="s2">&quot;sed -i &#39;32s{.*{spark.memory.offHeap.size &quot;</span> <span
-                        class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="n">OFF_HEAP_BYTES</span><span class="p">)</span> <span
-                        class="o">+</span> <span class="s2">&quot;{&#39; &quot;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
-                        class="p">)</span>
+        <span class="s2">&quot;sed -i &#39;32s/.*/spark.memory.offHeap.size </span><span class="si">{0}</span><span
+                        class="s2">/&#39; </span><span class="si">{1}</span><span class="s2">conf/spark-defaults.conf&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">OFF_HEAP_BYTES</span><span class="p">,</span> <span
+                        class="n">SPARK_HOME</span><span class="p">))</span>
 
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
-                        class="p">(</span><span class="s2">&quot;sed -i &#39;42s{.*{spark.control.k &quot;</span> <span
-                        class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">K</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;{&#39; &quot;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
-                        class="p">)</span>
+                        class="p">(</span><span
+                        class="s2">&quot;sed -i &#39;42s/.*/spark.control.k </span><span class="si">{0}</span><span
+                        class="s2">/&#39; </span><span class="si">{1}</span><span class="s2">conf/spark-defaults.conf&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">K</span><span class="p">,</span> <span class="n">SPARK_HOME</span><span
+                        class="p">))</span>
 
     <span class="c1"># SAMPLING RATE LINE 43</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
-                        class="p">(</span>
-        <span class="s2">&quot;sed -i &#39;43s{.*{spark.control.tsample &quot;</span> <span
-                        class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="n">TSAMPLE</span><span class="p">)</span> <span class="o">+</span> <span
-                        class="s2">&quot;{&#39; &quot;</span> <span class="o">+</span> <span
-                        class="n">SPARK_HOME</span> <span class="o">+</span> <span class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
-                        class="p">)</span>
+                        class="p">(</span><span class="s2">&quot;sed -i &#39;43s/.*/spark.control.tsample </span><span
+                        class="si">{0}</span><span class="s2">/&#39; </span><span
+                        class="si">{1}</span><span
+                        class="s2">conf/spark-defaults.conf&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">TSAMPLE</span><span class="p">,</span> <span
+                        class="n">SPARK_HOME</span><span class="p">))</span>
 
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
-                        class="p">(</span><span class="s2">&quot;sed -i &#39;44s{.*{spark.control.ti &quot;</span> <span
-                        class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">TI</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;{&#39; &quot;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
-                        class="p">)</span>
+                        class="p">(</span><span
+                        class="s2">&quot;sed -i &#39;44s/.*/spark.control.ti </span><span
+                        class="si">{0}</span><span class="s2">/&#39; </span><span
+                        class="si">{1}</span><span
+                        class="s2">conf/spark-defaults.conf&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">TI</span><span class="p">,</span> <span class="n">SPARK_HOME</span><span
+                        class="p">))</span>
 
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span><span class="s2">&quot;sed -i &#39;45s{.*{spark.control.corequantum &quot;</span> <span
@@ -362,34 +362,31 @@
                         class="p">)</span>
         <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-            <span class="s1">&#39;export SPARK_HOME=&quot;&#39;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s1">&#39;&quot; &amp;&amp; &#39;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s1">&#39;sbin/start-slave.sh &#39;</span> <span
-                        class="o">+</span> <span class="n">master_dns</span> <span
-                        class="o">+</span> <span class="s1">&#39;:7077 -h &#39;</span> <span
-                        class="o">+</span>
-            <span class="n">instance</span><span class="o">.</span><span
-                        class="n">public_dns_name</span> <span class="o">+</span> <span class="s1">&#39; --port 9999 -c &#39;</span> <span
-                        class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-                <span class="n">COREVM</span><span class="p">))</span>
+            <span class="s1">&#39;export SPARK_HOME=&quot;</span><span class="si">{s}</span><span
+                        class="s1">&quot; &amp;&amp; </span><span class="si">{s}</span><span
+                        class="s1">sbin/start-slave.sh </span><span class="si">{0}</span><span
+                        class="s1">:7077 -h </span><span class="si">{1}</span><span class="s1">  --port 9999 -c </span><span
+                        class="si">{2}</span><span class="s1">&#39;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">master_dns</span><span class="p">,</span> <span
+                        class="n">instance</span><span class="o">.</span><span class="n">public_dns_name</span><span
+                        class="p">,</span> <span class="n">COREVM</span><span
+                        class="p">,</span> <span class="n">s</span><span class="o">=</span><span
+                        class="n">SPARK_HOME</span><span class="p">))</span>
 
         <span class="c1"># REAL CPU LOG</span>
-        <span class="n">logcpucommand</span> <span class="o">=</span> <span class="s1">&#39;screen -d -m -S &quot;&#39;</span> <span
-                        class="o">+</span> <span class="n">instance</span><span
-                        class="o">.</span><span class="n">private_ip_address</span> <span class="o">+</span> <span
-                        class="s1">&#39;&quot; bash -c &quot;sar -u 1 &gt; sar-&#39;</span> <span
-                        class="o">+</span> <span class="n">instance</span><span
-                        class="o">.</span><span class="n">private_ip_address</span> <span class="o">+</span> <span
-                        class="s1">&#39;.log&quot;&#39;</span>
-        <span class="c1"># print(logcpucommand)</span>
+        <span class="n">log_cpu_command</span> <span class="o">=</span> <span class="s1">&#39;screen -d -m -S &quot;</span><span
+                        class="si">{0}</span><span class="s1">&quot; bash -c &quot;sar -u 1 &gt; sar-</span><span
+                        class="si">{1}</span><span class="s1">.log&quot;&#39;</span><span class="o">.</span><span
+                        class="n">format</span><span class="p">(</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">private_ip_address</span><span
+                        class="p">,</span> <span class="n">instance</span><span
+                        class="o">.</span><span class="n">private_ip_address</span><span
+                        class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Start SAR CPU Logging&quot;</span><span
                         class="p">)</span>
         <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
-                        class="p">(</span><span class="n">logcpucommand</span><span
+                        class="p">(</span><span class="n">log_cpu_command</span><span
                         class="p">)</span>
 
 
@@ -421,7 +418,8 @@
                         class="p">)</span>
         <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-            <span class="s2">&quot;cd /usr/local/spark &amp;&amp; git pull &amp;&amp;  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package&quot;</span><span
+            <span class="sd">&quot;&quot;&quot;cd /usr/local/spark &amp;&amp; git pull &amp;&amp;  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7</span>
+<span class="sd">            -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package&quot;&quot;&quot;</span><span
                         class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span
@@ -437,13 +435,13 @@
     <span class="c1"># SHUFFLE SERVICE EXTERNAL</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-        <span class="s2">&quot;sed -i &#39;31s{.*{spark.shuffle.service.enabled &quot;</span> <span
-                        class="o">+</span> <span class="n">ENABLE_EXTERNAL_SHUFFLE</span> <span
-                        class="o">+</span> <span class="s2">&quot;{&#39; &quot;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
-                        class="p">)</span>
+        <span class="s2">&quot;sed -i &#39;31s/.*/spark.shuffle.service.enabled </span><span
+                        class="si">{0}</span><span class="s2">/&#39; </span><span
+                        class="si">{1}</span><span
+                        class="s2">conf/spark-defaults.conf&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">ENABLE_EXTERNAL_SHUFFLE</span><span class="p">,</span> <span class="n">SPARK_HOME</span><span
+                        class="p">))</span>
 
     <span class="c1"># OFF HEAP</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
@@ -475,7 +473,7 @@
                         class="s2">&quot;{&#39; &quot;</span> <span class="o">+</span> <span
                         class="n">SPARK_HOME</span> <span class="o">+</span> <span class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
                         class="p">)</span>
-    <span class="c1"># SED &quot;sed -i &#39;s/^\(spark\.control\.deadline*\).*$/\1 140000/&#39; &quot;+SPARK_HOME+&quot;conf/spark-defaults.conf&quot;</span>
+
     <span class="c1"># MAX EXECUTOR LINE 39</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span><span class="s2">&quot;sed -i &#39;39s{.*{spark.control.maxexecutor &quot;</span> <span
@@ -484,7 +482,7 @@
                         class="s2">&quot;{&#39; &quot;</span> <span class="o">+</span> <span
                         class="n">SPARK_HOME</span> <span class="o">+</span> <span class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
                         class="p">)</span>
-    <span class="c1"># SED &quot;sed -i &#39;s/^\(spark\.control\.maxexecutor*\).*$/\1 4/&#39; &quot;+SPARK_HOME+&quot;conf/spark-defaults.conf&quot;</span>
+
     <span class="c1"># CORE FOR VM LINE 40</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span><span class="s2">&quot;sed -i &#39;40s{.*{spark.control.coreforvm &quot;</span> <span
@@ -493,7 +491,6 @@
                         class="s2">&quot;{&#39; &quot;</span> <span class="o">+</span> <span
                         class="n">SPARK_HOME</span> <span class="o">+</span> <span class="s2">&quot;conf/spark-defaults.conf&quot;</span><span
                         class="p">)</span>
-    <span class="c1"># SED &quot;sed -i &#39;s/^\(spark\.control\.coreforvm*\).*$/\1 8/&#39; &quot;+SPARK_HOME+&quot;conf/spark-defaults.conf&quot;</span>
 
     <span class="c1"># ALPHA LINE 36</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
@@ -724,8 +721,7 @@
 
     <span class="c1"># DISABLE BENCHMARK</span>
     <span class="k">for</span> <span class="n">bench</span> <span class="ow">in</span> <span
-                        class="n">BENCH_LINES</span><span class="o">.</span><span
-                        class="n">keys</span><span class="p">():</span>
+                        class="n">BENCH_LINES</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">bench</span> <span class="ow">not</span> <span
                         class="ow">in</span> <span class="n">BENCHMARK_PERF</span><span
                         class="p">:</span>
@@ -749,31 +745,27 @@
                         class="p">)</span>
     <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-        <span class="sd">&quot;&quot;&quot;sed -i  &#39;50s%.*%HDFS_URL = &quot;hdfs://&quot;&quot;&quot;</span> <span
-                        class="o">+</span> <span class="n">instance</span><span
-                        class="o">.</span><span class="n">public_dns_name</span> <span
-                        class="o">+</span> <span class="s2">&quot;&quot;&quot;:9000/test/&quot;%&#39; ./spark-perf/config/config.py&quot;&quot;&quot;</span><span
-                        class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;sed -i  &#39;50s%.*%HDFS_URL = &quot;hdfs://{0}:9000/test/&quot;%&#39; ./spark-perf/config/config.py&quot;&quot;&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">instance</span><span class="o">.</span><span
+                        class="n">public_dns_name</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">HDFS_MASTER</span> <span class="o">!=</span> <span
                         class="s2">&quot;&quot;</span><span class="p">:</span>
         <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-            <span class="sd">&quot;&quot;&quot;sed -i  &#39;50s%.*%HDFS_URL = &quot;hdfs://&quot;&quot;&quot;</span> <span
-                        class="o">+</span> <span class="n">HDFS_MASTER</span> <span
-                        class="o">+</span> <span class="s2">&quot;&quot;&quot;:9000/test/&quot;%&#39; ./spark-perf/config/config.py&quot;&quot;&quot;</span><span
-                        class="p">)</span>
+            <span class="sd">&quot;&quot;&quot;sed -i  &#39;50s%.*%HDFS_URL = &quot;hdfs://{0}:9000/test/&quot;%&#39; ./spark-perf/config/config.py&quot;&quot;&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">HDFS_MASTER</span><span class="p">))</span>
         <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-            <span class="sd">&quot;&quot;&quot;sed -i  &#39;10s%.*%HDFS_URL=&quot;hdfs://&quot;&quot;&quot;</span> <span
-                        class="o">+</span> <span class="n">HDFS_MASTER</span> <span
-                        class="o">+</span> <span class="s2">&quot;&quot;&quot;:9000&quot;%&#39; ./spark-bench/conf/env.sh&quot;&quot;&quot;</span><span
-                        class="p">)</span>
+            <span class="sd">&quot;&quot;&quot;sed -i  &#39;10s%.*%HDFS_URL=&quot;hdfs://{0}:9000&quot;%&#39; ./spark-bench/conf/env.sh&quot;&quot;&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">HDFS_MASTER</span><span class="p">))</span>
         <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-            <span class="sd">&quot;&quot;&quot;sed -i  &#39;14s%.*%DATA_HDFS=&quot;hdfs://&quot;&quot;&quot;</span> <span
-                        class="o">+</span> <span class="n">HDFS_MASTER</span> <span
-                        class="o">+</span> <span class="s2">&quot;&quot;&quot;:9000/SparkBench&quot;%&#39; ./spark-bench/conf/env.sh&quot;&quot;&quot;</span><span
-                        class="p">)</span>
+            <span class="sd">&quot;&quot;&quot;sed -i  &#39;14s%.*%DATA_HDFS=&quot;hdfs://{0}:9000/SparkBench&quot;%&#39; ./spark-bench/conf/env.sh&quot;&quot;&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">HDFS_MASTER</span><span class="p">))</span>
 
     <span class="c1"># START MASTER</span>
     <span class="k">if</span> <span class="n">HDFS</span> <span class="o">==</span> <span
@@ -782,16 +774,14 @@
                         class="p">)</span>
         <span class="n">ssh_client</span><span class="o">.</span><span class="n">run</span><span
                         class="p">(</span>
-            <span class="s1">&#39;export SPARK_HOME=&quot;&#39;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s1">&#39;&quot; &amp;&amp; &#39;</span> <span
-                        class="o">+</span> <span class="n">SPARK_HOME</span> <span
-                        class="o">+</span> <span
-                        class="s1">&#39;sbin/start-master.sh -h &#39;</span> <span
-                        class="o">+</span> <span class="n">instance</span><span
-                        class="o">.</span><span class="n">public_dns_name</span><span
-                        class="p">)</span>
+            <span class="s1">&#39;export SPARK_HOME=&quot;</span><span class="si">{d}</span><span
+                        class="s1">&quot; &amp;&amp; </span><span class="si">{d}</span><span
+                        class="s1">sbin/start-master.sh -h </span><span class="si">{0}</span><span
+                        class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span
+                        class="p">(</span>
+                <span class="n">instance</span><span class="o">.</span><span class="n">public_dns_name</span><span
+                        class="p">,</span> <span class="n">d</span><span class="o">=</span><span
+                        class="n">SPARK_HOME</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span
                         class="n">public_dns_name</span><span class="p">,</span> <span class="n">instance</span>
@@ -815,7 +805,8 @@
                         class="n">err</span> <span class="o">=</span> <span
                         class="n">ssh_client</span><span class="o">.</span><span
                         class="n">run</span><span class="p">(</span>
-        <span class="s2">&quot;test -d /mnt/hdfs/namenode || sudo mkdir --parents /mnt/hdfs/namenode &amp;&amp; sudo mkdir --parents /mnt/hdfs/datanode&quot;</span><span
+        <span class="sd">&quot;&quot;&quot;test -d /mnt/hdfs/namenode || sudo mkdir --parents /mnt/hdfs/namenode &amp;&amp;</span>
+<span class="sd">        sudo mkdir --parents /mnt/hdfs/datanode&quot;&quot;&quot;</span><span
                         class="p">)</span>
     <span class="k">if</span> <span class="n">status</span> <span class="o">!=</span> <span
                         class="mi">0</span><span class="p">:</span>
@@ -1049,9 +1040,16 @@
             class="mi">4</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">check_slave_connected_master</span><span
-                        class="p">(</span><span class="n">ssh_client</span><span class="p">):</span>
-    <span class="k">pass</span>
+<div class="viewcode-block" id="check_slave_connected_master"><a class="viewcode-back"
+                                                                 href="../run.html#run.check_slave_connected_master">[docs]</a><span
+        class="k">def</span> <span class="nf">check_slave_connected_master</span><span
+        class="p">(</span><span class="n">ssh_client</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param ssh_client:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
 
 
 <span class="nd">@timing</span>
@@ -1082,8 +1080,7 @@
                         class="p">:</span> <span class="s1">&#39;tag:ClusterId&#39;</span><span
                         class="p">,</span> <span class="s1">&#39;Values&#39;</span><span
                         class="p">:</span> <span class="p">[</span><span class="n">CLUSTER_ID</span><span
-                        class="p">]}</span>
-                 <span class="p">])</span>
+                        class="p">]}])</span>
 
     <span class="n">instance_list</span> <span class="o">=</span> <span class="nb">list</span><span
                         class="p">(</span><span class="n">instances</span><span class="p">)</span>
@@ -1262,31 +1259,26 @@
 
             <span class="k">for</span> <span class="n">config</span> <span
                         class="ow">in</span> <span class="n">BENCH_CONF</span><span
-                        class="p">[</span><span class="n">bench</span><span class="p">]</span><span
-                        class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        class="p">[</span><span class="n">bench</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">config</span> <span
                         class="o">!=</span> <span class="s2">&quot;NumTrials&quot;</span><span
                         class="p">:</span>
                     <span class="n">ssh_client</span><span class="o">.</span><span
                         class="n">run</span><span class="p">(</span>
-                        <span class="sd">&quot;&quot;&quot;sed -i &#39;&quot;&quot;&quot;</span> <span
-                        class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                        <span class="s2">&quot;sed -i &#39;</span><span class="si">{0}</span><span
+                        class="s2">s/.*/</span><span class="si">{1}</span><span
+                        class="s2">=</span><span class="si">{2}</span><span class="s2">/&#39; ./spark-bench/</span><span
+                        class="si">{3}</span><span
+                        class="s2">/conf/env.sh&quot;&quot;&quot;</span><span
+                        class="o">.</span><span class="n">format</span><span class="p">(</span>
                             <span class="n">BENCH_CONF</span><span class="p">[</span><span
                         class="n">bench</span><span class="p">][</span><span class="n">config</span><span
-                        class="p">][</span><span class="mi">0</span><span class="p">])</span> <span
-                        class="o">+</span> <span class="s2">&quot;&quot;&quot;s{.*{&quot;&quot;&quot;</span> <span
-                        class="o">+</span> <span class="n">config</span> <span
-                        class="o">+</span> <span
-                        class="s2">&quot;&quot;&quot;=&quot;&quot;&quot;</span> <span
-                        class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-                            <span class="n">BENCH_CONF</span><span class="p">[</span><span
+                        class="p">][</span><span class="mi">0</span><span class="p">],</span> <span
+                        class="n">config</span><span class="p">,</span> <span
+                        class="n">BENCH_CONF</span><span class="p">[</span><span
                         class="n">bench</span><span class="p">][</span><span class="n">config</span><span
-                        class="p">][</span><span class="mi">1</span><span class="p">])</span> <span
-                        class="o">+</span>
-                        <span class="sd">&quot;&quot;&quot;{&#39; ./spark-bench/&quot;&quot;&quot;</span> <span
-                        class="o">+</span> <span class="n">bench</span> <span
-                        class="o">+</span> <span class="s2">&quot;&quot;&quot;/conf/env.sh&quot;&quot;&quot;</span><span
-                        class="p">)</span>
+                        class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                            <span class="n">bench</span><span class="p">))</span>
 
             <span class="k">if</span> <span class="n">DELETE_HDFS</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating Data Benchmark &quot;</span> <span

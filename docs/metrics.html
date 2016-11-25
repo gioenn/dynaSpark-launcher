@@ -58,6 +58,44 @@
                     <h1>Metrics Module<a class="headerlink" href="#module-metrics"
                                          title="Permalink to this headline">¶</a></h1>
                     <dl class="function">
+                        <dt id="metrics.compute_cpu_time">
+                            <code class="descclassname">metrics.</code><code class="descname">compute_cpu_time</code><span
+                                class="sig-paren">(</span><em>app_id</em>, <em>app_info</em>, <em>workers_dict</em>,
+                            <em>config</em>, <em>folder</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/metrics.html#compute_cpu_time"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#metrics.compute_cpu_time"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>app_id</strong> &#8211; </li>
+                                            <li><strong>app_info</strong> &#8211; </li>
+                                            <li><strong>workers_dict</strong> &#8211; </li>
+                                            <li><strong>config</strong> &#8211; </li>
+                                            <li><strong>folder</strong> &#8211; </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last"></p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
                         <dt id="metrics.load_config">
                             <code class="descclassname">metrics.</code><code class="descname">load_config</code><span
                                 class="sig-paren">(</span><em>folder</em><span
@@ -79,6 +117,52 @@
                                 <tr class="field-even field">
                                     <th class="field-name">Returns:</th>
                                     <td class="field-body"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="metrics.save_deadline_errors">
+                            <code class="descclassname">metrics.</code><code class="descname">save_deadline_errors</code><span
+                                class="sig-paren">(</span><em>folder</em>, <em>deadline_error</em>,
+                            <em>stage_errors</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/metrics.html#save_deadline_errors"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#metrics.save_deadline_errors"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd>
+                            <dl class="docutils">
+                                <dt>Save the error of the application&#8217;s stages in the folder
+                                </dt>
+                                <dd>with some statistics (mean, stddev, median, max, min)</dd>
+                            </dl>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>folder</strong> &#8211; the output folder
+                                            </li>
+                                            <li><strong>deadline_error</strong> &#8211; the
+                                                application&#8217;s deadline error
+                                            </li>
+                                            <li><strong>stage_errors</strong> &#8211; the list of
+                                                the stages errors
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">Nothing</p>
+                                    </td>
                                 </tr>
                                 </tbody>
                             </table>

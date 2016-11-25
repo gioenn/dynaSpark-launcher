@@ -13,10 +13,11 @@ Contents:
 
 	config
 	launch
-	run
 	log
-	plot
+	main
 	metrics
+	plot
+	run
 
 
 Indices and tables

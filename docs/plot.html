@@ -117,45 +117,6 @@
                     </dl>
 
                     <dl class="function">
-                        <dt id="plot.load_app_data">
-                            <code class="descclassname">plot.</code><code class="descname">load_app_data</code><span
-                                class="sig-paren">(</span><em>app_log</em>, <em>hdfs</em><span
-                                class="sig-paren">)</span><a class="reference internal"
-                                                             href="_modules/plot.html#load_app_data"><span
-                                class="viewcode-link">[source]</span></a><a class="headerlink"
-                                                                            href="#plot.load_app_data"
-                                                                            title="Permalink to this definition">¶</a>
-                        </dt>
-                        <dd><p>Function that parse the application data like stage ids, start,
-                            deadline, end,
-                            tasktimestamps from the app_log</p>
-                            <table class="docutils field-list" frame="void" rules="none">
-                                <col class="field-name"/>
-                                <col class="field-body"/>
-                                <tbody valign="top">
-                                <tr class="field-odd field">
-                                    <th class="field-name">Parameters:</th>
-                                    <td class="field-body">
-                                        <ul class="first simple">
-                                            <li><strong>app_log</strong> &#8211; The log of the
-                                                application with log level INFO
-                                            </li>
-                                            <li><strong>hdfs</strong> &#8211; </li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                                <tr class="field-even field">
-                                    <th class="field-name">Returns:</th>
-                                    <td class="field-body"><p class="first last">app_info
-                                        dictionary</p>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </dd>
-                    </dl>
-
-                    <dl class="function">
                         <dt id="plot.load_config">
                             <code class="descclassname">plot.</code><code class="descname">load_config</code><span
                                 class="sig-paren">(</span><em>folder</em><span
@@ -180,46 +141,6 @@
                                 <tr class="field-even field">
                                     <th class="field-name">Returns:</th>
                                     <td class="field-body">the config dictionary</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </dd>
-                    </dl>
-
-                    <dl class="function">
-                        <dt id="plot.load_worker_data">
-                            <code class="descclassname">plot.</code><code class="descname">load_worker_data</code><span
-                                class="sig-paren">(</span><em>worker_log</em>, <em>cpu_log</em><span
-                                class="sig-paren">)</span><a class="reference internal"
-                                                             href="_modules/plot.html#load_worker_data"><span
-                                class="viewcode-link">[source]</span></a><a class="headerlink"
-                                                                            href="#plot.load_worker_data"
-                                                                            title="Permalink to this definition">¶</a>
-                        </dt>
-                        <dd><p>Load the controller data from the worker_log and combine with the
-                            cpu_real data from cpu_log</p>
-                            <table class="docutils field-list" frame="void" rules="none">
-                                <col class="field-name"/>
-                                <col class="field-body"/>
-                                <tbody valign="top">
-                                <tr class="field-odd field">
-                                    <th class="field-name">Parameters:</th>
-                                    <td class="field-body">
-                                        <ul class="first simple">
-                                            <li><strong>worker_log</strong> &#8211; the path of the
-                                                log of the worker
-                                            </li>
-                                            <li><strong>cpu_log</strong> &#8211; the path of the cpu
-                                                monitoring tool log of the worker
-                                            </li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                                <tr class="field-even field">
-                                    <th class="field-name">Returns:</th>
-                                    <td class="field-body"><p class="first last">worker_dict the
-                                        dictionary of the worker&#8217;s data</p>
-                                    </td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -371,6 +292,47 @@
                                     <th class="field-name">Returns:</th>
                                     <td class="field-body"><p class="first last">nothing; save the
                                         figure in the output folder</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="plot.text_plotter_x">
+                            <code class="descclassname">plot.</code><code class="descname">text_plotter_x</code><span
+                                class="sig-paren">(</span><em>x_data</em>, <em>axis</em>,
+                            <em>labels</em><span class="sig-paren">)</span><a
+                                class="reference internal" href="_modules/plot.html#text_plotter_x"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#plot.text_plotter_x"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Plot all the label on the axis and adjust y to avoid label
+                            overlapping</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>x_data</strong> &#8211; the list of x point
+                                            </li>
+                                            <li><strong>axis</strong> &#8211; the axis on which plot
+                                                the label text
+                                            </li>
+                                            <li><strong>labels</strong> &#8211; the list of label to
+                                                plot
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">Nothing</p>
                                     </td>
                                 </tr>
                                 </tbody>

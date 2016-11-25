@@ -73,23 +73,17 @@
                         class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">matplotlib</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span
-                        class="nn">np</span>
-
-<span class="kn">from</span> <span class="nn">util.utils</span> <span class="k">import</span> <span
-                        class="n">timing</span><span class="p">,</span> <span class="n">string_to_datetime</span>
-
-<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span
-                        class="p">(</span><span class="s1">&#39;PDF&#39;</span><span
-                        class="p">)</span>
-<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span
-                        class="k">as</span> <span class="nn">plticker</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span
                         class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span
+                        class="k">as</span> <span class="nn">plt_ticker</span>
 
 <span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span
-                        class="n">COREVM</span><span class="p">,</span> <span
-                        class="n">COREHTVM</span>
+                        class="n">COREVM</span>
+<span class="kn">from</span> <span class="nn">log</span> <span class="k">import</span> <span
+                        class="n">load_app_data</span><span class="p">,</span> <span class="n">load_worker_data</span>
+<span class="kn">from</span> <span class="nn">util.utils</span> <span class="k">import</span> <span
+                        class="n">timing</span>
 
 <span class="n">Y_TICK_AGG</span> <span class="o">=</span> <span class="mi">40</span>
 <span class="n">Y_TICK_SORT</span> <span class="o">=</span> <span class="mi">40</span>
@@ -101,7 +95,7 @@
 <span class="n">TQ_KMEANS</span> <span class="o">=</span> <span class="mi">9</span>
 <span class="n">PDF</span> <span class="o">=</span> <span class="mi">1</span>
 
-<span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+<span class="n">PLOT_PARAMETERS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;axes.labelsize&#39;</span><span class="p">:</span> <span class="n">LABEL_SIZE</span><span
                         class="p">,</span>  <span
                         class="c1"># fontsize for x and y labels (was 10)</span>
@@ -120,7 +114,7 @@
 
 <span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span
                         class="o">.</span><span class="n">update</span><span class="p">(</span><span
-                        class="n">params</span><span class="p">)</span>
+                        class="n">PLOT_PARAMETERS</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="load_config"><a class="viewcode-back"
@@ -145,386 +139,55 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
             class="n">config</span><span class="p">)</span> <span class="o">==</span> <span
             class="mi">0</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">csparkbench.config</span> <span class="k">import</span> <span
-            class="n">CONFIG_DICT</span>
+            <span class="kn">from</span> <span class="nn">config</span> <span
+            class="k">import</span> <span class="n">CONFIG_DICT</span>
             <span class="k">return</span> <span class="n">CONFIG_DICT</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">config</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">csparkbench.config</span> <span class="k">import</span> <span
-            class="n">CONFIG_DICT</span>
+        <span class="kn">from</span> <span class="nn">config</span> <span
+            class="k">import</span> <span class="n">CONFIG_DICT</span>
         <span class="k">return</span> <span class="n">CONFIG_DICT</span></div>
 
 
-<div class="viewcode-block" id="load_app_data"><a class="viewcode-back"
-                                                  href="../plot.html#plot.load_app_data">[docs]</a><span
-        class="k">def</span> <span class="nf">load_app_data</span><span class="p">(</span><span
-        class="n">app_log</span><span class="p">,</span> <span class="n">hdfs</span><span class="p">):</span>
+<div class="viewcode-block" id="text_plotter_x"><a class="viewcode-back"
+                                                   href="../plot.html#plot.text_plotter_x">[docs]</a><span
+        class="k">def</span> <span class="nf">text_plotter_x</span><span class="p">(</span><span
+        class="n">x_data</span><span class="p">,</span> <span class="n">axis</span><span
+        class="p">,</span> <span class="n">labels</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function that parse the application data like stage ids, start, deadline, end,</span>
-<span class="sd">    tasktimestamps from the app_log</span>
+<span class="sd">    Plot all the label on the axis and adjust y to avoid label overlapping</span>
 
-<span class="sd">    :param app_log: The log of the application with log level INFO</span>
-<span class="sd">    :param hdfs:</span>
-<span class="sd">    :return: app_info dictionary</span>
+<span class="sd">    :param x_data:  the list of x point</span>
+<span class="sd">    :param axis:  the axis on which plot the label text</span>
+<span class="sd">    :param labels: the list of label to plot</span>
+<span class="sd">    :return: Nothing</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading app data from log&quot;</span><span
-            class="p">)</span>
-    <span class="n">dict_to_plot</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">app_info</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">app_id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">app_log</span><span
-            class="p">)</span> <span class="k">as</span> <span class="n">applog</span><span
-            class="p">:</span>
-        <span class="n">stage_id</span> <span class="o">=</span> <span class="o">-</span><span
-            class="mi">1</span> <span class="k">if</span> <span class="n">hdfs</span> <span
-            class="k">else</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span
-            class="n">applog</span><span class="p">:</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span
-            class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span
-            class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
-            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
-            class="mi">3</span> <span class="ow">and</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">3</span><span class="p">]</span> <span
-            class="o">==</span> <span class="s2">&quot;TaskSetManager:&quot;</span> <span
-            class="ow">and</span> <span class="n">line</span><span class="p">[</span><span
-            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Finished&quot;</span><span
-            class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">app_info</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="nb">int</span><span
-            class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
-            class="p">[</span><span class="mi">9</span><span class="p">]))][</span><span class="s2">&quot;tasktimestamps&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span>
-                        <span class="n">string_to_datetime</span><span class="p">(</span><span
-            class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-                <span class="k">except</span> <span class="p">(</span><span
-            class="ne">KeyError</span><span class="p">,</span> <span
-            class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span
-            class="n">e</span><span class="p">:</span>
-                    <span class="n">app_info</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="nb">int</span><span
-            class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
-            class="p">[</span><span class="mi">9</span><span class="p">]))][</span><span class="s2">&quot;tasktimestamps&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                    <span class="n">app_info</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="nb">int</span><span
-            class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
-            class="p">[</span><span class="mi">9</span><span class="p">]))][</span><span class="s2">&quot;tasktimestamps&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span>
-                        <span class="n">string_to_datetime</span><span class="p">(</span><span
-            class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
-            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
-            class="mi">3</span> <span class="ow">and</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">3</span><span class="p">]</span> <span
-            class="o">==</span> <span
-            class="s2">&quot;StandaloneSchedulerBackend:&quot;</span> <span
-            class="ow">and</span> <span class="n">line</span><span class="p">[</span>
-                <span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span
-            class="s2">&quot;Connected&quot;</span><span class="p">:</span>
-                <span class="n">app_info</span><span class="p">[</span><span
-            class="n">line</span><span class="p">[</span><span class="o">-</span><span
-            class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span
-            class="p">()]</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="n">app_id</span> <span class="o">=</span> <span
-            class="n">line</span><span class="p">[</span><span class="o">-</span><span
-            class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span
-            class="p">()</span>
-                <span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">]</span> <span class="o">=</span> <span
-            class="p">{}</span>
-                <span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;dealineTimeStages&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span
-            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
-            class="mi">12</span> <span class="ow">and</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">3</span><span class="p">]</span> <span
-            class="o">==</span> <span class="s2">&quot;ControllerJob:&quot;</span><span
-            class="p">:</span>
-                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
-            class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;INIT&quot;</span><span
-            class="p">:</span>
-                    <span class="k">if</span> <span class="nb">len</span><span
-            class="p">(</span><span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
-            class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span
-            class="p">(</span>
-                            <span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
-            class="p">]):</span>
-                        <span class="n">stage_id</span> <span class="o">=</span> <span class="nb">int</span><span
-            class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="mi">12</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span
-            class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span
-            class="s2">&quot;&quot;</span><span class="p">))</span>
-                        <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
-            class="s2">&quot;start&quot;</span><span class="p">]</span> <span
-            class="o">=</span> <span class="n">string_to_datetime</span><span
-            class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="mi">1</span><span class="p">])</span>
-                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span>
-                            <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
-            class="s2">&quot;start&quot;</span><span class="p">])</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;START: &quot;</span> <span
-            class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">app_info</span><span
-            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
-            class="p">][</span><span class="s2">&quot;start&quot;</span><span class="p">]))</span>
-                        <span class="n">deadline_ms</span> <span class="o">=</span> <span
-            class="nb">float</span><span class="p">(</span><span class="n">line</span><span
-            class="p">[</span><span class="mi">16</span><span class="p">]</span><span
-            class="o">.</span><span class="n">replace</span><span class="p">(</span><span
-            class="s2">&quot;,&quot;</span><span class="p">,</span> <span
-            class="s2">&quot;&quot;</span><span class="p">))</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="n">deadline_ms</span><span
-            class="p">)</span>
-                        <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
-            class="s2">&quot;deadline&quot;</span><span class="p">]</span> <span class="o">=</span> \
-                            <span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
-            class="p">][</span><span class="o">-</span><span class="mi">1</span><span
-            class="p">]</span> \
-                            <span class="o">+</span> <span class="n">timedelta</span><span
-            class="p">(</span><span class="n">milliseconds</span><span class="o">=</span><span
-            class="n">deadline_ms</span><span class="p">)</span>
-                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="s2">&quot;dealineTimeStages&quot;</span><span class="p">]</span><span
-            class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
-            class="s2">&quot;deadline&quot;</span><span class="p">])</span>
-                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
-            class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;NEEDED&quot;</span> <span
-            class="ow">and</span> <span class="n">line</span><span class="p">[</span><span
-            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;SEND&quot;</span><span
-            class="p">:</span>
-                    <span class="n">next_app_id</span> <span class="o">=</span> <span
-            class="n">line</span><span class="p">[</span><span class="o">-</span><span
-            class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span
-            class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span
-            class="s2">&quot;</span><span class="p">,</span> <span
-            class="s2">&quot;&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">app_id</span> <span
-            class="o">!=</span> <span class="n">next_app_id</span><span class="p">:</span>
-                        <span class="n">app_id</span> <span class="o">=</span> <span class="n">next_app_id</span>
-                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="s2">&quot;dealineTimeStages&quot;</span><span class="p">]</span> <span
-            class="o">=</span> <span class="p">[]</span>
-                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                        <span class="n">dict_to_plot</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span
-            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
-            class="mi">3</span> <span class="ow">and</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">3</span><span class="p">]</span> <span
-            class="o">==</span> <span class="s2">&quot;DAGScheduler:&quot;</span><span
-            class="p">:</span>
-                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
-            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Submitting&quot;</span> <span
-            class="ow">and</span> <span class="n">line</span><span class="p">[</span><span
-            class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;missing&quot;</span><span
-            class="p">:</span>
-                    <span class="n">stage_id</span> <span class="o">=</span> <span
-            class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="mi">10</span><span class="p">])</span>
-                    <span class="n">app_info</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-                    <span class="n">app_info</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
-            class="p">][</span><span class="s2">&quot;tasks&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span
-            class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="mi">5</span><span class="p">])</span>
-                    <span class="n">app_info</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
-            class="p">][</span><span class="s2">&quot;start&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span
-            class="n">string_to_datetime</span><span class="p">(</span><span
-            class="n">line</span><span class="p">[</span><span class="mi">1</span><span
-            class="p">])</span>
-                <span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span
-            class="o">-</span><span class="mi">4</span><span class="p">]</span> <span
-            class="o">==</span> <span class="s2">&quot;finished&quot;</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">app_id</span> <span
-            class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-                        <span class="n">stage_id</span> <span class="o">=</span> <span class="nb">int</span><span
-            class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="mi">5</span><span class="p">])</span>
-                        <span class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">stage_id</span><span class="p">][</span><span
-            class="s2">&quot;end&quot;</span><span class="p">]</span> <span class="o">=</span> <span
-            class="n">string_to_datetime</span><span class="p">(</span><span
-            class="n">line</span><span class="p">[</span><span class="mi">1</span><span
-            class="p">])</span>
-                        <span class="k">if</span> <span class="nb">len</span><span
-            class="p">(</span><span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;startTimeStages&quot;</span><span
-            class="p">])</span> <span class="o">&gt;</span> <span class="nb">len</span><span
-            class="p">(</span>
-                                <span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
-            class="p">]):</span>
-                            <span class="n">dict_to_plot</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="s2">&quot;finishTimeStages&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span>
-                                <span class="n">app_info</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
-            class="p">][</span><span class="s2">&quot;end&quot;</span><span class="p">])</span>
-                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;END: &quot;</span> <span
-            class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">app_info</span><span
-            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">stage_id</span><span
-            class="p">][</span><span class="s2">&quot;end&quot;</span><span class="p">]))</span>
-        <span class="k">return</span> <span class="n">app_info</span></div>
-
-
-<span class="k">def</span> <span class="nf">get_text_positions</span><span class="p">(</span><span
-                        class="n">x_data</span><span class="p">,</span> <span
-                        class="n">y_data</span><span class="p">,</span> <span
-                        class="n">txt_width</span><span class="p">,</span> <span class="n">txt_height</span><span
-                        class="p">):</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span
-                        class="p">(</span><span class="nb">zip</span><span class="p">(</span><span
-                        class="n">y_data</span><span class="p">,</span> <span
-                        class="n">x_data</span><span class="p">))</span>
-    <span class="n">text_positions</span> <span class="o">=</span> <span
-                        class="n">y_data</span><span class="o">.</span><span
-                        class="n">copy</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span
-                        class="n">y</span><span class="p">,</span> <span class="n">x</span><span
-                        class="p">)</span> <span class="ow">in</span> <span
-                        class="nb">enumerate</span><span class="p">(</span><span
-                        class="n">a</span><span class="p">):</span>
-        <span class="n">local_text_positions</span> <span class="o">=</span> <span
-                        class="p">[</span><span class="n">i</span> <span class="k">for</span> <span
-                        class="n">i</span> <span class="ow">in</span> <span class="n">a</span> <span
-                        class="k">if</span> <span class="n">i</span><span class="p">[</span><span
-                        class="mi">0</span><span class="p">]</span> <span
-                        class="o">&gt;</span> <span class="p">(</span><span class="n">y</span> <span
-                        class="o">-</span> <span class="n">txt_height</span><span class="p">)</span>
-                                <span class="ow">and</span> <span class="p">(</span><span
-                        class="nb">abs</span><span class="p">(</span><span class="n">i</span><span
-                        class="p">[</span><span class="mi">1</span><span class="p">]</span> <span
-                        class="o">-</span> <span class="n">x</span><span class="p">)</span> <span
-                        class="o">&lt;</span> <span class="n">txt_width</span> <span
-                        class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span
-                        class="ow">and</span> <span class="n">i</span> <span
-                        class="o">!=</span> <span class="p">(</span><span class="n">y</span><span
-                        class="p">,</span> <span class="n">x</span><span class="p">)]</span>
-        <span class="k">if</span> <span class="n">local_text_positions</span><span
-                        class="p">:</span>
-            <span class="n">sorted_ltp</span> <span class="o">=</span> <span
-                        class="nb">sorted</span><span class="p">(</span><span class="n">local_text_positions</span><span
-                        class="p">)</span>
-            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span
-                        class="n">sorted_ltp</span><span class="p">[</span><span class="mi">0</span><span
-                        class="p">][</span><span class="mi">0</span><span class="p">]</span> <span
-                        class="o">-</span> <span class="n">y</span><span class="p">)</span> <span
-                        class="o">&lt;</span> <span class="n">txt_height</span><span
-                        class="p">:</span>  <span class="c1"># True == collision</span>
-                <span class="n">differ</span> <span class="o">=</span> <span
-                        class="n">np</span><span class="o">.</span><span class="n">diff</span><span
-                        class="p">(</span><span class="n">sorted_ltp</span><span class="p">,</span> <span
-                        class="n">axis</span><span class="o">=</span><span class="mi">0</span><span
-                        class="p">)</span>
-                <span class="n">a</span><span class="p">[</span><span class="n">index</span><span
-                        class="p">]</span> <span class="o">=</span> <span class="p">(</span><span
-                        class="n">sorted_ltp</span><span class="p">[</span><span
-                        class="o">-</span><span class="mi">1</span><span class="p">][</span><span
-                        class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span
-                        class="n">txt_height</span><span class="p">,</span> <span class="n">a</span><span
-                        class="p">[</span><span class="n">index</span><span class="p">][</span><span
-                        class="mi">1</span><span class="p">])</span>
-                <span class="n">text_positions</span><span class="p">[</span><span
-                        class="n">index</span><span class="p">]</span> <span
-                        class="o">=</span> <span class="n">sorted_ltp</span><span class="p">[</span><span
-                        class="o">-</span><span class="mi">1</span><span class="p">][</span><span
-                        class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span
-                        class="n">txt_height</span>
-                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span
-                        class="p">(</span><span class="n">j</span><span class="p">,</span> <span
-                        class="n">m</span><span class="p">)</span> <span class="ow">in</span> <span
-                        class="nb">enumerate</span><span class="p">(</span><span
-                        class="n">differ</span><span class="p">):</span>
-                    <span class="c1"># j is the vertical distance between words</span>
-                    <span class="k">if</span> <span class="n">j</span> <span
-                        class="o">&gt;</span> <span class="n">txt_height</span> <span
-                        class="o">*</span> <span class="mi">2</span><span class="p">:</span>  <span
-                        class="c1"># if True then room to fit a word in</span>
-                        <span class="n">a</span><span class="p">[</span><span class="n">index</span><span
-                        class="p">]</span> <span class="o">=</span> <span class="p">(</span><span
-                        class="n">sorted_ltp</span><span class="p">[</span><span
-                        class="n">k</span><span class="p">][</span><span class="mi">0</span><span
-                        class="p">]</span> <span class="o">+</span> <span
-                        class="n">txt_height</span><span class="p">,</span> <span class="n">a</span><span
-                        class="p">[</span><span class="n">index</span><span class="p">][</span><span
-                        class="mi">1</span><span class="p">])</span>
-                        <span class="n">text_positions</span><span class="p">[</span><span
-                        class="n">index</span><span class="p">]</span> <span
-                        class="o">=</span> <span class="n">sorted_ltp</span><span class="p">[</span><span
-                        class="n">k</span><span class="p">][</span><span class="mi">0</span><span
-                        class="p">]</span> <span class="o">+</span> <span
-                        class="n">txt_height</span>
-                        <span class="k">break</span>
-    <span class="k">return</span> <span class="n">text_positions</span>
-
-
-<span class="k">def</span> <span class="nf">text_plotter</span><span class="p">(</span><span
-                        class="n">x_data</span><span class="p">,</span> <span
-                        class="n">y_data</span><span class="p">,</span> <span class="n">text_positions</span><span
-                        class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span
-                        class="n">txt_width</span><span class="p">,</span> <span class="n">txt_height</span><span
-                        class="p">,</span> <span class="n">labels</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span
-                        class="p">(</span><span class="n">x</span><span class="p">,</span> <span
-                        class="n">y</span><span class="p">,</span> <span class="n">t</span><span
-                        class="p">,</span> <span class="n">l</span><span class="p">)</span> <span
-                        class="ow">in</span> <span class="nb">enumerate</span><span
-                        class="p">(</span><span class="nb">zip</span><span class="p">(</span><span
-                        class="n">x_data</span><span class="p">,</span> <span
-                        class="n">y_data</span><span class="p">,</span> <span class="n">text_positions</span><span
-                        class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
+            class="p">(</span><span class="n">x_point</span><span class="p">,</span> <span
+            class="n">label</span><span class="p">)</span> <span class="ow">in</span> <span
+            class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span
+            class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">labels</span><span
+            class="p">)):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
-                        class="n">x_data</span><span class="p">)</span> <span class="o">&gt;</span> <span
-                        class="mi">3</span><span class="p">:</span>
-            <span class="n">yt</span> <span class="o">=</span> <span class="mi">102</span> <span
-                        class="k">if</span> <span class="p">(</span><span class="n">i</span> <span
-                        class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span
-                        class="o">==</span> <span class="mi">1</span> <span
-                        class="k">else</span> <span class="mi">110</span>
+            class="n">x_data</span><span class="p">)</span> <span class="o">&gt;</span> <span
+            class="mi">3</span><span class="p">:</span>
+            <span class="n">y_point</span> <span class="o">=</span> <span
+            class="mi">102</span> <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span
+            class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span
+            class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span
+            class="mi">110</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">yt</span> <span class="o">=</span> <span class="mi">102</span>
+            <span class="n">y_point</span> <span class="o">=</span> <span class="mi">102</span>
         <span class="n">axis</span><span class="o">.</span><span class="n">text</span><span
-                        class="p">(</span><span class="n">x</span><span class="p">,</span> <span
-                        class="n">yt</span><span class="p">,</span> <span class="n">l</span><span
-                        class="p">,</span> <span class="n">rotation</span><span
-                        class="o">=</span><span class="mi">0</span><span class="p">,</span> <span
-                        class="n">horizontalalignment</span><span class="o">=</span><span
-                        class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">size</span><span
-                        class="o">=</span><span class="n">LABEL_SIZE</span><span class="p">)</span>
+            class="p">(</span><span class="n">x_point</span><span class="p">,</span> <span
+            class="n">y_point</span><span class="p">,</span> <span class="n">label</span><span
+            class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span
+            class="mi">0</span><span class="p">,</span> <span
+            class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span
+            class="p">,</span>
+                  <span class="n">size</span><span class="o">=</span><span
+            class="n">LABEL_SIZE</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="plot_worker"><a class="viewcode-back"
@@ -635,25 +298,29 @@
                             <span class="n">worker_dict</span><span class="p">[</span><span
             class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
             class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]]</span>
-            <span class="n">sp_real</span> <span class="o">=</span> <span
-            class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span
-            class="p">]</span>
-            <span class="n">sp</span> <span class="o">=</span> <span
-            class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp&quot;</span><span
-            class="p">]</span>
-            <span class="k">if</span> <span class="n">sp</span><span class="p">[</span><span
-            class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
-            class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">sp_real</span> <span class="o">=</span> <span class="p">[</span><span
+            class="n">y</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span
+            class="n">y</span> <span class="ow">in</span> <span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span class="p">]]</span>
+            <span class="n">set_points_progress</span> <span class="o">=</span> <span
+            class="p">[</span><span class="n">x</span> <span class="o">*</span> <span
+            class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span
+            class="ow">in</span> <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;sp&quot;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">set_points_progress</span><span
+            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">&lt;</span> <span class="mf">100.0</span><span
+            class="p">:</span>
                 <span class="n">time_sp</span><span class="o">.</span><span
             class="n">append</span><span class="p">(</span><span class="n">dead_ts</span><span
             class="p">)</span>
-                <span class="n">sp</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+                <span class="n">set_points_progress</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">100.0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">sp_real</span><span class="p">[</span><span
             class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
-            class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            class="o">&lt;</span> <span class="mf">100.0</span><span class="p">:</span>
                 <span class="n">next_time</span> <span class="o">=</span> <span class="n">time_sp_real</span><span
             class="p">[</span><span class="o">-</span><span class="mi">1</span><span
             class="p">]</span> <span class="o">+</span> <span class="p">(</span><span
@@ -666,27 +333,18 @@
                     <span class="n">time_sp_real</span><span class="o">.</span><span class="n">append</span><span
             class="p">(</span><span class="n">next_time</span><span class="p">)</span>
                     <span class="n">sp_real</span><span class="o">.</span><span
-            class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span
+            class="n">append</span><span class="p">(</span><span class="mf">100.0</span><span
             class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">time_sp_real</span><span class="o">.</span><span class="n">append</span><span
             class="p">(</span><span class="n">end_ts</span><span class="p">)</span>
                     <span class="n">sp_real</span><span class="o">.</span><span
-            class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span
+            class="n">append</span><span class="p">(</span><span class="mf">100.0</span><span
             class="p">)</span>
-            <span class="n">sp</span> <span class="o">=</span> <span class="p">[</span><span
-            class="n">x</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span
-            class="n">x</span> <span class="ow">in</span> <span class="n">sp</span><span
-            class="p">]</span>
-            <span class="n">sp_real</span> <span class="o">=</span> <span class="p">[</span><span
-            class="n">y</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span
-            class="n">y</span> <span class="ow">in</span> <span class="n">sp_real</span><span
-            class="p">]</span>
             <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span
             class="p">(</span><span class="n">time_sp</span><span class="p">,</span> <span
-            class="n">sp</span><span class="p">,</span> <span
-            class="s2">&quot;gray&quot;</span><span class="p">,</span> <span
-            class="n">label</span><span class="o">=</span><span class="s1">&#39;PROGRESS&#39;</span><span
+            class="n">set_points_progress</span><span class="p">,</span> <span class="s2">&quot;gray&quot;</span><span
+            class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;PROGRESS&#39;</span><span
             class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span
             class="mi">2</span><span class="p">)</span>
             <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span
@@ -696,8 +354,7 @@
             class="o">=</span><span class="s1">&#39;PROGRESS REAL&#39;</span><span
             class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span
             class="mi">2</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span
-            class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span
             class="s2">&quot;SID &quot;</span> <span class="o">+</span> <span
             class="nb">str</span><span class="p">(</span><span class="n">sid</span><span
@@ -705,36 +362,9 @@
             class="o">+</span> <span class="n">worker_log</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">PLOT_LABEL</span><span class="p">:</span>
-        <span class="c1"># set the bbox for the text. Increase txt_width for wider text.</span>
-        <span class="n">txt_height</span> <span class="o">=</span> <span class="mf">0.2</span> <span
-            class="o">*</span> <span class="p">(</span><span class="n">plt</span><span
-            class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span class="mi">1</span><span
-            class="p">]</span> <span class="o">-</span> <span class="n">plt</span><span
-            class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span class="mi">0</span><span
-            class="p">])</span>
-        <span class="n">txt_width</span> <span class="o">=</span> <span class="mf">0.2</span> <span
-            class="o">*</span> <span class="p">(</span><span class="n">plt</span><span
-            class="o">.</span><span class="n">xlim</span><span class="p">()[</span><span class="mi">1</span><span
-            class="p">]</span> <span class="o">-</span> <span class="n">plt</span><span
-            class="o">.</span><span class="n">xlim</span><span class="p">()[</span><span class="mi">0</span><span
-            class="p">])</span>
-        <span class="c1"># Get the corrected text positions, then write the text.</span>
-        <span class="n">y_label</span> <span class="o">=</span> <span class="n">np</span><span
-            class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span
-            class="p">(</span><span class="n">label_to_plot</span><span class="p">),</span> <span
-            class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span
-            class="mi">1</span><span class="p">])</span>
-        <span class="n">text_positions</span> <span class="o">=</span> <span class="n">get_text_positions</span><span
-            class="p">(</span><span class="n">ts_to_plot</span><span class="p">,</span>
-                                            <span class="n">y_label</span><span
-            class="p">,</span> <span class="n">txt_width</span><span class="p">,</span> <span
-            class="n">txt_height</span><span class="p">)</span>
-        <span class="n">text_plotter</span><span class="p">(</span><span class="n">ts_to_plot</span><span
-            class="p">,</span> <span class="n">y_label</span><span class="p">,</span>
-                     <span class="n">text_positions</span><span class="p">,</span> <span class="n">ax1</span><span
-            class="p">,</span> <span class="n">txt_width</span><span class="p">,</span> <span
-            class="n">txt_height</span><span class="p">,</span> <span class="n">label_to_plot</span><span
-            class="p">)</span>
+        <span class="n">text_plotter_x</span><span class="p">(</span><span
+            class="n">ts_to_plot</span><span class="p">,</span> <span class="n">ax1</span><span
+            class="p">,</span> <span class="n">label_to_plot</span><span class="p">)</span>
 
     <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span
             class="p">(</span><span class="s1">&#39;Time [s]&#39;</span><span class="p">)</span>
@@ -789,19 +419,19 @@
             class="ow">in</span> <span class="n">name</span><span class="p">:</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
-            class="n">plticker</span><span class="o">.</span><span
+            class="n">plt_ticker</span><span class="o">.</span><span
             class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
             class="o">=</span><span class="n">Y_TICK_AGG</span><span class="p">))</span>
     <span class="k">elif</span> <span class="s2">&quot;sort&quot;</span> <span class="ow">in</span> <span
             class="n">name</span><span class="p">:</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
-            class="n">plticker</span><span class="o">.</span><span
+            class="n">plt_ticker</span><span class="o">.</span><span
             class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
             class="o">=</span><span class="n">Y_TICK_SORT</span><span class="p">))</span>
     <span class="n">ax1</span><span class="o">.</span><span class="n">yaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
-            class="n">plticker</span><span class="o">.</span><span
+            class="n">plt_ticker</span><span class="o">.</span><span
             class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
             class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
 
@@ -898,8 +528,7 @@
                 <span class="c1"># ax2.plot(time_cpu,</span>
                 <span class="c1">#          worker_dict[&quot;cpu_real&quot;][start_index:end_index], &quot;.g-&quot;,</span>
                 <span class="c1">#          label=&#39;CPU REAL&#39;)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span
-            class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span
             class="s2">&quot;SID &quot;</span> <span class="o">+</span> <span
             class="nb">str</span><span class="p">(</span><span class="n">sid</span><span
@@ -937,7 +566,7 @@
 
     <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
-            class="n">plticker</span><span class="o">.</span><span
+            class="n">plt_ticker</span><span class="o">.</span><span
             class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
             class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
     <span class="c1"># locator = mpdate.SecondLocator(interval=SECONDLOCATOR)</span>
@@ -945,24 +574,25 @@
     <span class="c1"># plt.gca().xaxis.set_major_formatter(mpdate.DateFormatter(STRPTIME_FORMAT))</span>
     <span class="c1"># plt.gcf().autofmt_xdate()</span>
     <span class="k">if</span> <span class="n">TITLE</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span
-            class="p">(</span>
-            <span class="n">app_id</span> <span class="o">+</span> <span
-            class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+        <span class="n">title</span> <span class="o">=</span> <span class="n">app_id</span> <span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
             class="nb">str</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span class="p">])</span> <span
             class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
-            class="nb">str</span><span class="p">(</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
             class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
-            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
-            class="nb">str</span><span class="p">(</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="o">+</span> \
+                <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
             class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
             class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
             class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;K&quot;</span><span class="p">]))</span>
+            class="p">][</span><span class="s2">&quot;K&quot;</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span
+            class="p">(</span><span class="n">title</span><span class="p">)</span>
     <span class="n">ax1</span><span class="o">.</span><span class="n">set_zorder</span><span
             class="p">(</span><span class="n">ax2</span><span class="o">.</span><span class="n">get_zorder</span><span
             class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span
@@ -1046,7 +676,6 @@
             class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">timestamps</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">times</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">app_deadline</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">first_ts</span> <span class="o">=</span> <span
             class="n">app_dict</span><span class="p">[</span><span
             class="n">PLOT_SID_STAGE</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span
@@ -1091,8 +720,10 @@
             class="p">[</span><span class="o">-</span><span class="mi">1</span><span
             class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span
             class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="kc">None</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span
+            class="n">error</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span
+            class="n">error</span><span class="p">)</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span
             class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span
@@ -1219,8 +850,10 @@
             class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span
             class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span
             class="s1">&#39;--&#39;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="kc">None</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span
+            class="n">error</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span
+            class="n">error</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">TITLE</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span
@@ -1228,14 +861,15 @@
             class="s2">&quot; &quot;</span> <span class="o">+</span> <span
             class="nb">str</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span class="p">])</span> <span
-            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
-            class="nb">str</span><span class="p">(</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
-            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
-            class="nb">str</span><span class="p">(</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span>
+                      <span class="nb">str</span><span class="p">(</span><span
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
+            class="o">+</span>
+                      <span class="nb">str</span><span class="p">(</span><span
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
             class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
             class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
@@ -1277,218 +911,6 @@
             class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span
             class="p">()</span></div>
-
-
-<div class="viewcode-block" id="load_worker_data"><a class="viewcode-back"
-                                                     href="../plot.html#plot.load_worker_data">[docs]</a><span
-        class="k">def</span> <span class="nf">load_worker_data</span><span class="p">(</span><span
-        class="n">worker_log</span><span class="p">,</span> <span class="n">cpu_log</span><span
-        class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load the controller data from the worker_log and combine with the cpu_real data from cpu_log</span>
-
-<span class="sd">    :param worker_log: the path of the log of the worker</span>
-<span class="sd">    :param cpu_log:  the path of the cpu monitoring tool log of the worker</span>
-<span class="sd">    :return: worker_dict the dictionary of the worker&#39;s  data</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">worker_log</span><span
-            class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">cpu_log</span><span
-            class="p">)</span>
-    <span class="n">worker_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">worker_log</span><span
-            class="p">)</span> <span class="k">as</span> <span class="n">wlog</span><span class="p">:</span>
-        <span class="n">app_id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="n">worker_dict</span><span class="p">[</span><span class="s2">&quot;cpu_real&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">worker_dict</span><span class="p">[</span><span class="s2">&quot;time_cpu&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">sid</span> <span class="o">=</span> <span class="o">-</span><span
-            class="mi">1</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span
-            class="n">wlog</span><span class="p">:</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span
-            class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span
-            class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
-            class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span
-            class="mi">3</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
-            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Created&quot;</span> <span
-            class="ow">and</span> <span class="n">app_id</span> <span class="o">!=</span> <span
-            class="s2">&quot;&quot;</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">sid</span> <span
-            class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span
-            class="p">[</span><span class="mi">8</span><span class="p">]):</span>
-                        <span class="n">sid</span> <span class="o">=</span> <span
-            class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="mi">8</span><span class="p">])</span>
-                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">]</span> <span
-            class="o">=</span> <span class="p">{}</span>
-                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;cpu&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;time&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp&quot;</span><span
-            class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                    <span class="n">worker_dict</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
-            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]</span><span
-            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span
-            class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="o">-</span><span class="mi">1</span><span class="p">]</span><span
-            class="o">.</span><span class="n">replace</span><span class="p">(</span><span
-            class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span
-            class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
-                    <span class="n">worker_dict</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
-            class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
-                    <span class="n">worker_dict</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
-            class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span
-            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">string_to_datetime</span><span
-            class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="mi">1</span><span class="p">]))</span>
-                    <span class="n">worker_dict</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
-            class="p">][</span><span class="s2">&quot;sp&quot;</span><span class="p">]</span><span
-            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span
-            class="p">)</span>
-                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span
-            class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Scaled&quot;</span><span
-            class="p">:</span>
-                    <span class="c1"># print(l)</span>
-                    <span class="k">if</span> <span class="n">app_id</span> <span
-            class="o">==</span> <span class="s2">&quot;&quot;</span> <span
-            class="ow">or</span> <span class="n">app_id</span> <span class="o">!=</span> <span
-            class="n">line</span><span class="p">[</span><span class="mi">10</span><span class="p">]:</span>
-                        <span class="n">next_app_id</span> <span class="o">=</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">10</span><span class="p">]</span>
-                        <span class="k">try</span><span class="p">:</span>
-                            <span class="n">worker_dict</span><span class="p">[</span><span
-            class="n">next_app_id</span><span class="p">]</span> <span class="o">=</span> <span
-            class="p">{}</span>
-                            <span class="n">app_id</span> <span class="o">=</span> <span class="n">next_app_id</span>
-                        <span class="k">except</span> <span class="ne">KeyError</span><span
-            class="p">:</span>
-                            <span class="nb">print</span><span class="p">(</span><span class="n">next_app_id</span> <span
-            class="o">+</span> <span
-            class="s2">&quot; NOT FOUND BEFORE IN BENCHMARK LOGS&quot;</span><span
-            class="p">)</span>
-                <span class="k">if</span> <span class="n">app_id</span> <span
-            class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">4</span><span class="p">]</span> <span
-            class="o">==</span> <span class="s2">&quot;CoreToAllocate:&quot;</span><span
-            class="p">:</span>
-                        <span class="c1"># print(l)</span>
-                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;cpu&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
-            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
-            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
-            class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span
-            class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
-                    <span class="k">if</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">4</span><span class="p">]</span> <span
-            class="o">==</span> <span class="s2">&quot;Real:&quot;</span><span class="p">:</span>
-                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;sp_real&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span>
-                            <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
-            class="p">[</span><span class="o">-</span><span class="mi">1</span><span
-            class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span
-            class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span
-            class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
-                    <span class="k">if</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">4</span><span class="p">]</span> <span
-            class="o">==</span> <span class="s2">&quot;SP&quot;</span><span class="p">:</span>
-                        <span class="n">worker_dict</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;time&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span><span class="n">string_to_datetime</span><span class="p">(</span><span
-            class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-                        <span class="c1"># print(l[-1].replace(&quot;\n&quot;, &quot;&quot;))</span>
-                        <span class="n">progress</span> <span class="o">=</span> <span class="nb">float</span><span
-            class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="o">-</span><span class="mi">1</span><span class="p">]</span><span
-            class="o">.</span><span class="n">replace</span><span class="p">(</span><span
-            class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span
-            class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
-                        <span class="c1"># print(sp)</span>
-                        <span class="k">if</span> <span class="n">progress</span> <span class="o">&lt;</span> <span
-            class="mf">0.0</span><span class="p">:</span>
-                            <span class="n">worker_dict</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
-            class="p">][</span><span class="s2">&quot;sp&quot;</span><span class="p">]</span><span
-            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span
-            class="p">(</span><span class="n">progress</span><span class="p">)</span> <span
-            class="o">/</span> <span class="mi">100</span><span class="p">)</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">worker_dict</span><span class="p">[</span><span
-            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
-            class="p">][</span><span class="s2">&quot;sp&quot;</span><span class="p">]</span><span
-            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">progress</span><span
-            class="p">)</span>
-
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cpu_log</span><span
-            class="p">)</span> <span class="k">as</span> <span class="n">cpulog</span><span
-            class="p">:</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span
-            class="n">cpulog</span><span class="p">:</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span
-            class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;    &quot;</span><span
-            class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span
-            class="s2">&quot;Linux&quot;</span> <span class="ow">in</span> <span
-            class="n">line</span><span class="p">[</span><span class="mi">0</span><span
-            class="p">]</span><span class="o">.</span><span class="n">split</span><span
-            class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span
-            class="ow">or</span> <span class="s2">&quot;</span><span class="se">\n</span><span
-            class="s2">&quot;</span> <span class="ow">in</span> <span class="n">line</span><span
-            class="p">[</span><span class="mi">0</span><span class="p">]</span><span
-            class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span
-            class="p">))</span> <span class="ow">and</span> <span class="n">line</span><span
-            class="p">[</span>
-                <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span
-            class="s2">&quot; CPU&quot;</span> <span class="ow">and</span> <span
-            class="n">line</span><span class="p">[</span>
-                <span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span
-            class="s2">&quot;Average:&quot;</span><span class="p">:</span>
-                <span class="n">worker_dict</span><span class="p">[</span><span class="s2">&quot;time_cpu&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span>
-                    <span class="n">dt</span><span class="o">.</span><span class="n">strptime</span><span
-            class="p">(</span><span class="n">line</span><span class="p">[</span><span
-            class="mi">0</span><span class="p">],</span> <span
-            class="s1">&#39;%I:%M:%S %p&#39;</span><span class="p">)</span><span
-            class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">year</span><span
-            class="o">=</span><span class="mi">2016</span><span class="p">))</span>
-                <span class="n">cpuint</span> <span class="o">=</span> <span class="nb">float</span><span
-            class="p">(</span><span class="s1">&#39;</span><span class="si">{0:.2f}</span><span
-            class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span
-            class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span
-            class="p">[</span><span class="mi">2</span><span class="p">])</span> <span
-            class="o">*</span> <span class="n">COREHTVM</span><span class="p">)</span> <span
-            class="o">/</span> <span class="mi">100</span><span class="p">))</span>
-                <span class="n">worker_dict</span><span class="p">[</span><span class="s2">&quot;cpu_real&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">append</span><span
-            class="p">(</span><span class="n">cpuint</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span
-            class="p">(</span><span class="n">worker_dict</span><span class="o">.</span><span
-            class="n">keys</span><span class="p">()))</span>
-    <span class="k">return</span> <span class="n">worker_dict</span></div>
 
 
 <div class="viewcode-block" id="plot_overview_cpu"><a class="viewcode-back"
@@ -1573,8 +995,10 @@
             class="p">[</span><span class="o">-</span><span class="mi">1</span><span
             class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span
             class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="kc">None</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span
+            class="n">error</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span
+            class="n">error</span><span class="p">)</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span
             class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span
@@ -1630,9 +1054,11 @@
             class="n">name</span> <span class="ow">or</span> <span
             class="s2">&quot;sort&quot;</span> <span class="ow">in</span> <span
             class="n">name</span><span class="p">:</span>
-            <span class="n">TQ</span> <span class="o">=</span> <span class="n">TQ_MICRO</span>
+            <span class="n">time_quantum</span> <span class="o">=</span> <span
+            class="n">TQ_MICRO</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">TQ</span> <span class="o">=</span> <span class="n">TQ_KMEANS</span>
+            <span class="n">time_quantum</span> <span class="o">=</span> <span
+            class="n">TQ_KMEANS</span>
         <span class="c1"># tq_ts = math.floor(app_dead_ts / TQ) * TQ</span>
         <span class="c1"># original_ts[tq_ts] = app_dead_ts</span>
         <span class="c1"># try:</span>
@@ -1656,8 +1082,8 @@
             class="o">-</span> <span class="n">first_ts</span>
         <span class="n">tq_ts</span> <span class="o">=</span> <span class="n">math</span><span
             class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">app_alpha_deadline_ts</span> <span
-            class="o">/</span> <span class="n">TQ</span><span class="p">)</span> <span
-            class="o">*</span> <span class="n">TQ</span>
+            class="o">/</span> <span class="n">time_quantum</span><span class="p">)</span> <span
+            class="o">*</span> <span class="n">time_quantum</span>
         <span class="n">original_ts</span><span class="p">[</span><span class="n">tq_ts</span><span
             class="p">]</span> <span class="o">=</span> <span class="n">app_alpha_deadline_ts</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span
@@ -1688,13 +1114,8 @@
         <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span
             class="n">sorted_sid</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">int_dead</span> <span class="o">=</span> <span
-            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;deadline&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
-            class="p">()</span>
-                <span class="n">dead_ts</span> <span class="o">=</span> <span
-            class="n">int_dead</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="c1"># int_dead = app_info[app_id][sid][&quot;deadline&quot;].timestamp()</span>
+                <span class="c1"># dead_ts = int_dead - first_ts</span>
                 <span class="c1"># tq_ts = math.floor(dead_ts / TQ) * TQ</span>
                 <span class="c1"># original_ts[tq_ts] = dead_ts</span>
                 <span class="c1"># if sid == sorted(app_info[app_id])[-1] and dead_ts &lt; app_alpha_deadline_ts:</span>
@@ -1707,23 +1128,8 @@
                 <span class="c1"># except KeyError:</span>
                 <span class="c1">#     label_to_plot[tq_ts] = []</span>
                 <span class="c1">#     label_to_plot[tq_ts].append(&#39;D&#39; + str(sid))</span>
-                <span class="n">start_ts</span> <span class="o">=</span> <span
-            class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
-            class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;start&quot;</span><span
-            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
-            class="p">()</span> <span class="o">-</span> <span class="n">first_ts</span>
+                <span class="c1"># start_ts = app_info[app_id][sid][&quot;start&quot;].timestamp() - first_ts</span>
                 <span class="c1"># ax1.axvline(start_ts, color=&quot;black&quot;)</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">s_y</span> <span class="o">=</span> <span
-            class="n">normalized</span><span class="p">[</span><span
-            class="n">timestamps</span><span class="o">.</span><span class="n">index</span><span
-            class="p">(</span><span class="n">start_ts</span><span class="p">)]</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span
-            class="p">:</span>
-                    <span class="n">s_y</span> <span class="o">=</span> <span
-            class="n">start_ts</span>
-                <span class="c1"># ax1.text(start_ts + 3, s_y - 2, &#39;S&#39; + str(sid), style=&quot;italic&quot;,weight=&quot;bold&quot;,</span>
-                <span class="c1"># horizontalalignment=&#39;center&#39;)</span>
                 <span class="n">end</span> <span class="o">=</span> <span
             class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
             class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;end&quot;</span><span
@@ -1734,8 +1140,8 @@
                 <span class="n">tq_ts</span> <span class="o">=</span> <span
             class="n">math</span><span class="o">.</span><span class="n">floor</span><span
             class="p">(</span><span class="n">end_ts</span> <span class="o">/</span> <span
-            class="n">TQ</span><span class="p">)</span> <span class="o">*</span> <span
-            class="n">TQ</span>
+            class="n">time_quantum</span><span class="p">)</span> <span class="o">*</span> <span
+            class="n">time_quantum</span>
                 <span class="n">original_ts</span><span class="p">[</span><span
             class="n">tq_ts</span><span class="p">]</span> <span class="o">=</span> <span class="n">end_ts</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -1755,66 +1161,23 @@
             class="n">axvline</span><span class="p">(</span><span class="n">end_ts</span><span
             class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span
             class="p">)</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">index_t</span> <span class="o">=</span> <span class="n">timestamps</span><span
-            class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">end_ts</span><span
-            class="p">)</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span
-            class="p">:</span>
-                    <span class="n">index_t</span> <span class="o">=</span> <span
-            class="nb">min</span><span class="p">(</span><span class="nb">range</span><span
-            class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">timestamps</span><span
-            class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span
-            class="n">i</span><span class="p">:</span> <span class="nb">abs</span><span
-            class="p">(</span><span class="n">timestamps</span><span class="p">[</span><span
-            class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">end_ts</span><span
-            class="p">))</span>
-                <span class="n">e_y</span> <span class="o">=</span> <span
-            class="n">normalized</span><span class="p">[</span><span class="n">index_t</span><span
-            class="p">]</span>
-                <span class="c1"># ax1.text(end_ts, ymin - 3.5, &#39;E&#39; + str(sid), style=&quot;italic&quot;, weight=&quot;bold&quot;,</span>
-                <span class="c1"># horizontalalignment=&#39;center&#39;, verticalalignment=&#39;bottom&#39;)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="kc">None</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span
+            class="n">error</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span
+            class="n">error</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">PLOT_LABEL</span><span class="p">:</span>
-            <span class="c1"># set the bbox for the text. Increase txt_width for wider text.</span>
-            <span class="n">txt_height</span> <span class="o">=</span> <span class="mf">0.05</span> <span
-            class="o">*</span> <span class="p">(</span><span class="n">plt</span><span
-            class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span class="mi">1</span><span
-            class="p">]</span> <span class="o">-</span> <span class="n">plt</span><span
-            class="o">.</span><span class="n">ylim</span><span class="p">()[</span><span class="mi">0</span><span
-            class="p">])</span>
-            <span class="n">txt_width</span> <span class="o">=</span> <span class="mf">0.025</span> <span
-            class="o">*</span> <span class="p">(</span><span class="n">plt</span><span
-            class="o">.</span><span class="n">xlim</span><span class="p">()[</span><span class="mi">1</span><span
-            class="p">]</span> <span class="o">-</span> <span class="n">plt</span><span
-            class="o">.</span><span class="n">xlim</span><span class="p">()[</span><span class="mi">0</span><span
-            class="p">])</span>
             <span class="c1"># Get the corrected text positions, then write the text.</span>
             <span class="n">sorted_label_ts</span> <span class="o">=</span> <span class="p">[</span><span
             class="n">original_ts</span><span class="p">[</span><span class="n">ts</span><span
             class="p">]</span> <span class="k">for</span> <span class="n">ts</span> <span
             class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span
             class="n">label_to_plot</span><span class="p">)]</span>
-            <span class="n">text_positions</span> <span class="o">=</span> <span class="n">get_text_positions</span><span
-            class="p">(</span><span class="n">sorted_label_ts</span><span class="p">,</span>
-                                                <span class="n">np</span><span
-            class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span
-            class="p">(</span><span class="n">label_to_plot</span><span class="p">),</span> <span
-            class="n">ymax</span><span class="p">),</span> <span class="n">txt_width</span><span
-            class="p">,</span>
-                                                <span class="n">txt_height</span><span
-            class="p">)</span>
+
             <span class="c1"># print(text_positions)</span>
-            <span class="n">text_plotter</span><span class="p">(</span><span class="n">sorted_label_ts</span><span
-            class="p">,</span> <span class="n">np</span><span class="o">.</span><span
-            class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span
-            class="n">label_to_plot</span><span class="p">),</span> <span class="n">ymax</span><span
-            class="p">),</span> <span class="n">text_positions</span><span class="p">,</span>
-                         <span class="n">ax1</span><span class="p">,</span> <span class="n">txt_width</span><span
-            class="p">,</span> <span class="n">txt_height</span><span class="p">,</span>
-                         <span class="p">[</span><span class="s2">&quot;/&quot;</span><span
+            <span class="n">text_plotter_x</span><span class="p">(</span><span class="n">sorted_label_ts</span><span
+            class="p">,</span> <span class="n">ax1</span><span class="p">,</span>
+                           <span class="p">[</span><span class="s2">&quot;/&quot;</span><span
             class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">label_to_plot</span><span
             class="p">[</span><span class="n">ts</span><span class="p">])</span> <span
             class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span
@@ -1902,16 +1265,14 @@
             class="p">]]</span> <span class="k">if</span> <span class="n">sid</span> <span
             class="o">!=</span> <span class="n">first_sid</span> <span class="k">else</span> <span
             class="mi">0</span>
-                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span
-            class="p">(</span><span class="n">time_cpu</span><span class="p">,</span> <span
-            class="n">cpu</span><span class="p">)</span> <span class="ow">in</span> <span
-            class="nb">enumerate</span><span class="p">(</span>
+                <span class="k">for</span> <span class="n">time_cpu</span><span
+            class="p">,</span> <span class="n">cpu</span> <span class="ow">in</span> \
                         <span class="nb">zip</span><span class="p">(</span><span class="n">worker_dict</span><span
             class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
             class="p">][</span><span class="s2">&quot;time&quot;</span><span
             class="p">],</span> <span class="n">worker_dict</span><span class="p">[</span><span
             class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
-            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">])):</span>
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]):</span>
                     <span class="n">time_cpu_ts</span> <span class="o">=</span> <span class="n">time_cpu</span><span
             class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span
             class="o">=</span><span class="mi">0</span><span class="p">)</span><span
@@ -1942,15 +1303,15 @@
                         <span class="k">if</span> <span class="n">ts_cpu</span><span
             class="p">[</span><span class="n">s_index</span><span class="p">]</span> <span
             class="o">!=</span> <span class="p">(</span><span class="n">time_cpu_ts</span> <span
-            class="o">-</span> <span class="n">first_ts</span><span class="p">)</span> <span
-            class="ow">and</span> <span class="nb">abs</span><span class="p">(</span>
-                                        <span class="n">ts_cpu</span><span class="p">[</span><span
-            class="n">s_index</span><span class="p">]</span> <span class="o">-</span> <span
-            class="p">(</span><span class="n">time_cpu_ts</span> <span class="o">-</span> <span
-            class="n">first_ts</span><span class="p">))</span> <span class="o">&gt;=</span> <span
-            class="p">(</span>
-                                    <span class="n">config</span><span class="p">[</span><span
-            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="o">-</span> <span class="n">first_ts</span><span class="p">)</span> \
+                                <span class="ow">and</span> <span class="nb">abs</span><span
+            class="p">(</span><span class="n">ts_cpu</span><span class="p">[</span><span class="n">s_index</span><span
+            class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">time_cpu_ts</span> <span
+            class="o">-</span> <span class="n">first_ts</span><span class="p">))</span> <span
+            class="o">&gt;=</span> \
+                                        <span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
             class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">):</span>
                             <span class="c1"># print(ts_cpu)</span>
                             <span class="c1"># print([tixm.replace(microsecond=0).timestamp() -</span>
@@ -1981,8 +1342,9 @@
             class="n">cpus</span><span class="p">[</span><span class="n">s_index</span> <span
             class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span
             class="o">+</span> <span class="n">cpu</span><span class="p">)</span> <span class="o">&gt;</span> <span
-            class="n">max_cpu</span><span class="p">:</span> <span class="nb">print</span><span
-            class="p">(</span><span class="s2">&quot;+2 ERR&quot;</span><span class="p">)</span>
+            class="n">max_cpu</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span><span
+            class="s2">&quot;+2 ERR&quot;</span><span class="p">)</span>
                                     <span class="n">cpus</span><span class="p">[</span><span
             class="n">s_index</span> <span class="o">+</span> <span class="mi">2</span><span
             class="p">]</span> <span class="o">+=</span> <span class="n">cpu</span>
@@ -2134,12 +1496,12 @@
             class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
-            class="n">plticker</span><span class="o">.</span><span
+            class="n">plt_ticker</span><span class="o">.</span><span
             class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
             class="o">=</span><span class="n">yaxis_multiplier</span><span class="p">))</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">yaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
-            class="n">plticker</span><span class="o">.</span><span
+            class="n">plt_ticker</span><span class="o">.</span><span
             class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
             class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
 
@@ -2147,14 +1509,14 @@
             class="n">name</span><span class="p">:</span>
             <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
-            class="n">plticker</span><span class="o">.</span><span
+            class="n">plt_ticker</span><span class="o">.</span><span
             class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
             class="o">=</span><span class="n">Y_TICK_AGG</span><span class="p">))</span>
         <span class="k">elif</span> <span class="s2">&quot;sort&quot;</span> <span
             class="ow">in</span> <span class="n">name</span><span class="p">:</span>
             <span class="n">ax1</span><span class="o">.</span><span class="n">xaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
-            class="n">plticker</span><span class="o">.</span><span
+            class="n">plt_ticker</span><span class="o">.</span><span
             class="n">MultipleLocator</span><span class="p">(</span><span class="n">base</span><span
             class="o">=</span><span class="n">Y_TICK_SORT</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">TITLE</span><span class="p">:</span>
@@ -2163,16 +1525,17 @@
             class="s2">&quot; &quot;</span> <span class="o">+</span> <span
             class="nb">str</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Deadline&quot;</span><span class="p">])</span> <span
-            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
-            class="nb">str</span><span class="p">(</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
-            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
-            class="nb">str</span><span class="p">(</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
+            class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> \
+                      <span class="nb">str</span><span class="p">(</span><span
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
             class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
             class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;Alpha&quot;</span><span
+            class="p">])</span> <span class="o">+</span> \
+                      <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
+            class="nb">str</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
             class="p">][</span><span class="s2">&quot;K&quot;</span><span class="p">]))</span>
 
@@ -2241,13 +1604,23 @@
                                       <span class="mi">0</span><span class="p">]</span><span
             class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="kc">None</span>
+            <span class="nb">print</span><span class="p">(</span><span
+            class="s2">&quot;Stage ID </span><span class="si">{0}</span><span class="s2"> not executed by </span><span
+            class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span
+            class="n">format</span><span class="p">(</span><span
+            class="n">PLOT_SID_STAGE</span><span class="p">,</span> <span
+            class="n">worker_log</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">first_ts_worker</span></div>
 
 
 <span class="nd">@timing</span>
 <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">folder</span><span
                         class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param folder:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">folder</span><span
                         class="p">)</span>
     <span class="k">if</span> <span class="n">folder</span><span class="p">[</span><span
@@ -2321,7 +1694,7 @@
                         class="n">worker_dict</span>
 
         <span class="n">first_ts_worker</span> <span class="o">=</span> <span
-                        class="o">-</span><span class="mi">1</span>
+                        class="o">-</span><span class="mf">1.0</span>
         <span class="k">for</span> <span class="n">worker_log</span><span class="p">,</span> <span
                         class="n">cpu_log</span> <span class="ow">in</span> <span
                         class="nb">zip</span><span class="p">(</span><span
@@ -2331,11 +1704,11 @@
             <span class="k">for</span> <span class="n">app_id</span> <span
                         class="ow">in</span> <span class="n">app_info</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">first_ts_worker</span> <span
-                        class="o">==</span> <span class="o">-</span><span class="mi">1</span><span
-                        class="p">:</span> <span class="n">first_ts_worker</span> <span
-                        class="o">=</span> <span class="n">find_first_ts_worker</span><span
-                        class="p">(</span><span class="n">app_id</span><span class="p">,</span>
-                                                                                 <span class="n">workers_dict</span><span
+                        class="o">==</span> <span class="o">-</span><span class="mf">1.0</span><span
+                        class="p">:</span>
+                    <span class="n">first_ts_worker</span> <span class="o">=</span> <span class="n">find_first_ts_worker</span><span
+                        class="p">(</span><span class="n">app_id</span><span
+                        class="p">,</span> <span class="n">workers_dict</span><span
                         class="p">)</span>
                 <span class="n">plot_worker</span><span class="p">(</span><span
                         class="n">app_id</span><span class="p">,</span> <span
