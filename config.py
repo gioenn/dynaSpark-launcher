@@ -7,11 +7,11 @@ DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": 
                           "price": "0.3"},
             "us-west-2": {"ami": 'ami-7f5ff81f', "snapid": "snap-4f38bf1c", "az": 'us-west-2c',
                           "keypair": "gazzetta",
-                          "price": "0.4"}}
+                          "price": "0.25"}}
 
-CREDENTIAL_PROFILE = 'default'
+CREDENTIAL_PROFILE = 'cspark'
 REGION = "us-west-2"
-KEY_PAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + DATA_AMI[REGION]["keypair"] + ".pem"
+KEY_PAIR_PATH = "/home/meteos/" + DATA_AMI[REGION]["keypair"] + ".pem"
 SECURITY_GROUP = "spark-cluster"
 PRICE = DATA_AMI[REGION]["price"]
 INSTANCE_TYPE = "r3.4xlarge"

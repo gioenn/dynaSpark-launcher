@@ -8,7 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import boto3
-from boto.manage.cmdshell import sshclient_from_instance
+from util.cmdshell import sshclient_from_instance
 
 import log
 import metrics

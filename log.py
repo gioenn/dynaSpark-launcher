@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
 from datetime import timedelta
 
-from boto.manage.cmdshell import sshclient_from_instance
+from util.cmdshell import sshclient_from_instance
 
 from util.utils import timing, string_to_datetime
 
