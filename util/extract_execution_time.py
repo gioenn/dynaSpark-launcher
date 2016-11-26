@@ -49,5 +49,5 @@ print(exec_time_dict)
 
 for host in exec_time_dict.keys():
     nominalrate = exec_time_dict[host]['Records Read'] / (
-    (exec_time_dict[host]['Time'] / 1000.0) * COREVM)
+        (exec_time_dict[host]['Time'] / 1000.0) * CORE_VM)
     print(nominalrate)

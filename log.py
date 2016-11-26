@@ -90,7 +90,7 @@ def download_slave(i, output_folder, app_id, config):
 
 
 @timing
-def download(log_folder, instances, master_dns, output_folder):
+def download(log_folder, instances, master_dns, output_folder, config):
     """ Download the logs from the master and the worker nodes
 
     :param log_folder: the log folder of the application
@@ -102,7 +102,7 @@ def download(log_folder, instances, master_dns, output_folder):
     # MASTER
     print("Downloading log from Master: " + master_dns)
     master_instance = [i for i in instances if i.public_dns_name == master_dns][0]
-    output_folder, app_id = download_master(master_instance, output_folder, log_folder)
+    output_folder, app_id = download_master(master_instance, output_folder, log_folder, config)
 
     # SLAVE
     with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
@@ -193,6 +193,7 @@ def load_worker_data(worker_log, cpu_log, config):
 
     :param worker_log: the path of the log of the worker
     :param cpu_log:  the path of the cpu monitoring tool log of the worker
+    :param config: the configuration dictionary
     :return: worker_dict the dictionary of the worker's  data
     """
     print(worker_log)

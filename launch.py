@@ -1,5 +1,8 @@
 """
-Launch the instance with spot request
+Handle the instance:
+* Launch new instance with spot request
+* Terminate instance
+* Check instance connectivity
 """
 
 import socket
@@ -163,10 +166,8 @@ def check_spot_price(client, config):
 
     spot_price_history_response = client.describe_spot_price_history(
         InstanceTypes=[config["Aws"]["InstanceType"]],
-        ProductDescriptions=[
-                                                                         'Linux/UNIX'],
-        AvailabilityZone=
-        config["Aws"]["AZ"])
+        ProductDescriptions=['Linux/UNIX'],
+        AvailabilityZone=config["Aws"]["AZ"])
     print(spot_price_history_response['SpotPriceHistory'][0])
     last_spot_price = [float(x['SpotPrice']) for x in
                        spot_price_history_response['SpotPriceHistory'][:10]]

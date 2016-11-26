@@ -1,8 +1,6 @@
 """
-
+Configuration module of cSpark test benchmark
 """
-
-# import pprint
 
 # AWS
 DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU",
@@ -11,13 +9,13 @@ DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": 
                           "keypair": "gazzetta",
                           "price": "0.4"}}
 
-CREDENTIAL_PROFILE = 'matteo'
+CREDENTIAL_PROFILE = 'default'
 REGION = "us-west-2"
-KEYPAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + DATA_AMI[REGION]["keypair"] + ".pem"
+KEY_PAIR_PATH = "C:\\Users\\Matteo\\Downloads\\" + DATA_AMI[REGION]["keypair"] + ".pem"
 SECURITY_GROUP = "spark-cluster"
 PRICE = DATA_AMI[REGION]["price"]
 INSTANCE_TYPE = "r3.4xlarge"
-NUMINSTANCE = 9
+NUM_INSTANCE = 0
 EBS_OPTIMIZED = True if "r3" not in INSTANCE_TYPE else False
 REBOOT = 0
 KILL_JAVA = 1
@@ -31,7 +29,7 @@ TAG = [{
 }]
 
 # HDFS
-HDFS_MASTER = "ec2-35-160-124-233.us-west-2.compute.amazonaws.com"
+HDFS_MASTER = ""
 
 # Spark config
 SPARK_2 = "/opt/spark/"
@@ -56,11 +54,11 @@ if OFF_HEAP:
 OFF_HEAP_BYTES = 30720000000
 
 # Core Config
-COREVM = 8
-COREHTVM = 16
-DISABLEHT = 1
-if DISABLEHT:
-    COREHTVM = COREVM
+CORE_VM = 8
+CORE_HT_VM = 16
+DISABLE_HT = 1
+if DISABLE_HT:
+    CORE_HT_VM = CORE_VM
 
 # CONTROL
 ALPHA = 0.95
@@ -77,13 +75,13 @@ DEADLINE = 239474
 # 0%  209062
 # 20% 250874
 # 40% 284375
-MAXEXECUTOR = 8
-OVERSCALE = 2
+MAX_EXECUTOR = 8
+OVER_SCALE = 2
 K = 50
 TI = 12000
-TSAMPLE = 1000
-COREQUANTUM = 0.05
-COREMIN = 0.0
+T_SAMPLE = 1000
+CORE_QUANTUM = 0.05
+CORE_MIN = 0.0
 CPU_PERIOD = 100000
 
 # BENCHMARK
@@ -200,17 +198,17 @@ CONFIG_DICT = {
     "Deadline": DEADLINE,
     "Control": {
         "Alpha": ALPHA,
-        "OverScale": OVERSCALE,
-        "MaxExecutor": MAXEXECUTOR,
-        "CoreVM": COREVM,
+        "OverScale": OVER_SCALE,
+        "MaxExecutor": MAX_EXECUTOR,
+        "CoreVM": CORE_VM,
         "K": K,
         "Ti": TI,
-        "TSample": TSAMPLE,
-        "CoreQuantum": COREQUANTUM
+        "TSample": T_SAMPLE,
+        "CoreQuantum": CORE_QUANTUM
     },
     "Aws": {
         "InstanceType": INSTANCE_TYPE,
-        "HyperThreading": not DISABLEHT,
+        "HyperThreading": not DISABLE_HT,
         "Price": PRICE,
         "AMI": DATA_AMI[REGION]["ami"],
         "Region": REGION,
@@ -221,7 +219,7 @@ CONFIG_DICT = {
         "SnapshotId": DATA_AMI[REGION]["snapid"]
     },
     "Spark": {
-        "ExecutorCore": COREVM,
+        "ExecutorCore": CORE_VM,
         "ExecutorMemory": RAM_EXEC,
         "ExternalShuffle": ENABLE_EXTERNAL_SHUFFLE,
         "LocalityWait": LOCALITY_WAIT,
@@ -242,5 +240,3 @@ BENCH_LINES = {"scala-agg-by-key": ["226", "227"],
                "scala-sort-by-key-int": ["240", "241"],
                "scala-count": ["243", "244"],
                "scala-count-w-fltr": ["246", "247"]}
-
-# pprint.pprint(CONFIG_DICT)

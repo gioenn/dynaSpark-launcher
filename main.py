@@ -5,21 +5,22 @@ import boto3
 
 import launch
 import run
-from config import NUMINSTANCE, REGION, TAG, REBOOT, CLUSTER_ID, TERMINATE, RUN, NUM_RUN, \
+from config import NUM_INSTANCE, REGION, TAG, REBOOT, CLUSTER_ID, TERMINATE, RUN, NUM_RUN, \
     CREDENTIAL_PROFILE, CONFIG_DICT
 
 
 def main():
     """ Main function;
-    - Launch spot request of NUMINSTANCE
-    - Run Benchmark
-    :return:
+    * Launch spot request of NUMINSTANCE
+    * Run Benchmark
+    * Download Log
+    * Plot data from log
     """
     session = boto3.Session(profile_name=CREDENTIAL_PROFILE)
     client = session.client('ec2', region_name=REGION)
 
-    if NUMINSTANCE > 0:
-        spot_request_ids = launch.launch(client, NUMINSTANCE, CONFIG_DICT)
+    if NUM_INSTANCE > 0:
+        spot_request_ids = launch.launch(client, NUM_INSTANCE, CONFIG_DICT)
 
         print("CHECK SECURITY GROUP ALLOWED IP SETTINGS!!!")
 

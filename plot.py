@@ -630,7 +630,7 @@ def plot(folder):
     app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
     app_info = {}
     for app_log in sorted(app_logs):
-        app_info = load_app_data(app_log, config)
+        app_info = load_app_data(app_log)
 
         for app_id in app_info:
             plot_app_overview(app_id, app_info[app_id], folder, config)

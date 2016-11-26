@@ -14,11 +14,11 @@ import log
 import metrics
 import plot
 from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC_TIME, \
-    KEYPAIR_PATH, \
+    KEY_PAIR_PATH, \
     UPDATE_SPARK, \
-    DISABLEHT, ENABLE_EXTERNAL_SHUFFLE, OFF_HEAP, OFF_HEAP_BYTES, K, TSAMPLE, TI, COREQUANTUM, \
-    COREMIN, CPU_PERIOD, HDFS, \
-    COREVM, UPDATE_SPARK_MASTER, DEADLINE, MAXEXECUTOR, ALPHA, OVERSCALE, LOCALITY_WAIT, \
+    DISABLE_HT, ENABLE_EXTERNAL_SHUFFLE, OFF_HEAP, OFF_HEAP_BYTES, K, T_SAMPLE, TI, CORE_QUANTUM, \
+    CORE_MIN, CPU_PERIOD, HDFS, \
+    CORE_VM, UPDATE_SPARK_MASTER, DEADLINE, MAX_EXECUTOR, ALPHA, OVER_SCALE, LOCALITY_WAIT, \
     LOCALITY_WAIT_NODE, CPU_TASK, \
     LOCALITY_WAIT_PROCESS, LOCALITY_WAIT_RACK, INPUT_RECORD, NUM_TASK, BENCH_NUM_TRIALS, \
     SCALE_FACTOR, RAM_EXEC, \
@@ -82,7 +82,7 @@ def setup_slave(instance, master_dns):
     :param master_dns:
     :return:
     """
-    ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
+    ssh_client = sshclient_from_instance(instance, KEY_PAIR_PATH, user_name='ubuntu')
 
     print("Setup Slave: " + instance.public_dns_name)
 
@@ -98,7 +98,7 @@ def setup_slave(instance, master_dns):
     # CLEAN UP EXECUTORS APP LOGS
     ssh_client.run("rm -r " + SPARK_HOME + "work/*")
 
-    if DISABLEHT:
+    if DISABLE_HT:
         # DISABLE HT
         ssh_client.put_file("./disable-ht-v2.sh", "./disable-ht-v2.sh")
         ssh_client.run("chmod +x disable-ht-v2.sh")
@@ -123,16 +123,16 @@ def setup_slave(instance, master_dns):
 
     # SAMPLING RATE LINE 43
     ssh_client.run("sed -i '43s/.*/spark.control.tsample {0}/' {1}conf/spark-defaults.conf".format(
-        TSAMPLE, SPARK_HOME))
+        T_SAMPLE, SPARK_HOME))
 
     ssh_client.run("sed -i '44s/.*/spark.control.ti {0}/' {1}conf/spark-defaults.conf".format(
         TI, SPARK_HOME))
 
     ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
-        COREQUANTUM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        CORE_QUANTUM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run("sed -i '50s{.*{spark.control.coremin " + str(
-        COREMIN) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        CORE_MIN) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run("sed -i '50s{.*{spark.control.cpuperiod " + str(
         CPU_PERIOD) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
@@ -141,7 +141,7 @@ def setup_slave(instance, master_dns):
         print("   Starting Spark Slave")
         ssh_client.run(
             'export SPARK_HOME="{s}" && {s}sbin/start-slave.sh {0}:7077 -h {1}  --port 9999 -c {2}'.format(
-                master_dns, instance.public_dns_name, COREVM, s=SPARK_HOME))
+                master_dns, instance.public_dns_name, CORE_VM, s=SPARK_HOME))
 
         # REAL CPU LOG
         log_cpu_command = 'screen -d -m -S "{0}" bash -c "sar -u 1 > sar-{1}.log"'.format(
@@ -157,7 +157,7 @@ def setup_master(instance):
     :param instance:
     :return:
     """
-    ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
+    ssh_client = sshclient_from_instance(instance, KEY_PAIR_PATH, user_name='ubuntu')
 
     print("Setup Master: " + instance.public_dns_name)
 
@@ -194,23 +194,23 @@ def setup_master(instance):
 
     # MAX EXECUTOR LINE 39
     ssh_client.run("sed -i '39s{.*{spark.control.maxexecutor " + str(
-        MAXEXECUTOR) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        MAX_EXECUTOR) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     # CORE FOR VM LINE 40
     ssh_client.run("sed -i '40s{.*{spark.control.coreforvm " + str(
-        COREVM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        CORE_VM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     # ALPHA LINE 36
     ssh_client.run("sed -i '36s{.*{spark.control.alpha " + str(
         ALPHA) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
     # OVERSCALE LINE 38
     ssh_client.run("sed -i '38s{.*{spark.control.overscale " + str(
-        OVERSCALE) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        OVER_SCALE) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     # CHANGE ALSO IN MASTER FOR THE LOGS
     ssh_client.run(
         "sed -i '43s{.*{spark.control.tsample " + str(
-            TSAMPLE) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+            T_SAMPLE) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run("sed -i '42s{.*{spark.control.k " + str(
         K) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
@@ -219,7 +219,7 @@ def setup_master(instance):
         TI) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
-        COREQUANTUM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        CORE_QUANTUM) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run(
         "sed -i '46s{.*{spark.locality.wait " + str(
@@ -247,7 +247,7 @@ def setup_master(instance):
         "sed -i '49s{.*{spark.control.nominalratedata 0.0{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run("sed -i '50s{.*{spark.control.coremin " + str(
-        COREMIN) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+        CORE_MIN) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     ssh_client.run(
         "sed -i '54s{.*{spark.control.inputrecord " + str(
@@ -332,7 +332,7 @@ def setup_hdfs_ssd(instance):
     :param instance:
     :return:
     """
-    ssh_client = sshclient_from_instance(instance, KEYPAIR_PATH, user_name='ubuntu')
+    ssh_client = sshclient_from_instance(instance, KEY_PAIR_PATH, user_name='ubuntu')
     status, out, err = ssh_client.run(
         """test -d /mnt/hdfs/namenode || sudo mkdir --parents /mnt/hdfs/namenode &&
         sudo mkdir --parents /mnt/hdfs/datanode""")
@@ -365,7 +365,7 @@ def setup_hdfs_config(master_instance, slaves):
     :param slaves:
     :return:
     """
-    ssh_client = sshclient_from_instance(master_instance, KEYPAIR_PATH, user_name='ubuntu')
+    ssh_client = sshclient_from_instance(master_instance, KEY_PAIR_PATH, user_name='ubuntu')
     if HDFS_MASTER == "":
         master_dns = master_instance.public_dns_name
     else:
@@ -466,7 +466,7 @@ def run_benchmark():
     if SPARK_HOME == SPARK_2:
         print("Check Effectively Executor Running")
 
-    end_index = min(len(instance_list), MAXEXECUTOR + 1)
+    end_index = min(len(instance_list), MAX_EXECUTOR + 1)
     with ThreadPoolExecutor(8) as executor:
         for i in instance_list[1:end_index]:
             if i.public_dns_name != master_dns:
@@ -475,7 +475,7 @@ def run_benchmark():
     with ThreadPoolExecutor(8) as executor:
         for i in instance_list[end_index:]:
             if i.public_dns_name != master_dns:
-                ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
+                ssh_client = sshclient_from_instance(i, KEY_PAIR_PATH, user_name='ubuntu')
                 executor.submit(common_setup, ssh_client)
 
     if HDFS or HDFS_MASTER == master_dns:
@@ -492,11 +492,11 @@ def run_benchmark():
     time.sleep(15)
 
     print("MASTER: " + master_dns)
-    ssh_client = sshclient_from_instance(master_instance, KEYPAIR_PATH, user_name='ubuntu')
+    ssh_client = sshclient_from_instance(master_instance, KEY_PAIR_PATH, user_name='ubuntu')
     #  CHECK IF KEY IN MASTER
     status = ssh_client.run('[ ! -e %s ]; echo $?' % (DATA_AMI[REGION]["keypair"] + ".pem"))
     if not int(status[1].decode('utf8').replace("\n", "")):
-        ssh_client.put_file(KEYPAIR_PATH, "/home/ubuntu/" + DATA_AMI[REGION]["keypair"] + ".pem")
+        ssh_client.put_file(KEY_PAIR_PATH, "/home/ubuntu/" + DATA_AMI[REGION]["keypair"] + ".pem")
 
     # LANCIARE BENCHMARK
     if HDFS == 0:
@@ -538,7 +538,7 @@ def run_benchmark():
 
         # DOWNLOAD LOGS
         output_folder = log.download(logfolder, [i for i in instance_list[:end_index]], master_dns,
-                                     output_folder)
+                                     output_folder, CONFIG_DICT)
 
         write_config(output_folder)
 

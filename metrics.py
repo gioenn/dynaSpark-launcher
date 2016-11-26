@@ -65,8 +65,7 @@ def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
                         index = min(range(len(time_cpu)), key=lambda i: abs(time_cpu[i] - time))
                         # print(index)
                     cpu_time_max += (config["Control"]["Tsample"] / 1000) * max(cpu, worker_dict[
-                        "cpu_real"][
-                        index + int(config["Control"]["Tsample"] / 1000)])
+                        "cpu_real"][index + int(config["Control"]["Tsample"] / 1000)])
         except KeyError:
             print(app_id + " not found")
     duration_s = app_info[app_id][max(list(app_info[app_id].keys()))]["end"].timestamp() - \
@@ -91,8 +90,8 @@ def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
     throughput = float(num_task) / duration_s
     if cpu_time == 0:
         cpu_time = ((app_info[app_id][max(list(app_info[app_id].keys()))]["end"].timestamp() -
-                     app_info[app_id][PLOT_SID_STAGE]["start"].timestamp())) * config["Control"][
-                       "MaxExecutor"] * config["Control"]["CoreVM"]
+                     app_info[app_id][PLOT_SID_STAGE]["start"].timestamp())) * \
+                   config["Control"]["MaxExecutor"] * config["Control"]["CoreVM"]
         cpu_time_max = cpu_time
     cpu_time_max = math.floor(cpu_time_max)
     print("CPU_TIME: " + str(cpu_time))
@@ -210,7 +209,7 @@ def compute_metrics(folder):
     app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
     app_info = {}
     for app_log in sorted(app_logs):
-        app_info = load_app_data(app_log, config)
+        app_info = load_app_data(app_log)
 
         for app_id in app_info:
             compute_errors(app_id, app_info[app_id], folder, config)
