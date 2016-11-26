@@ -2,18 +2,23 @@
 
 ## Requirements
 
-boto3
+```bash
+pip instal -r requirements.txt
+```
 
-boto
+## AWS Credentials
+Open the credential file of Amazon AWS
 
-paramiko 
+```bash
+nano ~/.aws/credentials
+```
 
-matplotlib
+And add the credential for cspark
 
-## Configuration
+```bash
+[cspark]
+aws_access_key_id=< KEY-ID >
+aws_secret_access_key=< ACCESS-KEY >
+```
 
-Patch paramiko file to use attribute of boto3 instance class.
 
-Change parameters in config.py
-
-Run with launch.py file
