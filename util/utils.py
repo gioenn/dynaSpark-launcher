@@ -1,5 +1,6 @@
 import time
 from datetime import datetime as dt
+from functools import wraps
 
 
 def between(value, start_a, end_b):
@@ -31,11 +32,12 @@ def timing(f):
     :return:
     """
 
+    @wraps(f)
     def wrap(*args):
-        tstart = time.time()
+        t_start = time.time()
         ret = f(*args)
-        tend = time.time()
-        print('\n%s function took %0.3f ms' % (f.__name__, (tend - tstart) * 1000.0))
+        t_end = time.time()
+        print('\n%s function took %0.3f ms' % (f.__name__, (t_end - t_start) * 1000.0))
         return ret
 
     return wrap

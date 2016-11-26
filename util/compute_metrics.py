@@ -9,7 +9,7 @@
 #                 metrics.compute_metrics(app)
 
 
-from csparkbench import metrics
+import metrics
 
 metrics.compute_metrics(
     "./results/OK/aggregate-by-key/Native/spark_perf_output__2016-09-15_16-06-47_logs")

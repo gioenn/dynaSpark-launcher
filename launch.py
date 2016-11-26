@@ -8,8 +8,6 @@ import time
 from errno import ECONNREFUSED
 from errno import ETIMEDOUT
 
-from config import DATA_AMI, INSTANCE_TYPE, REGION, PRICE, SECURITY_GROUP, EBS_OPTIMIZED
-
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
@@ -154,19 +152,21 @@ def terminate(client, spot_request_ids, instance_ids):
     client.instances.filter(InstanceIds=instance_ids).terminate()
 
 
-def check_spot_price(client):
+def check_spot_price(client, config):
     """Check the current spot price on the selected amazon region of the instance type choosen
         and compare with the one provided by the user
 
     :param client: the ec2 client
+    :param config: the configuration dictionary of the user
     :return: Exit if the spot price of the user is too low (< current price + 20%)
     """
 
-    spot_price_history_response = client.describe_spot_price_history(InstanceTypes=[INSTANCE_TYPE],
-                                                                     ProductDescriptions=[
+    spot_price_history_response = client.describe_spot_price_history(
+        InstanceTypes=[config["Aws"]["InstanceType"]],
+        ProductDescriptions=[
                                                                          'Linux/UNIX'],
-                                                                     AvailabilityZone=
-                                                                     DATA_AMI[REGION]["az"])
+        AvailabilityZone=
+        config["Aws"]["AZ"])
     print(spot_price_history_response['SpotPriceHistory'][0])
     last_spot_price = [float(x['SpotPrice']) for x in
                        spot_price_history_response['SpotPriceHistory'][:10]]
@@ -176,40 +176,40 @@ def check_spot_price(client):
     spot_price += (spot_price * 0.2)
     spot_price = float("{0:.2f}".format(spot_price))
     print("LAST 10 SPOT PRICE + 20%: " + str(spot_price))
-    print("YOUR PRICE: " + str(PRICE))
-    if float(PRICE) < spot_price:
+    print("YOUR PRICE: " + str(config["Aws"]["Price"]))
+    if float(config["Aws"]["Price"]) < spot_price:
         print("ERROR PRICE")
         exit(1)
 
 
-def launch(client, num_instance):
+def launch(client, num_instance, config):
     """
     Launch num_instance on Amazon EC2 with spot request
 
     :param client: the ec2 client
     :param num_instance: number of instance to launch
+    :param config: the configuration dictionary of the user
     :return: the list of spot request's ids
     """
     if query_yes_no("Are you sure to launch " + str(num_instance) + " new instance?", "no"):
-        check_spot_price(client)
+        check_spot_price(client, config)
         spot_request_response = client.request_spot_instances(
-            SpotPrice=PRICE,
+            SpotPrice=config["Aws"]["Price"],
             InstanceCount=num_instance,
             Type='one-time',
             AvailabilityZoneGroup=
-            DATA_AMI[REGION]["az"],
+            config["Aws"]["AZ"],
             LaunchSpecification={
-                "ImageId": DATA_AMI[REGION]["ami"],
-                "KeyName": DATA_AMI[REGION]["keypair"],
+                "ImageId": config["Aws"]["AMI"],
+                "KeyName": config["Aws"]["KeyPair"],
                 "SecurityGroups": [
-                    SECURITY_GROUP,
+                    config["Aws"]["SecurityGroup"],
                 ],
                 'Placement': {
-                    'AvailabilityZone':
-                        DATA_AMI[REGION]["az"],
+                    'AvailabilityZone': config["Aws"]["AZ"],
                 },
-                "InstanceType": INSTANCE_TYPE,
-                "EbsOptimized": EBS_OPTIMIZED,
+                "InstanceType": config["Aws"]["InstanceType"],
+                "EbsOptimized": config["Aws"]["EbsOptimized"],
                 "BlockDeviceMappings": [
                     {
                         "DeviceName": "/dev/sda1",
@@ -217,8 +217,7 @@ def launch(client, num_instance):
                             "DeleteOnTermination": True,
                             "VolumeType": "gp2",
                             "VolumeSize": 200,
-                            "SnapshotId":
-                                DATA_AMI[REGION]["snapid"]
+                            "SnapshotId": config["Aws"]["SnapshotId"]
                         }
                     },
                     {

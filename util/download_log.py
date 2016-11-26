@@ -1,8 +1,8 @@
 import boto3
+
 import log
 import plot
-
-from csparkbench.config import *
+from config import *
 
 session = boto3.Session(profile_name=CREDENTIAL_PROFILE)
 ec2 = session.resource('ec2', region_name=REGION)

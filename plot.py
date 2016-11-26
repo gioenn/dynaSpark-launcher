@@ -18,7 +18,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_ticker
 
-from config import COREVM
 from log import load_app_data, load_worker_data
 from util.utils import timing
 
@@ -216,7 +215,7 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     # labels = labels_ax1[:2] + labels_ax2[:2]
     # plt.legend(handles, labels, loc='best', prop={'size': 6})
     ax2.set_ylabel('Core [#]')
-    ax2.set_ylim(0, COREVM)
+    ax2.set_ylim(0, config["Control"]["CoreVM"])
     xlim = ax2.get_xlim()
     ax2.set_xlim(0.0, xlim[1])
     # labels = ax1.get_xticklabels()
@@ -485,7 +484,7 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                 print(sid, sorted(sid_len)[0])
                 sid_len[sid] += sid_len[list(sorted(sid_len))[list(sorted(sid_len)).index(sid) - 1]]
         sid_len_keys = list(sid_len.keys())
-        max_cpu = (len(list(workers_dict.keys())) * COREVM)
+        max_cpu = (len(list(workers_dict.keys())) * config["Control"]["CoreVM"])
         # first_ts = app_info[app_id][PLOT_SID_STAGE]["start"].replace(microsecond=0).timestamp()
         for worker_log in workers_dict.keys():
             print(worker_log)
@@ -561,12 +560,12 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         ax2.set_xlim(0.0, xmax)
         ymin, ymax = ax2.get_ylim()
         print(ymax)
-        ax2.set_ylim(0.0, len(list(workers_dict.keys())) * COREVM)
+        ax2.set_ylim(0.0, len(list(workers_dict.keys())) * config["Control"]["CoreVM"])
 
         ax2.fill_between(ts_cpu, 0.0, cpus, facecolor="b", alpha=0.2)
-        yaxis_multiplier = float(COREVM)
+        yaxis_multiplier = float(config["Control"]["CoreVM"])
         if len(workers_dict) > 11:
-            yaxis_multiplier = float(COREVM) * 2
+            yaxis_multiplier = float(config["Control"]["CoreVM"]) * 2
         ax2.yaxis.set_major_locator(plt_ticker.MultipleLocator(base=yaxis_multiplier))
         ax1.yaxis.set_major_locator(plt_ticker.MultipleLocator(base=10.0))
 
@@ -631,7 +630,7 @@ def plot(folder):
     app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
     app_info = {}
     for app_log in sorted(app_logs):
-        app_info = load_app_data(app_log, config["HDFS"])
+        app_info = load_app_data(app_log, config)
 
         for app_id in app_info:
             plot_app_overview(app_id, app_info[app_id], folder, config)
@@ -642,7 +641,7 @@ def plot(folder):
     if len(worker_logs) == len(cpu_logs):
         workers_dict = {}
         for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
-            worker_dict = load_worker_data(worker_log, cpu_log)
+            worker_dict = load_worker_data(worker_log, cpu_log, config)
             workers_dict[worker_log] = worker_dict
 
         first_ts_worker = -1.0

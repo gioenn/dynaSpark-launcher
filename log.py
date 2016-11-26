@@ -1,5 +1,9 @@
 """
+Module that handles the cluster log:
 
+* Download from master and slaves
+* Extract app data
+* Extract worker data
 """
 
 import multiprocessing
@@ -10,21 +14,20 @@ from datetime import timedelta
 
 from boto.manage.cmdshell import sshclient_from_instance
 
-from config import KEYPAIR_PATH, SPARK_HOME, COREVM, COREHTVM
 from util.utils import timing, string_to_datetime
 
 
-def download_master(i, output_folder, log_folder):
-    """
+def download_master(i, output_folder, log_folder, config):
+    """Download log from master instance
 
-    :param i:
-    :param output_folder:
-    :param log_folder:
-    :return:
+    :param i: master instance
+    :param output_folder: output folder where save the log
+    :param log_folder: log folder on the master instance
+    :return: output_folder and the app_id: the application id
     """
-    ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
+    ssh_client = sshclient_from_instance(i, config["Aws"]["KeyPair"], user_name='ubuntu')
     app_id = ""
-    for file in ssh_client.listdir("" + SPARK_HOME + "spark-events/"):
+    for file in ssh_client.listdir("" + config["Spark"]["SparkHome"] + "spark-events/"):
         print("BENCHMARK: " + file)
         print("LOG FOLDER: " + log_folder)
         print("OUTPUT FOLDER: " + output_folder)
@@ -35,11 +38,12 @@ def download_master(i, output_folder, log_folder):
             os.makedirs(output_folder)
         except FileExistsError:
             print("Output folder already exists")
-        inputfile = SPARK_HOME + "spark-events/" + file
-        outputbz = inputfile + ".bz"
+        input_file = config["Spark"]["SparkHome"] + "spark-events/" + file
+        output_bz = input_file + ".bz"
         print("Bzipping event log...")
-        ssh_client.run("pbzip2 -9 -p" + str(COREVM) + " -c " + inputfile + " > " + outputbz)
-        ssh_client.get_file(outputbz, output_folder + "/" + file + ".bz")
+        ssh_client.run("pbzip2 -9 -p" + str(
+            config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz)
+        ssh_client.get_file(output_bz, output_folder + "/" + file + ".bz")
     for file in ssh_client.listdir(log_folder):
         print(file)
         if file != "bench-report.dat":
@@ -48,20 +52,22 @@ def download_master(i, output_folder, log_folder):
     return output_folder, app_id
 
 
-def download_slave(i, output_folder, app_id):
-    """
+def download_slave(i, output_folder, app_id, config):
+    """Download log from slave instance:
+    * The worker log that includes the controller output
+    * The cpu monitoring log
 
-    :param i:
-    :param output_folder:
-    :param app_id:
-    :return:
+    :param i: the slave instance
+    :param output_folder: the output folder where to save log
+    :param app_id: the application
+    :return: output_folder: the output folder
     """
-    ssh_client = sshclient_from_instance(i, KEYPAIR_PATH, user_name='ubuntu')
+    ssh_client = sshclient_from_instance(i, config["Aws"]["KeyPair"], user_name='ubuntu')
     print("Downloading log from slave: " + i.public_dns_name)
     try:
         worker_ip_fixed = i.private_ip_address.replace(".", "-")
         worker_log = "{0}logs/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-{1}.out".format(
-            SPARK_HOME, worker_ip_fixed)
+            config["Spark"]["SparkHome"], worker_ip_fixed)
         print(worker_log)
         ssh_client.run(
             "screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
@@ -73,10 +79,11 @@ def download_slave(i, output_folder, app_id):
     except FileNotFoundError:
         print("worker log not found")
     try:
-        for file in ssh_client.listdir(SPARK_HOME + "work/" + app_id + "/"):
+        for file in ssh_client.listdir(config["Spark"]["SparkHome"] + "work/" + app_id + "/"):
             print("Executor ID: " + file)
-            ssh_client.get_file(SPARK_HOME + "work/" + app_id + "/" + file + "/stderr",
-                                output_folder + "/" + i.public_dns_name + "-" + file + ".stderr")
+            ssh_client.get_file(
+                config["Spark"]["SparkHome"] + "work/" + app_id + "/" + file + "/stderr",
+                output_folder + "/" + i.public_dns_name + "-" + file + ".stderr")
     except FileNotFoundError:
         print("stderr not found")
     return output_folder
@@ -84,13 +91,13 @@ def download_slave(i, output_folder, app_id):
 
 @timing
 def download(log_folder, instances, master_dns, output_folder):
-    """
+    """ Download the logs from the master and the worker nodes
 
-    :param log_folder:
-    :param instances:
-    :param master_dns:
-    :param output_folder:
-    :return:
+    :param log_folder: the log folder of the application
+    :param instances: the instances of the cluster
+    :param master_dns: the dns of the master instances
+    :param output_folder: the output folder where to save the logs
+    :return: the output folder
     """
     # MASTER
     print("Downloading log from Master: " + master_dns)
@@ -106,7 +113,6 @@ def download(log_folder, instances, master_dns, output_folder):
     return output_folder
 
 
-@timing
 def load_app_data(app_log_path):
     """
     Function that parse the application data like stage ids, start, deadline, end,
@@ -181,7 +187,7 @@ def load_app_data(app_log_path):
         return app_info
 
 
-def load_worker_data(worker_log, cpu_log):
+def load_worker_data(worker_log, cpu_log, config):
     """
     Load the controller data from the worker_log and combine with the cpu_real data from cpu_log
 
@@ -245,7 +251,12 @@ def load_worker_data(worker_log, cpu_log):
                     and line[1] != " CPU" and line[0] != "Average:":
                 worker_dict["time_cpu"].append(
                     dt.strptime(line[0], '%I:%M:%S %p').replace(year=2016))
-                cpuint = float('{0:.2f}'.format((float(line[2]) * COREHTVM) / 100))
-                worker_dict["cpu_real"].append(cpuint)
+                if config["Aws"]["HyperThreading"]:
+                    cpu_real = float(
+                        '{0:.2f}'.format((float(line[2]) * config["Control"]["CoreVM"] * 2) / 100))
+                else:
+                    cpu_real = float(
+                        '{0:.2f}'.format((float(line[2]) * config["Control"]["CoreVM"]) / 100))
+                worker_dict["cpu_real"].append(cpu_real)
     print(list(worker_dict.keys()))
     return worker_dict

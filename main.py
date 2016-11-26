@@ -6,7 +6,7 @@ import boto3
 import launch
 import run
 from config import NUMINSTANCE, REGION, TAG, REBOOT, CLUSTER_ID, TERMINATE, RUN, NUM_RUN, \
-    CREDENTIAL_PROFILE
+    CREDENTIAL_PROFILE, CONFIG_DICT
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
     client = session.client('ec2', region_name=REGION)
 
     if NUMINSTANCE > 0:
-        spot_request_ids = launch.launch(client, NUMINSTANCE)
+        spot_request_ids = launch.launch(client, NUMINSTANCE, CONFIG_DICT)
 
         print("CHECK SECURITY GROUP ALLOWED IP SETTINGS!!!")
 

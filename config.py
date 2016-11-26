@@ -200,11 +200,12 @@ CONFIG_DICT = {
     "Deadline": DEADLINE,
     "Control": {
         "Alpha": ALPHA,
-        "Overscale": OVERSCALE,
+        "OverScale": OVERSCALE,
         "MaxExecutor": MAXEXECUTOR,
+        "CoreVM": COREVM,
         "K": K,
         "Ti": TI,
-        "Tsample": TSAMPLE,
+        "TSample": TSAMPLE,
         "CoreQuantum": COREQUANTUM
     },
     "Aws": {
@@ -212,7 +213,12 @@ CONFIG_DICT = {
         "HyperThreading": not DISABLEHT,
         "Price": PRICE,
         "AMI": DATA_AMI[REGION]["ami"],
-        "Region": REGION
+        "Region": REGION,
+        "AZ": DATA_AMI[REGION]["az"],
+        "SecurityGroup": SECURITY_GROUP,
+        "KeyPair": DATA_AMI[REGION]["keypair"],
+        "EbsOptimized": EBS_OPTIMIZED,
+        "SnapshotId": DATA_AMI[REGION]["snapid"]
     },
     "Spark": {
         "ExecutorCore": COREVM,
@@ -222,7 +228,8 @@ CONFIG_DICT = {
         "LocalityWaitProcess": LOCALITY_WAIT_PROCESS,
         "LocalityWaitNode": LOCALITY_WAIT_NODE,
         "LocalityWaitRack": LOCALITY_WAIT_RACK,
-        "CPUtask": CPU_TASK
+        "CPUTask": CPU_TASK,
+        "SparkHome": SPARK_HOME
     },
     "HDFS": bool(HDFS)
 }

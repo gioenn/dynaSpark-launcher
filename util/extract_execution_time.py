@@ -1,6 +1,6 @@
 import json
 
-from csparkbench.config import *
+from config import *
 
 exec_time_dict = {}
 with open(
