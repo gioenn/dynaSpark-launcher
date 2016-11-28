@@ -32,9 +32,28 @@ aws_secret_access_key=< ACCESS-KEY >
 ## Configuration
 See [config.py](https://elfolink.github.io/benchmark-sparkcontrol/config.html) 
 
-
-## Parameters Main.py
-
+## Example: Test PageRank
+After added the AWS credential to create a cluster with open the file config.py and change this setting:
 ```python
-# TODO
+DATA_AMI = # The name of the KeyPair for the instance
+KEY_PAIR_PATH = # The local path of the KeyPair 
+NUM_INSTANCE = 7 # 1 NameNode + 6 DataNode
+CLUSTER_ID = "HDFS" # We first create an HDFS cluster
 ```
+After editing the config.py, launch the file main.py. After setup and launch of the HDFS cluster copy the HDFS Master dns address.
+
+Now to launch PageRank on a new cSpark cluster setup the config.py file as follows:
+```python
+DATA_AMI = # The name of the KeyPair for the instance
+KEY_PAIR_PATH = # The local path of the KeyPair 
+NUM_INSTANCE = 7 # 1 MasterNode + 6 WorkerNode
+CLUSTER_ID = "CSPARK" # We first create an HDFS cluster
+HDFS_MASTER = # The HDFS master dns address
+PREV_SCALE_FACTOR = 0 # This is needed for generate new data
+BENCHMARK_BENCH = ["PageRank"]
+```
+
+
+### TODO
+- [ ] Add commandline parameters in main.py to override config.py
+- [ ] Add support for Azure
