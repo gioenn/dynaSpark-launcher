@@ -27,7 +27,7 @@
     <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Spark Control Benchmark 0.0.1 documentation" href="index.html"/>
     <link rel="next" title="Main Module" href="main.html"/>
-    <link rel="prev" title="Welcome to Spark Control Benchmark’s documentation!" href="index.html"/>
+    <link rel="prev" title="Launch Module" href="launch.html"/>
 </head>
 <body role="document">
 <div class="related" role="navigation" aria-label="related navigation">
@@ -45,7 +45,7 @@
                accesskey="N">next</a> |
         </li>
         <li class="right">
-            <a href="index.html" title="Welcome to Spark Control Benchmark’s documentation!"
+            <a href="launch.html" title="Launch Module"
                accesskey="P">previous</a> |
         </li>
         <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
@@ -62,17 +62,24 @@
                     <span id="log-module"></span>
                     <h1>Log Module<a class="headerlink" href="#module-log"
                                      title="Permalink to this headline">¶</a></h1>
+                    <p>Module that handles the cluster log:</p>
+                    <ul class="simple">
+                        <li>Download from master and slaves</li>
+                        <li>Extract app data</li>
+                        <li>Extract worker data</li>
+                    </ul>
                     <dl class="function">
-                        <dt id="log.download_master">
-                            <code class="descclassname">log.</code><code class="descname">download_master</code><span
-                                class="sig-paren">(</span><em>i</em>, <em>output_folder</em>, <em>log_folder</em><span
+                        <dt id="log.download">
+                            <code class="descclassname">log.</code><code
+                                class="descname">download</code><span class="sig-paren">(</span><em>log_folder</em>,
+                            <em>instances</em>, <em>master_dns</em>, <em>output_folder</em>, <em>config</em><span
                                 class="sig-paren">)</span><a class="reference internal"
-                                                             href="_modules/log.html#download_master"><span
+                                                             href="_modules/log.html#download"><span
                                 class="viewcode-link">[source]</span></a><a class="headerlink"
-                                                                            href="#log.download_master"
+                                                                            href="#log.download"
                                                                             title="Permalink to this definition">¶</a>
                         </dt>
-                        <dd>
+                        <dd><p>Download the logs from the master and the worker nodes</p>
                             <table class="docutils field-list" frame="void" rules="none">
                                 <col class="field-name"/>
                                 <col class="field-body"/>
@@ -81,15 +88,65 @@
                                     <th class="field-name">Parameters:</th>
                                     <td class="field-body">
                                         <ul class="first simple">
-                                            <li><strong>i</strong> &#8211; </li>
-                                            <li><strong>output_folder</strong> &#8211; </li>
-                                            <li><strong>log_folder</strong> &#8211; </li>
+                                            <li><strong>log_folder</strong> &#8211; the log folder
+                                                of the application
+                                            </li>
+                                            <li><strong>instances</strong> &#8211; the instances of
+                                                the cluster
+                                            </li>
+                                            <li><strong>master_dns</strong> &#8211; the dns of the
+                                                master instances
+                                            </li>
+                                            <li><strong>output_folder</strong> &#8211; the output
+                                                folder where to save the logs
+                                            </li>
                                         </ul>
                                     </td>
                                 </tr>
                                 <tr class="field-even field">
                                     <th class="field-name">Returns:</th>
-                                    <td class="field-body"><p class="first last"></p>
+                                    <td class="field-body"><p class="first last">the output
+                                        folder</p>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="log.download_master">
+                            <code class="descclassname">log.</code><code class="descname">download_master</code><span
+                                class="sig-paren">(</span><em>i</em>, <em>output_folder</em>, <em>log_folder</em>,
+                            <em>config</em><span class="sig-paren">)</span><a
+                                class="reference internal" href="_modules/log.html#download_master"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#log.download_master"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Download log from master instance</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body">
+                                        <ul class="first simple">
+                                            <li><strong>i</strong> &#8211; master instance</li>
+                                            <li><strong>output_folder</strong> &#8211; output folder
+                                                where save the log
+                                            </li>
+                                            <li><strong>log_folder</strong> &#8211; log folder on
+                                                the master instance
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body"><p class="first last">output_folder and
+                                        the app_id: the application id</p>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -100,14 +157,15 @@
                     <dl class="function">
                         <dt id="log.download_slave">
                             <code class="descclassname">log.</code><code class="descname">download_slave</code><span
-                                class="sig-paren">(</span><em>i</em>, <em>output_folder</em>, <em>app_id</em><span
-                                class="sig-paren">)</span><a class="reference internal"
-                                                             href="_modules/log.html#download_slave"><span
-                                class="viewcode-link">[source]</span></a><a class="headerlink"
-                                                                            href="#log.download_slave"
-                                                                            title="Permalink to this definition">¶</a>
-                        </dt>
-                        <dd>
+                                class="sig-paren">(</span><em>i</em>, <em>output_folder</em>, <em>app_id</em>,
+                            <em>config</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/log.html#download_slave"><span class="viewcode-link">[source]</span></a><a
+                                class="headerlink" href="#log.download_slave"
+                                title="Permalink to this definition">¶</a></dt>
+                        <dd><p>Download log from slave instance:
+                            * The worker log that includes the controller output
+                            * The cpu monitoring log</p>
                             <table class="docutils field-list" frame="void" rules="none">
                                 <col class="field-name"/>
                                 <col class="field-body"/>
@@ -116,16 +174,51 @@
                                     <th class="field-name">Parameters:</th>
                                     <td class="field-body">
                                         <ul class="first simple">
-                                            <li><strong>i</strong> &#8211; </li>
-                                            <li><strong>output_folder</strong> &#8211; </li>
-                                            <li><strong>app_id</strong> &#8211; </li>
+                                            <li><strong>i</strong> &#8211; the slave instance</li>
+                                            <li><strong>output_folder</strong> &#8211; the output
+                                                folder where to save log
+                                            </li>
+                                            <li><strong>app_id</strong> &#8211; the application</li>
                                         </ul>
                                     </td>
                                 </tr>
                                 <tr class="field-even field">
                                     <th class="field-name">Returns:</th>
-                                    <td class="field-body"><p class="first last"></p>
+                                    <td class="field-body"><p class="first last">output_folder: the
+                                        output folder</p>
                                     </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </dd>
+                    </dl>
+
+                    <dl class="function">
+                        <dt id="log.load_app_data">
+                            <code class="descclassname">log.</code><code class="descname">load_app_data</code><span
+                                class="sig-paren">(</span><em>app_log_path</em><span
+                                class="sig-paren">)</span><a class="reference internal"
+                                                             href="_modules/log.html#load_app_data"><span
+                                class="viewcode-link">[source]</span></a><a class="headerlink"
+                                                                            href="#log.load_app_data"
+                                                                            title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Function that parse the application data like stage ids, start,
+                            deadline, end,
+                            tasktimestamps from the app_log</p>
+                            <table class="docutils field-list" frame="void" rules="none">
+                                <col class="field-name"/>
+                                <col class="field-body"/>
+                                <tbody valign="top">
+                                <tr class="field-odd field">
+                                    <th class="field-name">Parameters:</th>
+                                    <td class="field-body"><strong>app_log_path</strong> &#8211; The
+                                        log of the application with log level INFO
+                                    </td>
+                                </tr>
+                                <tr class="field-even field">
+                                    <th class="field-name">Returns:</th>
+                                    <td class="field-body">app_info dictionary</td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -135,9 +228,10 @@
                     <dl class="function">
                         <dt id="log.load_worker_data">
                             <code class="descclassname">log.</code><code class="descname">load_worker_data</code><span
-                                class="sig-paren">(</span><em>worker_log</em>, <em>cpu_log</em><span
-                                class="sig-paren">)</span><a class="reference internal"
-                                                             href="_modules/log.html#load_worker_data"><span
+                                class="sig-paren">(</span><em>worker_log</em>, <em>cpu_log</em>,
+                            <em>config</em><span class="sig-paren">)</span><a
+                                class="reference internal"
+                                href="_modules/log.html#load_worker_data"><span
                                 class="viewcode-link">[source]</span></a><a class="headerlink"
                                                                             href="#log.load_worker_data"
                                                                             title="Permalink to this definition">¶</a>
@@ -157,6 +251,9 @@
                                             </li>
                                             <li><strong>cpu_log</strong> &#8211; the path of the cpu
                                                 monitoring tool log of the worker
+                                            </li>
+                                            <li><strong>config</strong> &#8211; the configuration
+                                                dictionary
                                             </li>
                                         </ul>
                                     </td>
@@ -181,9 +278,8 @@
     <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
-            <p class="topless"><a href="index.html"
-                                  title="previous chapter">Welcome to Spark Control Benchmark&#8217;s
-                documentation!</a></p>
+            <p class="topless"><a href="launch.html"
+                                  title="previous chapter">Launch Module</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="main.html"
                                   title="next chapter">Main Module</a></p>
@@ -223,7 +319,7 @@
             >next</a> |
         </li>
         <li class="right">
-            <a href="index.html" title="Welcome to Spark Control Benchmark’s documentation!"
+            <a href="launch.html" title="Launch Module"
             >previous</a> |
         </li>
         <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1

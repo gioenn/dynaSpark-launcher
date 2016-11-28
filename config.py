@@ -3,25 +3,40 @@ Configuration module of cSpark test benchmark
 """
 
 # AWS
-DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0', "az": 'eu-west-1c', "keypair": "gazzettaEU",
+DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0',
+                          "az": 'eu-west-1c',
+                          "keypair": "gazzettaEU",
                           "price": "0.3"},
-            "us-west-2": {"ami": 'ami-7f5ff81f', "snapid": "snap-4f38bf1c", "az": 'us-west-2c',
+            "us-west-2": {"ami": 'ami-7f5ff81f',
+                          "snapid": "snap-4f38bf1c",
+                          "az": 'us-west-2c',
                           "keypair": "gazzetta",
                           "price": "0.25"}}
+"""AMI id for region and availability zone"""
 
 CREDENTIAL_PROFILE = 'cspark'
+"""Credential profile name of AWS"""
 REGION = "us-west-2"
+"""Region of AWS to use"""
 KEY_PAIR_PATH = "/home/meteos/" + DATA_AMI[REGION]["keypair"] + ".pem"
+"""KeyPair path for the instance"""
 SECURITY_GROUP = "spark-cluster"
+"""Secutiry group of the instance"""
 PRICE = DATA_AMI[REGION]["price"]
 INSTANCE_TYPE = "r3.4xlarge"
+"""Instance type"""
 NUM_INSTANCE = 0
+"""Number of instance to use"""
 EBS_OPTIMIZED = True if "r3" not in INSTANCE_TYPE else False
 REBOOT = 0
+"""Reboot the instances of the cluster"""
 KILL_JAVA = 1
+"""Kill every java application on the cluster"""
 NUM_RUN = 1
+"""Number of run to repeat the benchmark"""
 
 CLUSTER_ID = "1"
+"""Id of the cluster with the launched instances"""
 print("Cluster ID : " + str(CLUSTER_ID))
 TAG = [{
     "Key": "ClusterId",
@@ -30,16 +45,20 @@ TAG = [{
 
 # HDFS
 HDFS_MASTER = ""
-
+"""Url of the HDFS NameNode if not set the cluster created is an HDFS Cluster"""
 # Spark config
 SPARK_2 = "/opt/spark/"
 SPARK_DOCKER = "/usr/local/spark/"
 SPARK_HOME = SPARK_DOCKER
+"""Location of Spark in the ami"""
 
 LOG_LEVEL = "INFO"
 UPDATE_SPARK = 0
+"""Git pull and build Spark of all the cluster"""
 UPDATE_SPARK_MASTER = 0
+"""Git pull and build Spark only of the master node"""
 UPDATE_SPARK_DOCKER = 0
+"""Pull the docker image in each node of the cluster"""
 ENABLE_EXTERNAL_SHUFFLE = "true"
 LOCALITY_WAIT = 0
 LOCALITY_WAIT_NODE = 0
@@ -88,6 +107,7 @@ CPU_PERIOD = 100000
 RUN = 1
 SYNC_TIME = 1
 PREV_SCALE_FACTOR = 1000
+"""*Important Settings* if it is equals to SCALE_FACTOR no need to generate new data on HDFS"""
 BENCH_NUM_TRIALS = 1
 
 BENCHMARK_PERF = [
@@ -99,6 +119,7 @@ BENCHMARK_PERF = [
     # "scala-count",
     # "scala-count-w-fltr",
 ]
+"""Spark-perf benchmark to execute"""
 
 BENCHMARK_BENCH = [
     "PageRank",
@@ -106,6 +127,7 @@ BENCHMARK_BENCH = [
     # "KMeans",
     # "SVM"
 ]
+"""Spark-bench benchmark to execute"""
 
 if len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) > 1 or len(BENCHMARK_PERF) + len(
         BENCHMARK_BENCH) == 0:
@@ -164,6 +186,7 @@ BENCH_CONF = {
         "MAX_ITERATION": (7, 1)
     }
 }
+"""Setting of the supported benchmark"""
 if len(BENCHMARK_PERF) > 0:
     SCALE_FACTOR = BENCH_CONF[BENCHMARK_PERF[0]]["ScaleFactor"]
     INPUT_RECORD = 200 * 1000 * 1000 * SCALE_FACTOR
@@ -185,7 +208,7 @@ BENCH_CONF[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]]
 TERMINATE = 0
 
 # HDFS
-HDFS = 1 if HDFS_MASTER == "" else 0
+HDFS = 1 if HDFS_MASTER == "" else 0  # TODO Fix this variable for plot
 HADOOP_CONF = "/usr/local/lib/hadoop-2.7.2/etc/hadoop/"
 DELETE_HDFS = 1 if SCALE_FACTOR != PREV_SCALE_FACTOR else 0
 

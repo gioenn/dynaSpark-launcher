@@ -54,7 +54,10 @@
                 <h1>Source code for launch</h1>
                 <div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Launch the instance with spot request</span>
+<span class="sd">Handle the instance:</span>
+<span class="sd">* Launch new instance with spot request</span>
+<span class="sd">* Terminate instance</span>
+<span class="sd">* Check instance connectivity</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">socket</span>
@@ -64,13 +67,6 @@
                         class="n">ECONNREFUSED</span>
 <span class="kn">from</span> <span class="nn">errno</span> <span class="k">import</span> <span
                         class="n">ETIMEDOUT</span>
-
-<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span
-                        class="n">DATA_AMI</span><span class="p">,</span> <span class="n">INSTANCE_TYPE</span><span
-                        class="p">,</span> <span class="n">REGION</span><span
-                        class="p">,</span> <span class="n">PRICE</span><span
-                        class="p">,</span> <span class="n">SECURITY_GROUP</span><span
-                        class="p">,</span> <span class="n">EBS_OPTIMIZED</span>
 
 
 <div class="viewcode-block" id="query_yes_no"><a class="viewcode-back"
@@ -370,27 +366,28 @@
 <div class="viewcode-block" id="check_spot_price"><a class="viewcode-back"
                                                      href="../launch.html#launch.check_spot_price">[docs]</a><span
         class="k">def</span> <span class="nf">check_spot_price</span><span class="p">(</span><span
-        class="n">client</span><span class="p">):</span>
+        class="n">client</span><span class="p">,</span> <span class="n">config</span><span
+        class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Check the current spot price on the selected amazon region of the instance type choosen</span>
 <span class="sd">        and compare with the one provided by the user</span>
 
 <span class="sd">    :param client: the ec2 client</span>
+<span class="sd">    :param config: the configuration dictionary of the user</span>
 <span class="sd">    :return: Exit if the spot price of the user is too low (&lt; current price + 20%)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">spot_price_history_response</span> <span class="o">=</span> <span class="n">client</span><span
             class="o">.</span><span class="n">describe_spot_price_history</span><span
-            class="p">(</span><span class="n">InstanceTypes</span><span class="o">=</span><span
-            class="p">[</span><span class="n">INSTANCE_TYPE</span><span class="p">],</span>
-                                                                     <span class="n">ProductDescriptions</span><span
-            class="o">=</span><span class="p">[</span>
-                                                                         <span class="s1">&#39;Linux/UNIX&#39;</span><span
-            class="p">],</span>
-                                                                     <span class="n">AvailabilityZone</span><span
-            class="o">=</span>
-                                                                     <span class="n">DATA_AMI</span><span
-            class="p">[</span><span class="n">REGION</span><span class="p">][</span><span
-            class="s2">&quot;az&quot;</span><span class="p">])</span>
+            class="p">(</span>
+        <span class="n">InstanceTypes</span><span class="o">=</span><span class="p">[</span><span
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Aws&quot;</span><span class="p">][</span><span class="s2">&quot;InstanceType&quot;</span><span
+            class="p">]],</span>
+        <span class="n">ProductDescriptions</span><span class="o">=</span><span
+            class="p">[</span><span class="s1">&#39;Linux/UNIX&#39;</span><span class="p">],</span>
+        <span class="n">AvailabilityZone</span><span class="o">=</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Aws&quot;</span><span class="p">][</span><span
+            class="s2">&quot;AZ&quot;</span><span class="p">])</span>
     <span class="nb">print</span><span class="p">(</span><span
             class="n">spot_price_history_response</span><span class="p">[</span><span class="s1">&#39;SpotPriceHistory&#39;</span><span
             class="p">][</span><span class="mi">0</span><span class="p">])</span>
@@ -425,11 +422,13 @@
             class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span
             class="s2">&quot;YOUR PRICE: &quot;</span> <span class="o">+</span> <span
-            class="nb">str</span><span class="p">(</span><span class="n">PRICE</span><span
-            class="p">))</span>
-    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">PRICE</span><span
-            class="p">)</span> <span class="o">&lt;</span> <span class="n">spot_price</span><span
-            class="p">:</span>
+            class="nb">str</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Aws&quot;</span><span class="p">][</span><span
+            class="s2">&quot;Price&quot;</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Aws&quot;</span><span class="p">][</span><span
+            class="s2">&quot;Price&quot;</span><span class="p">])</span> <span class="o">&lt;</span> <span
+            class="n">spot_price</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR PRICE&quot;</span><span
             class="p">)</span>
         <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
@@ -438,12 +437,14 @@
 <div class="viewcode-block" id="launch"><a class="viewcode-back"
                                            href="../launch.html#launch.launch">[docs]</a><span
         class="k">def</span> <span class="nf">launch</span><span class="p">(</span><span class="n">client</span><span
-        class="p">,</span> <span class="n">num_instance</span><span class="p">):</span>
+        class="p">,</span> <span class="n">num_instance</span><span class="p">,</span> <span
+        class="n">config</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Launch num_instance on Amazon EC2 with spot request</span>
 
 <span class="sd">    :param client: the ec2 client</span>
 <span class="sd">    :param num_instance: number of instance to launch</span>
+<span class="sd">    :param config: the configuration dictionary of the user</span>
 <span class="sd">    :return: the list of spot request&#39;s ids</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">query_yes_no</span><span class="p">(</span><span
@@ -453,41 +454,50 @@
             class="s2">&quot; new instance?&quot;</span><span class="p">,</span> <span class="s2">&quot;no&quot;</span><span
             class="p">):</span>
         <span class="n">check_spot_price</span><span class="p">(</span><span class="n">client</span><span
-            class="p">)</span>
+            class="p">,</span> <span class="n">config</span><span class="p">)</span>
         <span class="n">spot_request_response</span> <span class="o">=</span> <span
             class="n">client</span><span class="o">.</span><span
             class="n">request_spot_instances</span><span class="p">(</span>
             <span class="n">SpotPrice</span><span class="o">=</span><span
-            class="n">PRICE</span><span class="p">,</span>
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Aws&quot;</span><span class="p">][</span><span class="s2">&quot;Price&quot;</span><span
+            class="p">],</span>
             <span class="n">InstanceCount</span><span class="o">=</span><span
             class="n">num_instance</span><span class="p">,</span>
             <span class="n">Type</span><span class="o">=</span><span
             class="s1">&#39;one-time&#39;</span><span class="p">,</span>
             <span class="n">AvailabilityZoneGroup</span><span class="o">=</span>
-            <span class="n">DATA_AMI</span><span class="p">[</span><span
-            class="n">REGION</span><span class="p">][</span><span
-            class="s2">&quot;az&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Aws&quot;</span><span class="p">][</span><span class="s2">&quot;AZ&quot;</span><span
+            class="p">],</span>
             <span class="n">LaunchSpecification</span><span class="o">=</span><span
             class="p">{</span>
-                <span class="s2">&quot;ImageId&quot;</span><span class="p">:</span> <span class="n">DATA_AMI</span><span
-            class="p">[</span><span class="n">REGION</span><span class="p">][</span><span
-            class="s2">&quot;ami&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;KeyName&quot;</span><span class="p">:</span> <span class="n">DATA_AMI</span><span
-            class="p">[</span><span class="n">REGION</span><span class="p">][</span><span
-            class="s2">&quot;keypair&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;ImageId&quot;</span><span class="p">:</span> <span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Aws&quot;</span><span class="p">][</span><span
+            class="s2">&quot;AMI&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;KeyName&quot;</span><span class="p">:</span> <span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Aws&quot;</span><span class="p">][</span><span
+            class="s2">&quot;KeyPair&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;SecurityGroups&quot;</span><span class="p">:</span> <span
             class="p">[</span>
-                    <span class="n">SECURITY_GROUP</span><span class="p">,</span>
+                    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;Aws&quot;</span><span
+            class="p">][</span><span class="s2">&quot;SecurityGroup&quot;</span><span
+            class="p">],</span>
                 <span class="p">],</span>
                 <span class="s1">&#39;Placement&#39;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s1">&#39;AvailabilityZone&#39;</span><span class="p">:</span>
-                        <span class="n">DATA_AMI</span><span class="p">[</span><span class="n">REGION</span><span
-            class="p">][</span><span class="s2">&quot;az&quot;</span><span class="p">],</span>
+                    <span class="s1">&#39;AvailabilityZone&#39;</span><span class="p">:</span> <span
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Aws&quot;</span><span class="p">][</span><span class="s2">&quot;AZ&quot;</span><span
+            class="p">],</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;InstanceType&quot;</span><span class="p">:</span> <span
-            class="n">INSTANCE_TYPE</span><span class="p">,</span>
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Aws&quot;</span><span class="p">][</span><span class="s2">&quot;InstanceType&quot;</span><span
+            class="p">],</span>
                 <span class="s2">&quot;EbsOptimized&quot;</span><span class="p">:</span> <span
-            class="n">EBS_OPTIMIZED</span><span class="p">,</span>
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Aws&quot;</span><span class="p">][</span><span class="s2">&quot;EbsOptimized&quot;</span><span
+            class="p">],</span>
                 <span class="s2">&quot;BlockDeviceMappings&quot;</span><span
             class="p">:</span> <span class="p">[</span>
                     <span class="p">{</span>
@@ -501,10 +511,10 @@
             class="p">:</span> <span class="s2">&quot;gp2&quot;</span><span class="p">,</span>
                             <span class="s2">&quot;VolumeSize&quot;</span><span
             class="p">:</span> <span class="mi">200</span><span class="p">,</span>
-                            <span class="s2">&quot;SnapshotId&quot;</span><span class="p">:</span>
-                                <span class="n">DATA_AMI</span><span class="p">[</span><span
-            class="n">REGION</span><span class="p">][</span><span
-            class="s2">&quot;snapid&quot;</span><span class="p">]</span>
+                            <span class="s2">&quot;SnapshotId&quot;</span><span
+            class="p">:</span> <span class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Aws&quot;</span><span class="p">][</span><span class="s2">&quot;SnapshotId&quot;</span><span
+            class="p">]</span>
                         <span class="p">}</span>
                     <span class="p">},</span>
                     <span class="p">{</span>

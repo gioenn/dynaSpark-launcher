@@ -26,6 +26,8 @@
     <link rel="index" title="Index" href="genindex.html"/>
     <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Spark Control Benchmark 0.0.1 documentation" href="index.html"/>
+    <link rel="next" title="Launch Module" href="launch.html"/>
+    <link rel="prev" title="Welcome to Spark Control Benchmark’s documentation!" href="index.html"/>
 </head>
 <body role="document">
 <div class="related" role="navigation" aria-label="related navigation">
@@ -37,6 +39,14 @@
         <li class="right">
             <a href="py-modindex.html" title="Python Module Index"
             >modules</a> |
+        </li>
+        <li class="right">
+            <a href="launch.html" title="Launch Module"
+               accesskey="N">next</a> |
+        </li>
+        <li class="right">
+            <a href="index.html" title="Welcome to Spark Control Benchmark’s documentation!"
+               accesskey="P">previous</a> |
         </li>
         <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
             documentation</a> &#187;</li>
@@ -52,6 +62,240 @@
                     <span id="config-module"></span>
                     <h1>Config Module<a class="headerlink" href="#module-config"
                                         title="Permalink to this headline">¶</a></h1>
+                    <p>Configuration module of cSpark test benchmark</p>
+                    <dl class="data">
+                        <dt id="config.BENCHMARK_BENCH">
+                            <code class="descclassname">config.</code><code class="descname">BENCHMARK_BENCH</code><em
+                                class="property"> = ['PageRank']</em><a class="headerlink"
+                                                                        href="#config.BENCHMARK_BENCH"
+                                                                        title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Spark-bench benchmark to execute</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.BENCHMARK_PERF">
+                            <code class="descclassname">config.</code><code class="descname">BENCHMARK_PERF</code><em
+                                class="property"> = []</em><a class="headerlink"
+                                                              href="#config.BENCHMARK_PERF"
+                                                              title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Spark-perf benchmark to execute</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.BENCH_CONF">
+                            <code class="descclassname">config.</code><code class="descname">BENCH_CONF</code><em
+                                class="property"> = {'scala-agg-by-key-naive': {'ScaleFactor': 10},
+                            'scala-sort-by-key-int': {'ScaleFactor': 50}, 'PageRank': {'numV': (2,
+                            7000000), 'MAX_ITERATION': (8, 1), 'NUM_OF_PARTITIONS': (3, 1000),
+                            'NumTrials': 1}, 'scala-count': {'ScaleFactor': 10}, 'KMeans':
+                            {'MAX_ITERATION': (8, 1), 'NUM_OF_PARTITIONS': (6, 1000), 'DIMENSIONS':
+                            (4, 20), 'SCALING': (5, 0.6), 'NUM_OF_CLUSTERS': (3, 10),
+                            'NUM_OF_POINTS': (2, 100000000)}, 'scala-agg-by-key-int':
+                            {'ScaleFactor': 5}, 'scala-agg-by-key': {'ScaleFactor': 10},
+                            'scala-count-w-fltr': {'ScaleFactor': 10}, 'scala-sort-by-key':
+                            {'ScaleFactor': 100}, 'DecisionTree': {'NUM_OF_EXAMPLES': (2, 50000000),
+                            'MAX_ITERATION': (21, 1), 'NUM_OF_PARTITIONS': (4, 1200),
+                            'NUM_OF_CLASS_C': (7, 10), 'NUM_OF_FEATURES': (3, 6)}, 'SVM':
+                            {'NUM_OF_EXAMPLES': (2, 200000000), 'MAX_ITERATION': (7, 1),
+                            'NUM_OF_PARTITIONS': (4, 1000), 'NUM_OF_FEATURES': (3, 10)}}</em><a
+                                class="headerlink" href="#config.BENCH_CONF"
+                                title="Permalink to this definition">¶</a></dt>
+                        <dd><p>Setting of the supported benchmark</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.CLUSTER_ID">
+                            <code class="descclassname">config.</code><code class="descname">CLUSTER_ID</code><em
+                                class="property"> = '1'</em><a class="headerlink"
+                                                               href="#config.CLUSTER_ID"
+                                                               title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Id of the cluster with the launched instances</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.CREDENTIAL_PROFILE">
+                            <code class="descclassname">config.</code><code class="descname">CREDENTIAL_PROFILE</code><em
+                                class="property"> = 'cspark'</em><a class="headerlink"
+                                                                    href="#config.CREDENTIAL_PROFILE"
+                                                                    title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Credential profile name of AWS</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.DATA_AMI">
+                            <code class="descclassname">config.</code><code class="descname">DATA_AMI</code><em
+                                class="property"> = {'us-west-2': {'snapid': 'snap-4f38bf1c', 'az':
+                            'us-west-2c', 'ami': 'ami-7f5ff81f', 'price': '0.25', 'keypair':
+                            'gazzetta'}, 'eu-west-1': {'price': '0.3', 'az': 'eu-west-1c', 'ami':
+                            'ami-d3225da0', 'keypair': 'gazzettaEU'}}</em><a class="headerlink"
+                                                                             href="#config.DATA_AMI"
+                                                                             title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>AMI id for region and availability zone</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.HDFS_MASTER">
+                            <code class="descclassname">config.</code><code class="descname">HDFS_MASTER</code><em
+                                class="property"> = ''</em><a class="headerlink"
+                                                              href="#config.HDFS_MASTER"
+                                                              title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Url of the HDFS NameNode if not set the cluster created is an HDFS
+                            Cluster</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.INSTANCE_TYPE">
+                            <code class="descclassname">config.</code><code class="descname">INSTANCE_TYPE</code><em
+                                class="property"> = 'r3.4xlarge'</em><a class="headerlink"
+                                                                        href="#config.INSTANCE_TYPE"
+                                                                        title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Instance type</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.KEY_PAIR_PATH">
+                            <code class="descclassname">config.</code><code class="descname">KEY_PAIR_PATH</code><em
+                                class="property"> = '/home/meteos/gazzetta.pem'</em><a
+                                class="headerlink" href="#config.KEY_PAIR_PATH"
+                                title="Permalink to this definition">¶</a></dt>
+                        <dd><p>KeyPair path for the instance</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.KILL_JAVA">
+                            <code class="descclassname">config.</code><code class="descname">KILL_JAVA</code><em
+                                class="property"> = 1</em><a class="headerlink"
+                                                             href="#config.KILL_JAVA"
+                                                             title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Kill every java application on the cluster</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.NUM_INSTANCE">
+                            <code class="descclassname">config.</code><code class="descname">NUM_INSTANCE</code><em
+                                class="property"> = 0</em><a class="headerlink"
+                                                             href="#config.NUM_INSTANCE"
+                                                             title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Number of instance to use</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.NUM_RUN">
+                            <code class="descclassname">config.</code><code
+                                class="descname">NUM_RUN</code><em class="property"> = 1</em><a
+                                class="headerlink" href="#config.NUM_RUN"
+                                title="Permalink to this definition">¶</a></dt>
+                        <dd><p>Number of run to repeat the benchmark</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.PREV_SCALE_FACTOR">
+                            <code class="descclassname">config.</code><code class="descname">PREV_SCALE_FACTOR</code><em
+                                class="property"> = 1000</em><a class="headerlink"
+                                                                href="#config.PREV_SCALE_FACTOR"
+                                                                title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p><em>Important Settings</em> if it is equals to SCALE_FACTOR no need
+                            to generate new data on HDFS</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.REBOOT">
+                            <code class="descclassname">config.</code><code
+                                class="descname">REBOOT</code><em class="property"> = 0</em><a
+                                class="headerlink" href="#config.REBOOT"
+                                title="Permalink to this definition">¶</a></dt>
+                        <dd><p>Reboot the instances of the cluster</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.REGION">
+                            <code class="descclassname">config.</code><code
+                                class="descname">REGION</code><em class="property"> =
+                            'us-west-2'</em><a class="headerlink" href="#config.REGION"
+                                               title="Permalink to this definition">¶</a></dt>
+                        <dd><p>Region of AWS to use</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.SECURITY_GROUP">
+                            <code class="descclassname">config.</code><code class="descname">SECURITY_GROUP</code><em
+                                class="property"> = 'spark-cluster'</em><a class="headerlink"
+                                                                           href="#config.SECURITY_GROUP"
+                                                                           title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Secutiry group of the instance</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.SPARK_HOME">
+                            <code class="descclassname">config.</code><code class="descname">SPARK_HOME</code><em
+                                class="property"> = '/usr/local/spark/'</em><a class="headerlink"
+                                                                               href="#config.SPARK_HOME"
+                                                                               title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Location of Spark in the ami</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.UPDATE_SPARK">
+                            <code class="descclassname">config.</code><code class="descname">UPDATE_SPARK</code><em
+                                class="property"> = 0</em><a class="headerlink"
+                                                             href="#config.UPDATE_SPARK"
+                                                             title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Git pull and build Spark of all the cluster</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.UPDATE_SPARK_DOCKER">
+                            <code class="descclassname">config.</code><code class="descname">UPDATE_SPARK_DOCKER</code><em
+                                class="property"> = 0</em><a class="headerlink"
+                                                             href="#config.UPDATE_SPARK_DOCKER"
+                                                             title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Pull the docker image in each node of the cluster</p>
+                        </dd>
+                    </dl>
+
+                    <dl class="data">
+                        <dt id="config.UPDATE_SPARK_MASTER">
+                            <code class="descclassname">config.</code><code class="descname">UPDATE_SPARK_MASTER</code><em
+                                class="property"> = 0</em><a class="headerlink"
+                                                             href="#config.UPDATE_SPARK_MASTER"
+                                                             title="Permalink to this definition">¶</a>
+                        </dt>
+                        <dd><p>Git pull and build Spark only of the master node</p>
+                        </dd>
+                    </dl>
+
                 </div>
 
 
@@ -60,6 +304,13 @@
     </div>
     <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="index.html"
+                                  title="previous chapter">Welcome to Spark Control Benchmark&#8217;s
+                documentation!</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="launch.html"
+                                  title="next chapter">Launch Module</a></p>
             <div role="note" aria-label="source link">
                 <h3>This Page</h3>
                 <ul class="this-page-menu">
@@ -90,6 +341,14 @@
         <li class="right">
             <a href="py-modindex.html" title="Python Module Index"
             >modules</a> |
+        </li>
+        <li class="right">
+            <a href="launch.html" title="Launch Module"
+            >next</a> |
+        </li>
+        <li class="right">
+            <a href="index.html" title="Welcome to Spark Control Benchmark’s documentation!"
+            >previous</a> |
         </li>
         <li class="nav-item nav-item-0"><a href="index.html">Spark Control Benchmark 0.0.1
             documentation</a> &#187;</li>

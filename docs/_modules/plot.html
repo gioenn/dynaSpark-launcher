@@ -78,8 +78,6 @@
 <span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span
                         class="k">as</span> <span class="nn">plt_ticker</span>
 
-<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span
-                        class="n">COREVM</span>
 <span class="kn">from</span> <span class="nn">log</span> <span class="k">import</span> <span
                         class="n">load_app_data</span><span class="p">,</span> <span class="n">load_worker_data</span>
 <span class="kn">from</span> <span class="nn">util.utils</span> <span class="k">import</span> <span
@@ -554,8 +552,9 @@
     <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span
             class="p">(</span><span class="s1">&#39;Core [#]&#39;</span><span class="p">)</span>
     <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span
-            class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">COREVM</span><span
-            class="p">)</span>
+            class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;CoreVM&quot;</span><span class="p">])</span>
     <span class="n">xlim</span> <span class="o">=</span> <span class="n">ax2</span><span
             class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
     <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span
@@ -1240,7 +1239,9 @@
             class="nb">len</span><span class="p">(</span><span class="nb">list</span><span
             class="p">(</span><span class="n">workers_dict</span><span class="o">.</span><span
             class="n">keys</span><span class="p">()))</span> <span class="o">*</span> <span
-            class="n">COREVM</span><span class="p">)</span>
+            class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;CoreVM&quot;</span><span
+            class="p">])</span>
         <span class="c1"># first_ts = app_info[app_id][PLOT_SID_STAGE][&quot;start&quot;].replace(microsecond=0).timestamp()</span>
         <span class="k">for</span> <span class="n">worker_log</span> <span
             class="ow">in</span> <span class="n">workers_dict</span><span class="o">.</span><span
@@ -1476,7 +1477,9 @@
             class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">len</span><span
             class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">workers_dict</span><span
             class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span
-            class="o">*</span> <span class="n">COREVM</span><span class="p">)</span>
+            class="o">*</span> <span class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;CoreVM&quot;</span><span
+            class="p">])</span>
 
         <span class="n">ax2</span><span class="o">.</span><span class="n">fill_between</span><span
             class="p">(</span><span class="n">ts_cpu</span><span class="p">,</span> <span
@@ -1486,14 +1489,17 @@
             class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span
             class="p">)</span>
         <span class="n">yaxis_multiplier</span> <span class="o">=</span> <span
-            class="nb">float</span><span class="p">(</span><span class="n">COREVM</span><span
-            class="p">)</span>
+            class="nb">float</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;CoreVM&quot;</span><span class="p">])</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
             class="n">workers_dict</span><span class="p">)</span> <span class="o">&gt;</span> <span
             class="mi">11</span><span class="p">:</span>
             <span class="n">yaxis_multiplier</span> <span class="o">=</span> <span
-            class="nb">float</span><span class="p">(</span><span class="n">COREVM</span><span
-            class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+            class="nb">float</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;CoreVM&quot;</span><span
+            class="p">])</span> <span class="o">*</span> <span class="mi">2</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span
             class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span
             class="n">plt_ticker</span><span class="o">.</span><span
@@ -1614,119 +1620,112 @@
 
 
 <span class="nd">@timing</span>
-<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">folder</span><span
-                        class="p">):</span>
+<div class="viewcode-block" id="plot"><a class="viewcode-back"
+                                         href="../plot.html#plot.plot">[docs]</a><span
+        class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">folder</span><span
+        class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    :param folder:</span>
 <span class="sd">    :return:</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">folder</span><span
-                        class="p">)</span>
+            class="p">)</span>
     <span class="k">if</span> <span class="n">folder</span><span class="p">[</span><span
-                        class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
-                        class="o">!=</span> <span class="s2">&quot;/&quot;</span><span
-                        class="p">:</span>
+            class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
+            class="o">!=</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
         <span class="n">folder</span> <span class="o">+=</span> <span
-                        class="s2">&quot;/&quot;</span>
+            class="s2">&quot;/&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span
-                        class="p">(</span><span class="n">folder</span><span class="p">)</span>
+            class="p">(</span><span class="n">folder</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">config</span><span
-                        class="p">)</span>
+            class="p">)</span>
 
     <span class="k">global</span> <span class="n">PLOT_SID_STAGE</span>
     <span class="n">PLOT_SID_STAGE</span> <span class="o">=</span> <span class="mi">1</span> <span
-                        class="k">if</span> <span class="n">config</span><span
-                        class="p">[</span><span class="s2">&quot;HDFS&quot;</span><span
-                        class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+            class="k">if</span> <span class="n">config</span><span class="p">[</span><span
+            class="s2">&quot;HDFS&quot;</span><span class="p">]</span> <span
+            class="k">else</span> <span class="mi">0</span>
 
     <span class="n">app_logs</span> <span class="o">=</span> <span class="n">glob</span><span
-                        class="o">.</span><span class="n">glob</span><span class="p">(</span><span
-                        class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;*.err&quot;</span><span
-                        class="p">)</span> <span class="o">+</span> <span class="n">glob</span><span
-                        class="o">.</span><span class="n">glob</span><span class="p">(</span><span
-                        class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;*.dat&quot;</span><span
-                        class="p">)</span>
+            class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span
+            class="o">+</span> <span class="s2">&quot;*.err&quot;</span><span
+            class="p">)</span> <span class="o">+</span> <span class="n">glob</span><span
+            class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span
+            class="o">+</span> <span class="s2">&quot;*.dat&quot;</span><span class="p">)</span>
     <span class="n">app_info</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">app_log</span> <span class="ow">in</span> <span
-                        class="nb">sorted</span><span class="p">(</span><span
-                        class="n">app_logs</span><span class="p">):</span>
+            class="nb">sorted</span><span class="p">(</span><span class="n">app_logs</span><span
+            class="p">):</span>
         <span class="n">app_info</span> <span class="o">=</span> <span
-                        class="n">load_app_data</span><span class="p">(</span><span class="n">app_log</span><span
-                        class="p">,</span> <span class="n">config</span><span
-                        class="p">[</span><span class="s2">&quot;HDFS&quot;</span><span
-                        class="p">])</span>
+            class="n">load_app_data</span><span class="p">(</span><span
+            class="n">app_log</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">app_id</span> <span class="ow">in</span> <span
-                        class="n">app_info</span><span class="p">:</span>
+            class="n">app_info</span><span class="p">:</span>
             <span class="n">plot_app_overview</span><span class="p">(</span><span
-                        class="n">app_id</span><span class="p">,</span> <span
-                        class="n">app_info</span><span class="p">[</span><span
-                        class="n">app_id</span><span class="p">],</span> <span
-                        class="n">folder</span><span class="p">,</span> <span
-                        class="n">config</span><span class="p">)</span>
+            class="n">app_id</span><span class="p">,</span> <span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">],</span> <span
+            class="n">folder</span><span class="p">,</span> <span class="n">config</span><span
+            class="p">)</span>
 
     <span class="n">worker_logs</span> <span class="o">=</span> <span class="n">glob</span><span
-                        class="o">.</span><span class="n">glob</span><span class="p">(</span><span
-                        class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;*worker*.out&quot;</span><span
-                        class="p">)</span>
+            class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span
+            class="o">+</span> <span class="s2">&quot;*worker*.out&quot;</span><span
+            class="p">)</span>
     <span class="n">cpu_logs</span> <span class="o">=</span> <span class="n">glob</span><span
-                        class="o">.</span><span class="n">glob</span><span class="p">(</span><span
-                        class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;sar*.log&quot;</span><span
-                        class="p">)</span>
+            class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span
+            class="o">+</span> <span class="s2">&quot;sar*.log&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">worker_logs</span><span
-                        class="p">)</span> <span class="o">==</span> <span
-                        class="nb">len</span><span class="p">(</span><span class="n">cpu_logs</span><span
-                        class="p">):</span>
+            class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">cpu_logs</span><span class="p">):</span>
         <span class="n">workers_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">worker_log</span><span class="p">,</span> <span
-                        class="n">cpu_log</span> <span class="ow">in</span> <span
-                        class="nb">zip</span><span class="p">(</span><span
-                        class="nb">sorted</span><span class="p">(</span><span
-                        class="n">worker_logs</span><span class="p">),</span> <span class="nb">sorted</span><span
-                        class="p">(</span><span class="n">cpu_logs</span><span class="p">)):</span>
+            class="n">cpu_log</span> <span class="ow">in</span> <span class="nb">zip</span><span
+            class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">worker_logs</span><span
+            class="p">),</span> <span class="nb">sorted</span><span class="p">(</span><span
+            class="n">cpu_logs</span><span class="p">)):</span>
             <span class="n">worker_dict</span> <span class="o">=</span> <span class="n">load_worker_data</span><span
-                        class="p">(</span><span class="n">worker_log</span><span class="p">,</span> <span
-                        class="n">cpu_log</span><span class="p">)</span>
+            class="p">(</span><span class="n">worker_log</span><span class="p">,</span> <span
+            class="n">cpu_log</span><span class="p">,</span> <span class="n">config</span><span
+            class="p">)</span>
             <span class="n">workers_dict</span><span class="p">[</span><span
-                        class="n">worker_log</span><span class="p">]</span> <span class="o">=</span> <span
-                        class="n">worker_dict</span>
+            class="n">worker_log</span><span class="p">]</span> <span class="o">=</span> <span
+            class="n">worker_dict</span>
 
         <span class="n">first_ts_worker</span> <span class="o">=</span> <span
-                        class="o">-</span><span class="mf">1.0</span>
+            class="o">-</span><span class="mf">1.0</span>
         <span class="k">for</span> <span class="n">worker_log</span><span class="p">,</span> <span
-                        class="n">cpu_log</span> <span class="ow">in</span> <span
-                        class="nb">zip</span><span class="p">(</span><span
-                        class="nb">sorted</span><span class="p">(</span><span
-                        class="n">worker_logs</span><span class="p">),</span> <span class="nb">sorted</span><span
-                        class="p">(</span><span class="n">cpu_logs</span><span class="p">)):</span>
+            class="n">cpu_log</span> <span class="ow">in</span> <span class="nb">zip</span><span
+            class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">worker_logs</span><span
+            class="p">),</span> <span class="nb">sorted</span><span class="p">(</span><span
+            class="n">cpu_logs</span><span class="p">)):</span>
             <span class="k">for</span> <span class="n">app_id</span> <span
-                        class="ow">in</span> <span class="n">app_info</span><span class="p">:</span>
+            class="ow">in</span> <span class="n">app_info</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">first_ts_worker</span> <span
-                        class="o">==</span> <span class="o">-</span><span class="mf">1.0</span><span
-                        class="p">:</span>
+            class="o">==</span> <span class="o">-</span><span class="mf">1.0</span><span
+            class="p">:</span>
                     <span class="n">first_ts_worker</span> <span class="o">=</span> <span class="n">find_first_ts_worker</span><span
-                        class="p">(</span><span class="n">app_id</span><span
-                        class="p">,</span> <span class="n">workers_dict</span><span
-                        class="p">)</span>
+            class="p">(</span><span class="n">app_id</span><span class="p">,</span> <span class="n">workers_dict</span><span
+            class="p">)</span>
                 <span class="n">plot_worker</span><span class="p">(</span><span
-                        class="n">app_id</span><span class="p">,</span> <span
-                        class="n">app_info</span><span class="p">,</span> <span
-                        class="n">worker_log</span><span class="p">,</span> <span class="n">workers_dict</span><span
-                        class="p">[</span><span class="n">worker_log</span><span class="p">],</span> <span
-                        class="n">config</span><span class="p">,</span>
+            class="n">app_id</span><span class="p">,</span> <span class="n">app_info</span><span
+            class="p">,</span> <span class="n">worker_log</span><span class="p">,</span> <span
+            class="n">workers_dict</span><span class="p">[</span><span
+            class="n">worker_log</span><span class="p">],</span> <span class="n">config</span><span
+            class="p">,</span>
                             <span class="n">first_ts_worker</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">app_id</span> <span class="ow">in</span> <span
-                        class="n">app_info</span><span class="p">:</span>
+            class="n">app_info</span><span class="p">:</span>
             <span class="n">plot_overview_cpu</span><span class="p">(</span><span
-                        class="n">app_id</span><span class="p">,</span> <span
-                        class="n">app_info</span><span class="p">,</span> <span class="n">workers_dict</span><span
-                        class="p">,</span> <span class="n">config</span><span
-                        class="p">,</span> <span class="n">folder</span><span class="p">)</span>
+            class="n">app_id</span><span class="p">,</span> <span class="n">app_info</span><span
+            class="p">,</span> <span class="n">workers_dict</span><span class="p">,</span> <span
+            class="n">config</span><span class="p">,</span> <span class="n">folder</span><span
+            class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: SAR != WORKER LOGS&quot;</span><span
-                        class="p">)</span>
+            class="p">)</span></div>
 </pre>
                 </div>
 

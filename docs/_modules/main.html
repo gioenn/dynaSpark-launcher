@@ -61,23 +61,25 @@
 <span class="kn">import</span> <span class="nn">launch</span>
 <span class="kn">import</span> <span class="nn">run</span>
 <span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span
-                        class="n">NUMINSTANCE</span><span class="p">,</span> <span
+                        class="n">NUM_INSTANCE</span><span class="p">,</span> <span
                         class="n">REGION</span><span class="p">,</span> <span
                         class="n">TAG</span><span class="p">,</span> <span
                         class="n">REBOOT</span><span class="p">,</span> <span
                         class="n">CLUSTER_ID</span><span class="p">,</span> <span class="n">TERMINATE</span><span
                         class="p">,</span> <span class="n">RUN</span><span class="p">,</span> <span
                         class="n">NUM_RUN</span><span class="p">,</span> \
-    <span class="n">CREDENTIAL_PROFILE</span>
+    <span class="n">CREDENTIAL_PROFILE</span><span class="p">,</span> <span
+                        class="n">CONFIG_DICT</span>
 
 
 <div class="viewcode-block" id="main"><a class="viewcode-back"
                                          href="../main.html#main.main">[docs]</a><span
         class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot; Main function;</span>
-<span class="sd">    - Launch spot request of NUMINSTANCE</span>
-<span class="sd">    - Run Benchmark</span>
-<span class="sd">    :return:</span>
+<span class="sd">    * Launch spot request of NUMINSTANCE</span>
+<span class="sd">    * Run Benchmark</span>
+<span class="sd">    * Download Log</span>
+<span class="sd">    * Plot data from log</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span
             class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">profile_name</span><span
@@ -87,12 +89,12 @@
             class="p">,</span> <span class="n">region_name</span><span class="o">=</span><span
             class="n">REGION</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">NUMINSTANCE</span> <span class="o">&gt;</span> <span
+    <span class="k">if</span> <span class="n">NUM_INSTANCE</span> <span class="o">&gt;</span> <span
             class="mi">0</span><span class="p">:</span>
         <span class="n">spot_request_ids</span> <span class="o">=</span> <span
             class="n">launch</span><span class="o">.</span><span class="n">launch</span><span
-            class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">NUMINSTANCE</span><span
-            class="p">)</span>
+            class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">NUM_INSTANCE</span><span
+            class="p">,</span> <span class="n">CONFIG_DICT</span><span class="p">)</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CHECK SECURITY GROUP ALLOWED IP SETTINGS!!!&quot;</span><span
             class="p">)</span>
