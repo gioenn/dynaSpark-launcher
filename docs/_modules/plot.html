@@ -89,7 +89,7 @@
 <span class="n">PLOT_SID_STAGE</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">PLOT_LABEL</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">LABEL_SIZE</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="n">TQ_MICRO</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">TQ_MICRO</span> <span class="o">=</span> <span class="mi">20</span>
 <span class="n">TQ_KMEANS</span> <span class="o">=</span> <span class="mi">9</span>
 <span class="n">PDF</span> <span class="o">=</span> <span class="mi">1</span>
 
@@ -324,7 +324,7 @@
             class="p">]</span> <span class="o">+</span> <span class="p">(</span><span
             class="nb">int</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span class="p">])</span> <span
             class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">next_time</span> <span
             class="o">&lt;=</span> <span class="n">end_ts</span><span class="p">:</span>
@@ -450,7 +450,17 @@
             <span class="n">cpus</span> <span class="o">+=</span> <span class="n">worker_dict</span><span
             class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
             class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]</span>
-
+            <span class="n">start_ts</span> <span class="o">=</span> <span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;start&quot;</span><span
+            class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
+            class="p">()</span> <span class="o">-</span> <span class="n">first_ts_worker</span>
+            <span class="n">times</span><span class="o">.</span><span class="n">insert</span><span
+            class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">start_ts</span><span
+            class="p">)</span>
+            <span class="n">cpus</span><span class="o">.</span><span class="n">insert</span><span
+            class="p">(</span><span class="mi">0</span><span class="p">,</span> <span
+            class="mf">0.0</span><span class="p">)</span>
             <span class="n">end_ts</span> <span class="o">=</span> <span
             class="n">app_info</span><span class="p">[</span><span class="n">app_id</span><span
             class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;end&quot;</span><span
@@ -461,41 +471,47 @@
             class="p">][</span><span class="n">sid</span><span class="p">][</span><span class="s2">&quot;deadline&quot;</span><span
             class="p">]</span><span class="o">.</span><span class="n">timestamp</span><span
             class="p">()</span> <span class="o">-</span> <span class="n">first_ts_worker</span>
-            <span class="k">if</span> <span class="n">sid</span> <span class="o">==</span> <span
-            class="nb">sorted</span><span class="p">(</span><span class="n">app_info</span><span
-            class="p">[</span><span class="n">app_id</span><span class="p">])[</span><span
-            class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
-            class="ow">and</span> <span class="n">end_ts</span> <span class="o">&lt;</span> <span
-            class="n">dead_ts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">end_ts</span> <span
+            class="o">&lt;</span> <span class="n">dead_ts</span><span class="p">:</span>
                 <span class="n">times</span><span class="o">.</span><span
-            class="n">append</span><span class="p">(</span><span class="n">dead_ts</span><span
+            class="n">append</span><span class="p">(</span><span class="n">end_ts</span><span
             class="p">)</span>
                 <span class="n">cpus</span><span class="o">.</span><span
             class="n">append</span><span class="p">(</span><span class="n">cpus</span><span
             class="p">[</span><span class="o">-</span><span class="mi">1</span><span
-            class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span
-            class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+            class="p">])</span>
+                <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">end_ts</span> <span
+            class="o">+</span> <span class="mf">0.01</span><span class="p">)</span>
+                <span class="n">cpus</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span
+            class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">next_time</span> <span class="o">=</span> <span
             class="n">time</span><span class="p">[</span><span class="o">-</span><span
             class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span
             class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span class="p">])</span> <span
             class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">next_time</span> <span
             class="o">&lt;=</span> <span class="n">end_ts</span><span class="p">:</span>
+                    <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">next_time</span> <span
+            class="o">-</span> <span class="mf">0.01</span><span class="p">)</span>
+                    <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="n">cpus</span><span class="p">[</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">])</span>
                     <span class="n">times</span><span class="o">.</span><span
             class="n">append</span><span class="p">(</span><span class="n">next_time</span><span
             class="p">)</span>
                     <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
             class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
-                <span class="n">times</span><span class="o">.</span><span
-            class="n">append</span><span class="p">(</span><span class="n">end_ts</span><span
-            class="p">)</span>
-                <span class="n">cpus</span><span class="o">.</span><span
-            class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span
-            class="p">)</span>
+                    <span class="n">times</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">end_ts</span> <span
+            class="o">-</span> <span class="mf">0.01</span><span class="p">)</span>
+                    <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
+            class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
                 <span class="n">index_next</span> <span class="o">=</span> <span
             class="nb">min</span><span class="p">(</span><span class="nb">sorted</span><span
             class="p">(</span><span class="n">app_info</span><span class="p">[</span><span
@@ -533,6 +549,13 @@
             class="p">)</span> <span class="o">+</span> <span class="s2">&quot; not executed by &quot;</span> <span
             class="o">+</span> <span class="n">worker_log</span><span class="p">)</span>
 
+    <span class="n">times</span><span class="p">,</span> <span class="n">cpus</span> <span
+            class="o">=</span> <span class="p">(</span><span class="nb">list</span><span
+            class="p">(</span><span class="n">t</span><span class="p">)</span> <span
+            class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span
+            class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span
+            class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">times</span><span
+            class="p">,</span> <span class="n">cpus</span><span class="p">))))</span>
     <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span
             class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">cpus</span><span
             class="p">,</span> <span class="s2">&quot;.b-&quot;</span><span class="p">,</span> <span
@@ -580,7 +603,7 @@
             class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
             class="nb">str</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span class="p">])</span> <span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span class="p">])</span> <span
             class="o">+</span> \
                 <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span
             class="nb">str</span><span class="p">(</span><span class="n">config</span><span
@@ -863,7 +886,7 @@
             class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span>
                       <span class="nb">str</span><span class="p">(</span><span
             class="n">config</span><span class="p">[</span><span
-            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
             class="o">+</span>
                       <span class="nb">str</span><span class="p">(</span><span
@@ -1219,10 +1242,7 @@
             class="nb">sorted</span><span class="p">(</span><span class="n">sid_len</span><span
             class="o">.</span><span class="n">keys</span><span class="p">())[</span><span
             class="mi">0</span><span class="p">]:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">sid</span><span
-            class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span
-            class="n">sid_len</span><span class="p">)[</span><span class="mi">0</span><span
-            class="p">])</span>
+                <span class="c1"># print(sid, sorted(sid_len)[0])</span>
                 <span class="n">sid_len</span><span class="p">[</span><span
             class="n">sid</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sid_len</span><span
             class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span
@@ -1266,6 +1286,54 @@
             class="p">]]</span> <span class="k">if</span> <span class="n">sid</span> <span
             class="o">!=</span> <span class="n">first_sid</span> <span class="k">else</span> <span
             class="mi">0</span>
+
+                <span class="n">next_time</span> <span class="o">=</span> <span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span
+            class="p">][</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">]</span> <span class="o">+</span> <span class="n">timedelta</span><span
+            class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="p">(</span><span
+            class="nb">int</span><span class="p">(</span><span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span class="p">])</span> <span
+            class="o">/</span> <span class="mi">1000</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">next_time</span> <span
+            class="o">&lt;=</span> <span class="n">app_info</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;end&quot;</span><span class="p">]:</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_time</span><span
+            class="p">)</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker_dict</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">][</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_time</span><span
+            class="p">)</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span
+            class="p">)</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">app_info</span><span
+            class="p">[</span><span class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;end&quot;</span><span class="p">])</span>
+                    <span class="n">worker_dict</span><span class="p">[</span><span
+            class="n">app_id</span><span class="p">][</span><span class="n">sid</span><span
+            class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">]</span><span
+            class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span
+            class="p">)</span>
                 <span class="k">for</span> <span class="n">time_cpu</span><span
             class="p">,</span> <span class="n">cpu</span> <span class="ow">in</span> \
                         <span class="nb">zip</span><span class="p">(</span><span class="n">worker_dict</span><span
@@ -1291,14 +1359,13 @@
             class="n">sid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                             <span class="n">time_cpu_ts</span> <span class="o">-=</span> <span
             class="mi">2</span>
-                        <span class="k">elif</span> <span
+                    <span class="k">elif</span> <span
             class="s2">&quot;2016-10-03_08-01-39&quot;</span> <span class="ow">in</span> <span
             class="n">worker_log</span><span class="p">:</span>
-                            <span class="k">if</span> <span
-            class="s2">&quot;38.out&quot;</span> <span class="ow">in</span> <span class="n">worker_log</span> <span
-            class="ow">and</span> <span class="n">sid</span> <span class="o">==</span> <span
-            class="mi">1</span><span class="p">:</span>
-                                <span class="n">time_cpu_ts</span> <span class="o">-=</span> <span
+                        <span class="k">if</span> <span class="s2">&quot;38.out&quot;</span> <span
+            class="ow">in</span> <span class="n">worker_log</span> <span class="ow">and</span> <span
+            class="n">sid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">time_cpu_ts</span> <span class="o">-=</span> <span
             class="mi">1</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">ts_cpu</span><span
@@ -1310,9 +1377,9 @@
             class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">time_cpu_ts</span> <span
             class="o">-</span> <span class="n">first_ts</span><span class="p">))</span> <span
             class="o">&gt;=</span> \
-                                        <span class="p">(</span><span class="n">config</span><span
+                                    <span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">):</span>
                             <span class="c1"># print(ts_cpu)</span>
                             <span class="c1"># print([tixm.replace(microsecond=0).timestamp() -</span>
@@ -1359,9 +1426,7 @@
                             <span class="k">if</span> <span class="n">ts_cpu</span><span
             class="p">[</span><span class="n">s_index</span><span class="p">]</span> <span
             class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-                                <span class="nb">print</span><span class="p">(</span><span
-            class="n">time_cpu_ts</span> <span class="o">-</span> <span
-            class="n">first_ts</span><span class="p">)</span>
+                                <span class="c1"># print(time_cpu_ts - first_ts)</span>
                                 <span class="n">ts_cpu</span><span class="p">[</span><span
             class="n">s_index</span><span class="p">]</span> <span class="o">=</span> <span
             class="n">time_cpu_ts</span> <span class="o">-</span> <span class="n">first_ts</span>
@@ -1393,7 +1458,7 @@
             class="p">[</span><span class="o">-</span><span class="mi">1</span><span
             class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">next_ts</span> <span class="o">&lt;=</span> <span
             class="p">(</span><span class="n">end_ts</span> <span class="o">-</span> <span
@@ -1430,7 +1495,7 @@
                 <span class="k">if</span> <span class="p">(</span><span class="n">next_start</span> <span
             class="o">-</span> <span class="n">end</span><span class="p">)</span> <span class="o">&gt;</span> <span
             class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">):</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERR &quot;</span><span
             class="p">,</span> <span class="n">sid</span><span class="p">)</span>
@@ -1451,6 +1516,14 @@
             class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span
             class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">ts_cpu</span><span
             class="p">,</span> <span class="n">cpus</span><span class="p">))))</span>
+        <span class="c1"># for sid in sorted_sid:</span>
+        <span class="c1">#     end = app_info[app_id][sid][&quot;end&quot;].replace(microsecond=100).timestamp() - first_ts</span>
+        <span class="c1">#     try:</span>
+        <span class="c1">#         index_ts = ts_cpu.index(end)</span>
+        <span class="c1">#     except ValueError:</span>
+        <span class="c1">#         index_ts = min(range(len(ts_cpu)), key=lambda i: abs(ts_cpu[i] - end))</span>
+        <span class="c1">#     if cpus[index_ts] == 0.0:</span>
+        <span class="c1">#         cpus[index_ts] = cpus[index_ts - 1]</span>
         <span class="n">ts_cpu</span><span class="o">.</span><span class="n">append</span><span
             class="p">(</span><span class="n">end_ts</span><span class="p">)</span>
         <span class="n">cpus</span><span class="o">.</span><span class="n">append</span><span
@@ -1534,7 +1607,7 @@
             class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> \
                       <span class="nb">str</span><span class="p">(</span><span
             class="n">config</span><span class="p">[</span><span
-            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="s2">&quot;Control&quot;</span><span class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span
             class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
@@ -1579,7 +1652,9 @@
             class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
             class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span
-            class="p">()</span></div>
+            class="p">()</span>
+    <span class="k">return</span> <span class="n">cpus</span><span class="p">,</span> <span
+            class="n">ts_cpu</span></div>
 
 
 <div class="viewcode-block" id="find_first_ts_worker"><a class="viewcode-back"
@@ -1617,6 +1692,242 @@
             class="n">PLOT_SID_STAGE</span><span class="p">,</span> <span
             class="n">worker_log</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">first_ts_worker</span></div>
+
+
+<div class="viewcode-block" id="plot_mean_comparision"><a class="viewcode-back"
+                                                          href="../plot.html#plot.plot_mean_comparision">[docs]</a><span
+        class="k">def</span> <span class="nf">plot_mean_comparision</span><span
+        class="p">(</span><span class="n">folders</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param folders:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span
+            class="nn">np</span>
+
+    <span class="n">x_multi</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span
+            class="n">folders</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">folder</span><span
+            class="p">)</span>
+        <span class="k">if</span> <span class="n">folder</span><span class="p">[</span><span
+            class="o">-</span><span class="mi">1</span><span class="p">]</span> <span
+            class="o">!=</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+            <span class="n">folder</span> <span class="o">+=</span> <span
+            class="s2">&quot;/&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span
+            class="n">load_config</span><span class="p">(</span><span class="n">folder</span><span
+            class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">config</span><span
+            class="p">)</span>
+
+        <span class="k">global</span> <span class="n">PLOT_SID_STAGE</span>
+        <span class="n">PLOT_SID_STAGE</span> <span class="o">=</span> <span
+            class="mi">1</span> <span class="k">if</span> <span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;HDFS&quot;</span><span class="p">]</span> <span
+            class="k">else</span> <span class="mi">0</span>
+
+        <span class="n">app_logs</span> <span class="o">=</span> <span class="n">glob</span><span
+            class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span
+            class="o">+</span> <span class="s2">&quot;*.err&quot;</span><span
+            class="p">)</span> <span class="o">+</span> <span class="n">glob</span><span
+            class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span
+            class="o">+</span> <span class="s2">&quot;*.dat&quot;</span><span class="p">)</span>
+        <span class="n">app_info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">app_log</span> <span class="ow">in</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">app_logs</span><span
+            class="p">):</span>
+            <span class="n">app_info</span> <span class="o">=</span> <span
+            class="n">load_app_data</span><span class="p">(</span><span
+            class="n">app_log</span><span class="p">)</span>
+
+        <span class="n">worker_logs</span> <span class="o">=</span> <span class="n">glob</span><span
+            class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span
+            class="o">+</span> <span class="s2">&quot;*worker*.out&quot;</span><span
+            class="p">)</span>
+        <span class="n">cpu_logs</span> <span class="o">=</span> <span class="n">glob</span><span
+            class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span
+            class="o">+</span> <span class="s2">&quot;sar*.log&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">worker_logs</span><span class="p">)</span> <span class="o">==</span> <span
+            class="nb">len</span><span class="p">(</span><span class="n">cpu_logs</span><span
+            class="p">):</span>
+            <span class="n">workers_dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">worker_log</span><span
+            class="p">,</span> <span class="n">cpu_log</span> <span class="ow">in</span> <span
+            class="nb">zip</span><span class="p">(</span><span class="nb">sorted</span><span
+            class="p">(</span><span class="n">worker_logs</span><span class="p">),</span> <span
+            class="nb">sorted</span><span class="p">(</span><span class="n">cpu_logs</span><span
+            class="p">)):</span>
+                <span class="n">worker_dict</span> <span class="o">=</span> <span class="n">load_worker_data</span><span
+            class="p">(</span><span class="n">worker_log</span><span class="p">,</span> <span
+            class="n">cpu_log</span><span class="p">,</span> <span class="n">config</span><span
+            class="p">)</span>
+                <span class="n">workers_dict</span><span class="p">[</span><span class="n">worker_log</span><span
+            class="p">]</span> <span class="o">=</span> <span class="n">worker_dict</span>
+
+            <span class="k">for</span> <span class="n">app_id</span> <span
+            class="ow">in</span> <span class="n">app_info</span><span class="p">:</span>
+                <span class="n">cpus</span><span class="p">,</span> <span
+            class="n">ts_cpu</span> <span class="o">=</span> <span
+            class="n">plot_overview_cpu</span><span class="p">(</span><span
+            class="n">app_id</span><span class="p">,</span> <span class="n">app_info</span><span
+            class="p">,</span> <span class="n">workers_dict</span><span class="p">,</span> <span
+            class="n">config</span><span class="p">,</span> <span class="n">folder</span><span
+            class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;/0%&quot;</span> <span class="ow">in</span> <span
+            class="n">folder</span> <span class="ow">and</span> <span class="nb">len</span><span
+            class="p">(</span><span class="n">x_multi</span><span class="p">)</span> <span
+            class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">break</span>
+                    <span class="c1"># old_set = x_multi.pop(len(x_multi) - 1)</span>
+                    <span class="c1"># x_multi.append(np.mean(np.array([old_set, cpus]), axis=0, dtype=np.float64))</span>
+                <span class="k">elif</span> <span class="s2">&quot;20%&quot;</span> <span
+            class="ow">in</span> <span class="n">folder</span> <span class="ow">and</span> <span
+            class="nb">len</span><span class="p">(</span><span class="n">x_multi</span><span
+            class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+                    <span class="c1"># old_set = x_multi.pop(len(x_multi) - 1)</span>
+                    <span class="c1"># print(old_set)</span>
+                    <span class="c1"># print(cpus)</span>
+                    <span class="c1"># if len(old_set) &gt; len(cpus)</span>
+                    <span class="c1">#     print(np.array([old_set, cpus]))</span>
+                    <span class="c1">#     print(np.mean(np.array([old_set, cpus]), axis=0, dtype=np.float64))</span>
+                    <span class="c1"># x_multi.append()</span>
+                <span class="k">elif</span> <span class="s2">&quot;40%&quot;</span> <span
+            class="ow">in</span> <span class="n">folder</span> <span class="ow">and</span> <span
+            class="nb">len</span><span class="p">(</span><span class="n">x_multi</span><span
+            class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">break</span>
+                    <span class="c1"># old_set = x_multi.pop(len(x_multi) - 1)</span>
+                    <span class="c1"># x_multi.append(np.mean(np.array([old_set, cpus]), axis=0, dtype=np.float64))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">config</span><span
+            class="p">[</span><span class="s2">&quot;Control&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
+            class="p">]</span> <span class="o">==</span> <span class="mi">5000</span><span
+            class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;FOLDER&quot;</span><span
+            class="p">,</span> <span class="n">folder</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;XMULTI&quot;</span><span
+            class="p">,</span> <span class="n">x_multi</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;XMULTI LEN&quot;</span><span
+            class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_multi</span><span
+            class="p">))</span>
+                        <span class="n">x_multi</span><span class="o">.</span><span
+            class="n">append</span><span class="p">(</span><span class="n">cpus</span><span
+            class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: SAR != WORKER LOGS&quot;</span><span
+            class="p">)</span>
+    <span class="n">max_len</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">cpu</span> <span class="ow">in</span> <span
+            class="n">x_multi</span><span class="p">:</span>
+        <span class="n">max_len</span> <span class="o">=</span> <span class="nb">max</span><span
+            class="p">(</span><span class="nb">len</span><span class="p">(</span><span
+            class="n">cpu</span><span class="p">),</span> <span class="n">max_len</span><span
+            class="p">)</span>
+    <span class="k">for</span> <span class="n">cpu</span> <span class="ow">in</span> <span
+            class="n">x_multi</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span
+            class="n">cpu</span><span class="p">)</span> <span class="o">&lt;</span> <span
+            class="n">max_len</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span
+            class="n">max_len</span> <span class="o">-</span> <span class="nb">len</span><span
+            class="p">(</span><span class="n">cpu</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span
+            class="nb">range</span><span class="p">(</span><span class="n">max_len</span> <span
+            class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">cpu</span><span
+            class="p">)):</span>
+                <span class="n">x_multi</span><span class="p">[</span><span class="n">x_multi</span><span
+            class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cpu</span><span
+            class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span
+            class="mi">0</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span
+            class="n">x_multi</span><span class="p">[</span><span class="mi">0</span><span
+            class="p">]))</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">np</span><span
+            class="o">.</span><span class="n">mean</span><span class="p">(</span><span
+            class="n">np</span><span class="o">.</span><span class="n">array</span><span
+            class="p">(</span><span class="n">x_multi</span><span class="p">[</span><span
+            class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span
+            class="p">(</span><span class="o">-</span><span class="mi">1</span><span
+            class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">axis</span><span
+            class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">twenty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span
+            class="n">mean</span><span class="p">(</span><span class="n">np</span><span
+            class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x_multi</span><span
+            class="p">[</span><span class="mi">1</span><span class="p">])</span><span
+            class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span
+            class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span
+            class="p">)</span>
+    <span class="n">fourty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span
+            class="n">mean</span><span class="p">(</span><span class="n">np</span><span
+            class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x_multi</span><span
+            class="p">[</span><span class="mi">2</span><span class="p">])</span><span
+            class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span
+            class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span
+            class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span
+            class="p">)</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span
+            class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span
+            class="p">(</span><span class="n">zero</span><span class="p">))</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="mf">0.35</span>  <span
+            class="c1"># the width of the bars</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span
+            class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span
+            class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span
+            class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span
+            class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span
+            class="p">)</span>
+    <span class="n">zero_bar</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">bar</span><span class="p">(</span><span
+            class="n">ind</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span
+            class="n">width</span><span class="p">,</span> <span class="n">color</span><span
+            class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span
+            class="n">label</span><span class="o">=</span><span
+            class="s2">&quot;0%&quot;</span><span class="p">)</span>
+    <span class="n">twenty_bar</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">bar</span><span class="p">(</span><span
+            class="n">ind</span> <span class="o">+</span> <span class="n">width</span><span
+            class="p">,</span> <span class="n">twenty</span><span class="p">,</span> <span
+            class="n">width</span><span class="p">,</span> <span class="n">color</span><span
+            class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span
+            class="n">label</span><span class="o">=</span><span
+            class="s2">&quot;20%&quot;</span><span class="p">)</span>
+    <span class="n">fourty_bar</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">bar</span><span class="p">(</span><span
+            class="n">ind</span> <span class="o">+</span> <span class="n">width</span> <span
+            class="o">+</span> <span class="n">width</span><span class="p">,</span> <span class="n">fourty</span><span
+            class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span
+            class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span
+            class="n">label</span><span class="o">=</span><span
+            class="s2">&quot;40%&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span
+            class="p">(</span><span class="s1">&#39;Core [avg]&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span
+            class="p">(</span><span class="s1">&#39;TimeSlot [10s]&#39;</span><span
+            class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xticks</span><span
+            class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="n">width</span> <span
+            class="o">+</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">ax1</span><span
+            class="o">.</span><span class="n">get_xticklabels</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span
+            class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">rotation</span><span
+            class="o">=</span><span class="mi">45</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span
+            class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span
+            class="s2">&quot;hist.png&quot;</span><span class="p">)</span></div>
+
+
 
 
 <span class="nd">@timing</span>
@@ -1708,6 +2019,13 @@
             class="p">:</span>
                     <span class="n">first_ts_worker</span> <span class="o">=</span> <span class="n">find_first_ts_worker</span><span
             class="p">(</span><span class="n">app_id</span><span class="p">,</span> <span class="n">workers_dict</span><span
+            class="p">)</span>
+                    <span class="k">if</span> <span class="n">first_ts_worker</span> <span
+            class="o">==</span> <span class="o">-</span><span class="mf">1.0</span><span
+            class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR FIRST TS WORKER&quot;</span><span
+            class="p">)</span>
+                        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span
             class="p">)</span>
                 <span class="n">plot_worker</span><span class="p">(</span><span
             class="n">app_id</span><span class="p">,</span> <span class="n">app_info</span><span

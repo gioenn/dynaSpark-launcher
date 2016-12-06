@@ -144,7 +144,7 @@
             class="p">][</span><span class="s2">&quot;cpu&quot;</span><span class="p">])</span>
                 <span class="n">cpu_time</span> <span class="o">+=</span> <span
             class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span> <span
             class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
                     <span class="n">worker_dict</span><span class="p">[</span><span
@@ -177,14 +177,14 @@
                         <span class="c1"># print(index)</span>
                     <span class="n">cpu_time_max</span> <span class="o">+=</span> <span
             class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span> <span
             class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">cpu</span><span
             class="p">,</span> <span class="n">worker_dict</span><span class="p">[</span>
                         <span class="s2">&quot;cpu_real&quot;</span><span class="p">][</span><span
             class="n">index</span> <span class="o">+</span> <span class="nb">int</span><span
             class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)])</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">app_id</span> <span
@@ -244,7 +244,7 @@
             class="nb">float</span><span class="p">(</span><span class="n">cpus</span><span
             class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">config</span><span
             class="p">[</span><span class="s2">&quot;Control&quot;</span><span
-            class="p">][</span><span class="s2">&quot;Tsample&quot;</span><span
+            class="p">][</span><span class="s2">&quot;TSample&quot;</span><span
             class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">))</span> <span
             class="o">/</span> <span class="n">duration_s</span>
 
@@ -504,11 +504,6 @@
                         class="o">&lt;</span> <span class="n">app_alpha_deadline_ts</span><span
                         class="p">:</span>
                     <span class="n">dead_ts</span> <span class="o">=</span> <span class="n">app_alpha_deadline_ts</span>
-                <span class="nb">print</span><span class="p">(</span><span
-                        class="nb">abs</span><span class="p">(</span><span class="n">int_dead</span> <span
-                        class="o">-</span> <span class="n">end</span><span class="p">),</span> <span
-                        class="n">total_duration</span><span class="p">,</span> <span
-                        class="n">end</span><span class="p">)</span>
                 <span class="n">deadline_error</span> <span class="o">=</span> <span class="nb">round</span><span
                         class="p">(</span><span class="nb">round</span><span
                         class="p">(((</span><span class="nb">abs</span><span class="p">(</span><span
@@ -518,6 +513,13 @@
                         class="p">),</span> <span class="mi">4</span><span class="p">)</span> <span
                         class="o">*</span> <span class="mi">100</span><span class="p">,</span>
                                        <span class="mi">3</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sid</span><span
+                        class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span
+                        class="n">int_dead</span> <span class="o">-</span> <span
+                        class="n">end</span><span class="p">),</span> <span
+                        class="n">total_duration</span><span class="p">,</span> <span
+                        class="n">end</span><span class="p">,</span> <span
+                        class="n">deadline_error</span><span class="p">)</span>
                 <span class="n">errors</span><span class="o">.</span><span
                         class="n">append</span><span class="p">(</span><span class="n">deadline_error</span><span
                         class="p">)</span>

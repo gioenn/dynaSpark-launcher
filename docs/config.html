@@ -88,20 +88,20 @@
                     <dl class="data">
                         <dt id="config.BENCH_CONF">
                             <code class="descclassname">config.</code><code class="descname">BENCH_CONF</code><em
-                                class="property"> = {'scala-agg-by-key-naive': {'ScaleFactor': 10},
-                            'scala-sort-by-key-int': {'ScaleFactor': 50}, 'PageRank': {'numV': (2,
-                            7000000), 'MAX_ITERATION': (8, 1), 'NUM_OF_PARTITIONS': (3, 1000),
-                            'NumTrials': 1}, 'scala-count': {'ScaleFactor': 10}, 'KMeans':
-                            {'MAX_ITERATION': (8, 1), 'NUM_OF_PARTITIONS': (6, 1000), 'DIMENSIONS':
-                            (4, 20), 'SCALING': (5, 0.6), 'NUM_OF_CLUSTERS': (3, 10),
-                            'NUM_OF_POINTS': (2, 100000000)}, 'scala-agg-by-key-int':
-                            {'ScaleFactor': 5}, 'scala-agg-by-key': {'ScaleFactor': 10},
-                            'scala-count-w-fltr': {'ScaleFactor': 10}, 'scala-sort-by-key':
-                            {'ScaleFactor': 100}, 'DecisionTree': {'NUM_OF_EXAMPLES': (2, 50000000),
-                            'MAX_ITERATION': (21, 1), 'NUM_OF_PARTITIONS': (4, 1200),
-                            'NUM_OF_CLASS_C': (7, 10), 'NUM_OF_FEATURES': (3, 6)}, 'SVM':
-                            {'NUM_OF_EXAMPLES': (2, 200000000), 'MAX_ITERATION': (7, 1),
-                            'NUM_OF_PARTITIONS': (4, 1000), 'NUM_OF_FEATURES': (3, 10)}}</em><a
+                                class="property"> = {'DecisionTree': {'NUM_OF_PARTITIONS': (4,
+                            1200), 'NUM_OF_FEATURES': (3, 6), 'MAX_ITERATION': (21, 1),
+                            'NUM_OF_EXAMPLES': (2, 50000000), 'NUM_OF_CLASS_C': (7, 10)},
+                            'scala-sort-by-key': {'ScaleFactor': 100}, 'scala-count':
+                            {'ScaleFactor': 10}, 'scala-sort-by-key-int': {'ScaleFactor': 50},
+                            'scala-agg-by-key-int': {'ScaleFactor': 5}, 'scala-agg-by-key-naive':
+                            {'ScaleFactor': 10}, 'KMeans': {'NUM_OF_CLUSTERS': (3, 10),
+                            'MAX_ITERATION': (8, 1), 'NUM_OF_POINTS': (2, 100000000),
+                            'NUM_OF_PARTITIONS': (6, 1000), 'DIMENSIONS': (4, 20), 'SCALING': (5,
+                            0.6)}, 'scala-agg-by-key': {'ScaleFactor': 10}, 'PageRank':
+                            {'NUM_OF_PARTITIONS': (3, 1000), 'NumTrials': 1, 'numV': (2, 7000000),
+                            'MAX_ITERATION': (8, 1)}, 'scala-count-w-fltr': {'ScaleFactor': 10},
+                            'SVM': {'NUM_OF_PARTITIONS': (4, 1000), 'NUM_OF_FEATURES': (3, 10),
+                            'NUM_OF_EXAMPLES': (2, 200000000), 'MAX_ITERATION': (7, 1)}}</em><a
                                 class="headerlink" href="#config.BENCH_CONF"
                                 title="Permalink to this definition">¶</a></dt>
                         <dd><p>Setting of the supported benchmark</p>
@@ -133,12 +133,12 @@
                     <dl class="data">
                         <dt id="config.DATA_AMI">
                             <code class="descclassname">config.</code><code class="descname">DATA_AMI</code><em
-                                class="property"> = {'us-west-2': {'snapid': 'snap-4f38bf1c', 'az':
-                            'us-west-2c', 'ami': 'ami-7f5ff81f', 'price': '0.25', 'keypair':
-                            'gazzetta'}, 'eu-west-1': {'price': '0.3', 'az': 'eu-west-1c', 'ami':
-                            'ami-d3225da0', 'keypair': 'gazzettaEU'}}</em><a class="headerlink"
-                                                                             href="#config.DATA_AMI"
-                                                                             title="Permalink to this definition">¶</a>
+                                class="property"> = {'eu-west-1': {'az': 'eu-west-1c', 'price':
+                            '0.3', 'ami': 'ami-d3225da0', 'keypair': 'gazzettaEU'}, 'us-west-2':
+                            {'az': 'us-west-2c', 'price': '0.25', 'keypair': 'gazzetta', 'ami':
+                            'ami-7f5ff81f', 'snapid': 'snap-4f38bf1c'}}</em><a class="headerlink"
+                                                                               href="#config.DATA_AMI"
+                                                                               title="Permalink to this definition">¶</a>
                         </dt>
                         <dd><p>AMI id for region and availability zone</p>
                         </dd>
