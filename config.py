@@ -47,9 +47,9 @@ TAG = [{
 HDFS_MASTER = ""
 """Url of the HDFS NameNode if not set the cluster created is an HDFS Cluster"""
 # Spark config
-SPARK_2 = "/opt/spark/"
-SPARK_DOCKER = "/usr/local/spark/"
-SPARK_HOME = SPARK_DOCKER
+SPARK_2_HOME = "/opt/spark/"
+C_SPARK_HOME = "/usr/local/spark/"
+SPARK_HOME = C_SPARK_HOME
 """Location of Spark in the ami"""
 
 LOG_LEVEL = "INFO"

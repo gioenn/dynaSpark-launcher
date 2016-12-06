@@ -24,7 +24,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     SCALE_FACTOR, RAM_EXEC, \
     RAM_DRIVER, BENCHMARK_PERF, BENCH_LINES, HDFS_MASTER, DATA_AMI, REGION, HADOOP_CONF, \
     CONFIG_DICT, CREDENTIAL_PROFILE, \
-    CLUSTER_ID, SPARK_2, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL
+    CLUSTER_ID, SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL
 from util.utils import timing, between
 
 
@@ -463,7 +463,7 @@ def run_benchmark():
         exit(1)
 
     master_dns, master_instance = setup_master(instance_list[0])
-    if SPARK_HOME == SPARK_2:
+    if SPARK_HOME == SPARK_2_HOME:
         print("Check Effectively Executor Running")
 
     end_index = min(len(instance_list), MAX_EXECUTOR + 1)

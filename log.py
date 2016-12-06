@@ -149,11 +149,6 @@ def load_app_data(app_log_path):
                         stage_id = int(line[10])
                         app_info[app_id][stage_id] = {}
                         app_info[app_id][stage_id]["tasks"] = int(line[5])
-                        app_info[app_id][stage_id]["start"] = string_to_datetime(line[1])
-                        print(
-                            "START {1}: {0}".format(app_info[app_id][stage_id]["start"], stage_id))
-                        dict_to_plot[app_id]["startTimeStages"].append(
-                            app_info[app_id][stage_id]["start"])
                     elif line[-4] == "finished":
                         if app_id != "":
                             stage_id = int(line[5])
@@ -169,6 +164,12 @@ def load_app_data(app_log_path):
                         size_finish = len(dict_to_plot[app_id]["finishTimeStages"]) + 1
                         if len(dict_to_plot[app_id]["dealineTimeStages"]) < size_finish:
                             stage_id = int(line[12].replace(",", ""))
+                            app_info[app_id][stage_id]["start"] = string_to_datetime(line[1])
+                            print(
+                                "START {1}: {0}".format(app_info[app_id][stage_id]["start"],
+                                                        stage_id))
+                            dict_to_plot[app_id]["startTimeStages"].append(
+                                app_info[app_id][stage_id]["start"])
                             deadline_ms = float(line[16].replace(",", ""))
                             print(deadline_ms)
                             app_info[app_id][stage_id]["deadline"] = \

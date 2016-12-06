@@ -54,7 +54,7 @@ def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
         try:
             for sid in worker_dict[app_id]:
                 cpus += sum(worker_dict[app_id][sid]["cpu"])
-                cpu_time += (config["Control"]["Tsample"] / 1000) * sum(
+                cpu_time += (config["Control"]["TSample"] / 1000) * sum(
                     worker_dict[app_id][sid]["cpu"])
                 time_cpu = worker_dict["time_cpu"]
                 for cpu, time in zip(worker_dict[app_id][sid]["cpu"],
@@ -64,8 +64,8 @@ def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
                     except ValueError:
                         index = min(range(len(time_cpu)), key=lambda i: abs(time_cpu[i] - time))
                         # print(index)
-                    cpu_time_max += (config["Control"]["Tsample"] / 1000) * max(cpu, worker_dict[
-                        "cpu_real"][index + int(config["Control"]["Tsample"] / 1000)])
+                    cpu_time_max += (config["Control"]["TSample"] / 1000) * max(cpu, worker_dict[
+                        "cpu_real"][index + int(config["Control"]["TSample"] / 1000)])
         except KeyError:
             print(app_id + " not found")
     duration_s = app_info[app_id][max(list(app_info[app_id].keys()))]["end"].timestamp() - \
@@ -81,7 +81,7 @@ def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
         print("SPEED NATIVE 20% ", speed_20)
         print("SPEED NATIVE 40% ", speed_40)
     else:
-        speed = (float(cpus) * (config["Control"]["Tsample"] / 1000)) / duration_s
+        speed = (float(cpus) * (config["Control"]["TSample"] / 1000)) / duration_s
 
     num_task = 0.0
 
@@ -166,9 +166,9 @@ def compute_errors(app_id, app_dict, folder, config):
                 dead_ts = int_dead - first_ts
                 if sid == sorted_sid[-1] and start_ts < app_alpha_deadline_ts:
                     dead_ts = app_alpha_deadline_ts
-                print(abs(int_dead - end), total_duration, end)
                 deadline_error = round(round(((abs(dead_ts - end_ts)) / total_duration), 4) * 100,
                                        3)
+                print(sid, abs(int_dead - end), total_duration, end, deadline_error)
                 errors.append(deadline_error)
             except KeyError:
                 None
