@@ -23,6 +23,10 @@ from util.utils import timing
 
 Y_TICK_AGG = 40
 Y_TICK_SORT = 40
+Y_LABEL = 'Core [#]'
+Y1_LABEL = 'App Progress [%]'
+Y2_LABEL = 'Stage Progress [%]'
+X_LABEL = 'Time [s]'
 TITLE = False
 PLOT_SID_STAGE = 0
 PLOT_LABEL = True
@@ -104,7 +108,7 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     for sid in sorted_sid:
         try:
             start_ts = app_info[app_id][sid]["start"].timestamp() - first_ts_worker
-            ax1.axvline(start_ts, ymin=0.0, ymax=1.1, color="green", zorder=100)
+            # ax1.axvline(start_ts, ymin=0.0, ymax=1.1, color="green", zorder=100)
             # try:
             #     label_to_plot[tq_ts].append("S" + str(sid))
             # except KeyError:
@@ -113,13 +117,13 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             # ax1.text(start_ts, 105, "S" + str(sid), style="italic", weight="bold",
             # horizontalalignment='center')
             end_ts = app_info[app_id][sid]["end"].timestamp() - first_ts_worker
-            ax1.axvline(end_ts, color="red")
+            ax1.axvline(end_ts, color="green")
             label_to_plot.append("E" + str(sid))
             ts_to_plot.append(end_ts)
             # ax1.text(end_ts, -0.035, "E"+str(sid), style="italic", weight="bold",
             # horizontalalignment='center')
             dead_ts = app_info[app_id][sid]["deadline"].timestamp() - first_ts_worker
-            ax1.axvline(dead_ts, color="green", linestyle='--')
+            ax1.axvline(dead_ts, color="red", linestyle='--')
             # try:
             #     label_to_plot[tq_ts].append("D" + str(sid))
             # except KeyError:
@@ -151,8 +155,8 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     if PLOT_LABEL:
         text_plotter_x(ts_to_plot, ax1, label_to_plot)
 
-    ax1.set_xlabel('Time [s]')
-    ax1.set_ylabel('Stage Progress [%]')
+    ax1.set_xlabel(X_LABEL)
+    ax1.set_ylabel(Y2_LABEL)
     ax1.spines["top"].set_visible(False)
     ax1.spines["right"].set_visible(False)
     ax1.get_xaxis().tick_bottom()
@@ -180,28 +184,37 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             cpus += worker_dict[app_id][sid]["cpu"]
             start_ts = app_info[app_id][sid]["start"].timestamp() - first_ts_worker
             times.insert(0, start_ts)
-            cpus.insert(0, 0.0)
+            cpus.insert(0, 0.01)
             end_ts = app_info[app_id][sid]["end"].timestamp() - first_ts_worker
             dead_ts = app_info[app_id][sid]["deadline"].timestamp() - first_ts_worker
-            if end_ts < dead_ts:
-                times.append(end_ts)
+            next_time = time[-1] + (int(config["Control"]["TSample"]) / 1000)
+            index_next = min(sorted(app_info[app_id]).index(sid) + 1, len(app_info[app_id]) - 1)
+            next_start_ts = app_info[app_id][sorted(app_info[app_id])[index_next]][
+                                "start"].timestamp() - first_ts_worker
+            if end_ts < dead_ts and end_ts < next_time:
+                times.append(end_ts - 0.01)
                 cpus.append(cpus[-1])
-                times.append(end_ts + 0.01)
-                cpus.append(0.0)
-            else:
-                next_time = time[-1] + (int(config["Control"]["TSample"]) / 1000)
-                if next_time <= end_ts:
-                    times.append(next_time - 0.01)
-                    cpus.append(cpus[-1])
-                    times.append(next_time)
-                    cpus.append(0.0)
-                    times.append(end_ts - 0.01)
-                    cpus.append(0.0)
-                index_next = min(sorted(app_info[app_id]).index(sid) + 1, len(app_info[app_id]) - 1)
-                times.append(
-                    app_info[app_id][sorted(app_info[app_id])[index_next]][
-                        "start"].timestamp() - first_ts_worker)
-                cpus.append(0.0)
+                if end_ts + 0.01 < next_start_ts:
+                    times.append(end_ts + 0.01)
+                else:
+                    times.append(end_ts)
+                cpus.append(0.01)
+            elif next_time <= end_ts:
+                times.append(next_time - 0.02)
+                cpus.append(cpus[-1])
+                times.append(next_time - 0.01)
+                cpus.append(0.01)
+                if end_ts + 0.01 < next_start_ts:
+                    times.append(end_ts + 0.01)
+                    cpus.append(0.01)
+                else:
+                    times.append(end_ts)
+                    cpus.append(0.01)
+                    # index_next = min(sorted(app_info[app_id]).index(sid) + 1, len(app_info[app_id]) - 1)
+                    # times.append(
+                    #     app_info[app_id][sorted(app_info[app_id])[index_next]][
+                    #         "start"].timestamp() - first_ts_worker)
+                    # cpus.append(0.0)
                 # start_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][0])
                 # end_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][-1])
                 #
@@ -214,6 +227,7 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             print("SID " + str(sid) + " not executed by " + worker_log)
 
     times, cpus = (list(t) for t in zip(*sorted(zip(times, cpus))))
+    # [print(t, c) for t, c in zip(times, cpus)]
     ax2.plot(times, cpus, ".b-", label='CPU')
     ax2.fill_between(times, 0.0, cpus, facecolor="b", alpha=0.2)
     # handles_ax1, labels_ax1 = ax1.get_legend_handles_labels()
@@ -221,7 +235,7 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     # handles = handles_ax1[:2] + handles_ax2[:2]
     # labels = labels_ax1[:2] + labels_ax2[:2]
     # plt.legend(handles, labels, loc='best', prop={'size': 6})
-    ax2.set_ylabel('Core [#]')
+    ax2.set_ylabel(Y_LABEL)
     ax2.set_ylim(0, config["Control"]["CoreVM"])
     xlim = ax2.get_xlim()
     ax2.set_xlim(0.0, xlim[1])
@@ -303,8 +317,8 @@ def plot_app_overview(app_id, app_dict, folder, config):
         ax1.axvline(app_alpha_deadline_ts)
         ax1.text(app_alpha_deadline_ts, ymax + 0.5, 'AD', weight="bold",
                  horizontalalignment='center')
-        ax1.set_xlabel('Time [s]')
-        ax1.set_ylabel('App Progress [%]')
+        ax1.set_xlabel(X_LABEL)
+        ax1.set_ylabel(Y1_LABEL)
 
         # PLOT VERTICAL LINES DEAD, START, END
         sorted_sid = sorted(app_dict)
@@ -321,7 +335,7 @@ def plot_app_overview(app_id, app_dict, folder, config):
                 end = app_dict[sid]["end"].timestamp()
                 end_ts = end - first_ts
                 #
-                ax1.axvline(end_ts, color="r")
+                ax1.axvline(end_ts, color="green")
                 # try:
                 #     index_t = timestamps.index(end_ts)
                 # except ValueError:
@@ -403,8 +417,8 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         # PLOT DEADLINE
         label_to_plot = {}
         original_ts = {}
-        app_dead_ts = app_deadline.timestamp() - first_ts
-        ax1.axvline(app_dead_ts, color="green", linewidth=3)
+        # app_dead_ts = app_deadline.timestamp() - first_ts
+        #ax1.axvline(app_dead_ts, color="red", linewidth=3)
         if "agg" in name or "sort" in name:
             time_quantum = TQ_MICRO
         else:
@@ -423,16 +437,16 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         app_alpha_deadline_ts = app_alpha_deadline.timestamp() - first_ts
         tq_ts = math.floor(app_alpha_deadline_ts / time_quantum) * time_quantum
         original_ts[tq_ts] = app_alpha_deadline_ts
-        ax1.axvline(app_alpha_deadline_ts, color="green", linewidth=3, zorder=10)
+        ax1.axvline(app_alpha_deadline_ts, color="red", linewidth=3, zorder=10)
         try:
-            label_to_plot[tq_ts].append("AD")
+            label_to_plot[tq_ts].append("D")
         except KeyError:
             label_to_plot[tq_ts] = []
-            label_to_plot[tq_ts].append("AD")
+            label_to_plot[tq_ts].append("D")
         # ax1.text(app_alpha_deadline_ts, ymax + 0.5, 'AD', weight="bold",
         # horizontalalignment='center')
-        ax1.set_xlabel('Time [s]')
-        ax1.set_ylabel('App Progress [%]')
+        ax1.set_xlabel(X_LABEL)
+        ax1.set_ylabel(Y1_LABEL)
 
         # PLOT VERTICAL LINES DEAD, START, END
         for sid in sorted_sid:
@@ -458,11 +472,14 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                 tq_ts = math.floor(end_ts / time_quantum) * time_quantum
                 original_ts[tq_ts] = end_ts
                 try:
-                    label_to_plot[tq_ts].append("E" + str(sid))
+                    if "D" not in label_to_plot[tq_ts]:
+                        label_to_plot[tq_ts].insert(0, "E" + str(sid))
+                    else:
+                        label_to_plot[tq_ts].append("E" + str(sid))
                 except KeyError:
                     label_to_plot[tq_ts] = []
                     label_to_plot[tq_ts].append("E" + str(sid))
-                ax1.axvline(end_ts, color="r")
+                ax1.axvline(end_ts, color="green")
             except KeyError as error:
                 print(error)
 
@@ -472,16 +489,28 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
 
             # print(text_positions)
             text_plotter_x(sorted_label_ts, ax1,
-                           ["/".join(label_to_plot[ts]) for ts in sorted(label_to_plot)])
+                           ["/".join(reversed(label_to_plot[ts])) for ts in sorted(label_to_plot)])
 
+        # PLOT AGGREGATED CPU
         ax2 = ax1.twinx()
-        ax2.set_ylabel("Core [#]")
+        ax2.set_ylabel(Y_LABEL)
         ts_cpu = []
         cpus = []
         sid_len = {}
         for worker_log in workers_dict:
             worker_dict = workers_dict[worker_log]
             for sid in sorted(worker_dict[app_id]):
+                next_time = worker_dict[app_id][sid]["time"][-1] + timedelta(
+                    seconds=(int(config["Control"]["TSample"]) / 1000))
+                if app_info[app_id][sid]["end"] < next_time and \
+                                worker_dict[app_id][sid]["time"][-1].replace(microsecond=0) != \
+                                app_info[app_id][sid]["end"].replace(microsecond=0) and \
+                                app_info[app_id][sid]["end"] < app_info[app_id][sid]["deadline"]:
+                    worker_dict[app_id][sid]["time"].append(app_info[app_id][sid]["end"])
+                    worker_dict[app_id][sid]["cpu"].append(worker_dict[app_id][sid]["cpu"][-1])
+                elif next_time < app_info[app_id][sid]["end"]:
+                    worker_dict[app_id][sid]["time"].append(next_time)
+                    worker_dict[app_id][sid]["cpu"].append(worker_dict[app_id][sid]["cpu"][-1])
                 try:
                     sid_len[sid] = max(sid_len[sid], len(worker_dict[app_id][sid]["cpu"]))
                 except KeyError:
@@ -501,14 +530,6 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                 s_index = sid_len[
                     sid_len_keys[sid_len_keys.index(sid) - 1]] if sid != first_sid else 0
 
-                next_time = worker_dict[app_id][sid]["time"][-1] + timedelta(seconds=(int(config["Control"]["TSample"]) / 1000))
-                if next_time <= app_info[app_id][sid]["end"]:
-                    worker_dict[app_id][sid]["time"].append(next_time)
-                    worker_dict[app_id][sid]["cpu"].append(worker_dict[app_id][sid]["cpu"][-1])
-                    worker_dict[app_id][sid]["time"].append(next_time)
-                    worker_dict[app_id][sid]["cpu"].append(0.0)
-                    worker_dict[app_id][sid]["time"].append(app_info[app_id][sid]["end"])
-                    worker_dict[app_id][sid]["cpu"].append(0.0)
                 for time_cpu, cpu in \
                         zip(worker_dict[app_id][sid]["time"], worker_dict[app_id][sid]["cpu"]):
                     time_cpu_ts = time_cpu.replace(microsecond=0).timestamp()
@@ -521,9 +542,18 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                         if "38.out" in worker_log and sid == 1:
                             time_cpu_ts -= 1
                     try:
-                        if ts_cpu[s_index] != (time_cpu_ts - first_ts) \
-                                and abs(ts_cpu[s_index] - (time_cpu_ts - first_ts)) >= \
-                                    (config["Control"]["TSample"] / 1000):
+                        # print(ts_cpu[s_index] != (time_cpu_ts - first_ts), abs(ts_cpu[s_index] - (time_cpu_ts - first_ts)) >= \
+                        #           (config["Control"]["TSample"] / 1000))
+                        if (sid == 1 and app_id == "app-20160930162120-0000") or (
+                                sid in [0, 1, 2] and app_id == "app-20160930170244-0000") \
+                                or (app_id == "app-20161001190429-0000"):
+                            # eval = abs(ts_cpu[s_index] - (time_cpu_ts - first_ts)) >= (config["Control"]["TSample"] / 1000)
+                            eval = False
+                        else:
+                            eval = True
+                        # print(ts_cpu[s_index] != (time_cpu_ts - first_ts), eval)
+                        # eval = True
+                        if ts_cpu[s_index] != (time_cpu_ts - first_ts) and eval:
                             # print(ts_cpu)
                             # print([tixm.replace(microsecond=0).timestamp() -
                             # first_ts for tixm in worker_dict[app_id][sid]["time"]])
@@ -531,17 +561,17 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                             index = ts_cpu.index(time_cpu_ts - first_ts)
                             cpus[index] += cpu
                         else:
-                            if (cpus[s_index] + cpu) > max_cpu:
-                                print("+0 ERR")
-                                if (cpus[s_index + 1] + cpu) > max_cpu:
-                                    print("+1 ERR")
-                                    if (cpus[s_index + 2] + cpu) > max_cpu:
-                                        print("+2 ERR")
-                                    cpus[s_index + 2] += cpu
-                                else:
-                                    cpus[s_index + 1] += cpu
-                            else:
-                                cpus[s_index] += cpu
+                            # if (cpus[s_index] + cpu) > max_cpu:
+                            #     print("+0 ERR")
+                            #     if (cpus[s_index + 1] + cpu) > max_cpu:
+                            #         print("+1 ERR")
+                            #         if (cpus[s_index + 2] + cpu) > max_cpu:
+                            #             print("+2 ERR")
+                            #         cpus[s_index + 2] += cpu
+                            #     else:
+                            #         cpus[s_index + 1] += cpu
+                            # else:
+                            cpus[s_index] += cpu
                             if ts_cpu[s_index] == 0.0:
                                 # print(time_cpu_ts - first_ts)
                                 ts_cpu[s_index] = time_cpu_ts - first_ts
@@ -564,9 +594,9 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                     microsecond=0).timestamp() - first_ts
                 if (next_start - end) > (config["Control"]["TSample"] / 1000):
                     print("ERR ", sid)
-                    ts_cpu.append(end)
+                    ts_cpu.append(end + 0.01)
                     cpus.append(0.0)
-                    ts_cpu.append(next_start)
+                    ts_cpu.append(next_start - 0.01)
                     cpus.append(0.0)
         ts_cpu, cpus = (list(t) for t in zip(*sorted(zip(ts_cpu, cpus))))
         # for sid in sorted_sid:
