@@ -12,8 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
 from datetime import timedelta
 
+from config import KEY_PAIR_PATH
 from util.cmdshell import sshclient_from_instance
-
 from util.utils import timing, string_to_datetime
 
 
@@ -25,7 +25,7 @@ def download_master(i, output_folder, log_folder, config):
     :param log_folder: log folder on the master instance
     :return: output_folder and the app_id: the application id
     """
-    ssh_client = sshclient_from_instance(i, config["Aws"]["KeyPair"], user_name='ubuntu')
+    ssh_client = sshclient_from_instance(i, KEY_PAIR_PATH, user_name='ubuntu')
     app_id = ""
     for file in ssh_client.listdir("" + config["Spark"]["SparkHome"] + "spark-events/"):
         print("BENCHMARK: " + file)
@@ -62,7 +62,7 @@ def download_slave(i, output_folder, app_id, config):
     :param app_id: the application
     :return: output_folder: the output folder
     """
-    ssh_client = sshclient_from_instance(i, config["Aws"]["KeyPair"], user_name='ubuntu')
+    ssh_client = sshclient_from_instance(i, KEY_PAIR_PATH, user_name='ubuntu')
     print("Downloading log from slave: " + i.public_dns_name)
     try:
         worker_ip_fixed = i.private_ip_address.replace(".", "-")
