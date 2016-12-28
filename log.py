@@ -108,7 +108,7 @@ def download(log_folder, instances, master_dns, output_folder, config):
     with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
         for i in instances:
             if i.public_dns_name != master_dns:
-                worker = executor.submit(download_slave, i, output_folder, app_id)
+                worker = executor.submit(download_slave, i, output_folder, app_id, config)
                 output_folder = worker.result()
     return output_folder
 
