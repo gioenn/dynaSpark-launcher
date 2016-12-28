@@ -8,7 +8,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import boto3
-from util.cmdshell import sshclient_from_instance
 
 import log
 import metrics
@@ -25,6 +24,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     RAM_DRIVER, BENCHMARK_PERF, BENCH_LINES, HDFS_MASTER, DATA_AMI, REGION, HADOOP_CONF, \
     CONFIG_DICT, CREDENTIAL_PROFILE, \
     CLUSTER_ID, SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL
+from util.cmdshell import sshclient_from_instance
 from util.utils import timing, between
 
 
@@ -166,8 +166,9 @@ def setup_master(instance):
     if UPDATE_SPARK_MASTER:
         print("   Updating Spark...")
         ssh_client.run(
-            """cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive  -Pyarn -Phadoop-2.7
-            -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
+            """cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn
+            -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests
+             -Dmaven.test.skip=true package""")
 
     print("   Remove Logs")
     ssh_client.run("rm " + SPARK_HOME + "spark-events/*")
