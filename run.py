@@ -498,6 +498,7 @@ def run_benchmark():
     status = ssh_client.run('[ ! -e %s ]; echo $?' % (DATA_AMI[REGION]["keypair"] + ".pem"))
     if not int(status[1].decode('utf8').replace("\n", "")):
         ssh_client.put_file(KEY_PAIR_PATH, "/home/ubuntu/" + DATA_AMI[REGION]["keypair"] + ".pem")
+        ssh_client.run("chmod 400 " + DATA_AMI[REGION]["keypair"] + ".pem")
 
     # LANCIARE BENCHMARK
     if HDFS == 0:
