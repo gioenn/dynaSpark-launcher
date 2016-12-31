@@ -43,7 +43,8 @@ def main():
 
     if REBOOT:
         print("Rebooting instances...")
-        instances = client.instances.filter(
+        ec2 = session.resource('ec2', region_name=REGION)
+        instances = ec2.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']},
                      {'Name': 'tag:ClusterId', 'Values': [CLUSTER_ID]}])
         instance_ids = [x.id for x in instances]
