@@ -108,7 +108,7 @@ def download(log_folder, instances, master_dns, output_folder, config):
     with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
         for i in instances:
             if i.public_dns_name != master_dns:
-                worker = executor.submit(download_slave, i, output_folder, app_id)
+                worker = executor.submit(download_slave, i, output_folder, app_id, config)
                 output_folder = worker.result()
     return output_folder
 
@@ -260,5 +260,9 @@ def load_worker_data(worker_log, cpu_log, config):
                     cpu_real = float(
                         '{0:.2f}'.format((float(line[2]) * config["Control"]["CoreVM"]) / 100))
                 worker_dict["cpu_real"].append(cpu_real)
+    for app_id in list(worker_dict):
+        print(app_id)
+        if not len(worker_dict[app_id]) > 0:
+            del worker_dict[app_id]
     print(list(worker_dict.keys()))
     return worker_dict

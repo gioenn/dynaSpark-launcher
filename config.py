@@ -5,20 +5,20 @@ Configuration module of cSpark test benchmark
 # AWS
 DATA_AMI = {"eu-west-1": {"ami": 'ami-d3225da0',
                           "az": 'eu-west-1c',
-                          "keypair": "gazzettaEU",
+                          "keypair": "giovanni2",
                           "price": "0.3"},
             "us-west-2": {"ami": 'ami-7f5ff81f',
                           "snapid": "snap-4f38bf1c",
                           "az": 'us-west-2c',
-                          "keypair": "gazzetta",
-                          "price": "0.25"}}
+                          "keypair": "giovanni2",
+                          "price": "0.3"}}
 """AMI id for region and availability zone"""
 
 CREDENTIAL_PROFILE = 'cspark'
 """Credential profile name of AWS"""
 REGION = "us-west-2"
 """Region of AWS to use"""
-KEY_PAIR_PATH = "/home/meteos/" + DATA_AMI[REGION]["keypair"] + ".pem"
+KEY_PAIR_PATH = "/Users/Giovanni/Desktop/" + DATA_AMI[REGION]["keypair"] + ".pem"
 """KeyPair path for the instance"""
 SECURITY_GROUP = "spark-cluster"
 """Secutiry group of the instance"""
@@ -35,7 +35,7 @@ KILL_JAVA = 1
 NUM_RUN = 1
 """Number of run to repeat the benchmark"""
 
-CLUSTER_ID = "1"
+CLUSTER_ID = "CSPARK"
 """Id of the cluster with the launched instances"""
 print("Cluster ID : " + str(CLUSTER_ID))
 TAG = [{
@@ -44,7 +44,7 @@ TAG = [{
 }]
 
 # HDFS
-HDFS_MASTER = ""
+HDFS_MASTER = "ec2-35-161-111-116.us-west-2.compute.amazonaws.com"
 """Url of the HDFS NameNode if not set the cluster created is an HDFS Cluster"""
 # Spark config
 SPARK_2_HOME = "/opt/spark/"
@@ -81,7 +81,7 @@ if DISABLE_HT:
 
 # CONTROL
 ALPHA = 0.95
-DEADLINE = 239474
+DEADLINE = 284375
 # SVM
 # 0%  217500
 # 20% 261000
@@ -94,7 +94,7 @@ DEADLINE = 239474
 # 0%  209062
 # 20% 250874
 # 40% 284375
-MAX_EXECUTOR = 8
+MAX_EXECUTOR = 9
 OVER_SCALE = 2
 K = 50
 TI = 12000
@@ -159,7 +159,8 @@ BENCH_CONF = {
     },
     "PageRank": {
         "NUM_OF_PARTITIONS": (3, 1000),
-        "numV": (2, 7000000),
+        "numV": (2, 2000000),
+        "mu": (4, 5.0),
         "MAX_ITERATION": (8, 1)
     },
     "KMeans": {

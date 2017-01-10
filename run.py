@@ -91,9 +91,7 @@ def setup_slave(instance, master_dns):
     if UPDATE_SPARK:
         print("   Updating Spark...")
         ssh_client.run(
-            """cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn
-            -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests
-             -Dmaven.test.skip=true package""")
+            """cd /usr/local/spark && git pull && build/mvn clean && build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
 
     # CLEAN UP EXECUTORS APP LOGS
     ssh_client.run("rm -r " + SPARK_HOME + "work/*")
@@ -166,9 +164,7 @@ def setup_master(instance):
     if UPDATE_SPARK_MASTER:
         print("   Updating Spark...")
         ssh_client.run(
-            """cd /usr/local/spark && git pull &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn
-            -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests
-             -Dmaven.test.skip=true package""")
+            """cd /usr/local/spark && git pull && build/mvn clean &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
 
     print("   Remove Logs")
     ssh_client.run("rm " + SPARK_HOME + "spark-events/*")
@@ -498,7 +494,7 @@ def run_benchmark():
     status = ssh_client.run('[ ! -e %s ]; echo $?' % (DATA_AMI[REGION]["keypair"] + ".pem"))
     if not int(status[1].decode('utf8').replace("\n", "")):
         ssh_client.put_file(KEY_PAIR_PATH, "/home/ubuntu/" + DATA_AMI[REGION]["keypair"] + ".pem")
-
+        ssh_client.run("chmod 400 "+ "/home/ubuntu/" + DATA_AMI[REGION]["keypair"] + ".pem")
     # LANCIARE BENCHMARK
     if HDFS == 0:
         if len(BENCHMARK_PERF) > 0:

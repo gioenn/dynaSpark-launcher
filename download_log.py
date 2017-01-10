@@ -12,10 +12,10 @@ instances = ec2.instances.filter(
              ])
 
 logfolder = "./spark-bench/num"
-master_dns = "ec2-35-161-226-18.us-west-2.compute.amazonaws.com"
+master_dns = "ec2-35-165-203-239.us-west-2.compute.amazonaws.com"
 # master_dns = "ec2-54-70-77-95.us-west-2.compute.amazonaws.com"
 output_folder = "./spark-bench/num/"
-output_folder = log.download(logfolder, instances, master_dns, output_folder)
+output_folder = log.download(logfolder, instances, master_dns, output_folder, CONFIG_DICT)
 
 if output_folder[-1] != "/":
     output_folder += "/"
