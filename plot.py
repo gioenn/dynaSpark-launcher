@@ -13,6 +13,7 @@ import json
 import math
 from datetime import datetime as dt, timedelta
 from pathlib import Path
+from sys import platform
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -256,7 +257,10 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     folder_split = worker_log.split("/")
     name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
            folder_split[-1].split("-")[-1].replace(".out", "")
-    folder = "/".join(worker_log.split("/")[:-1])
+    delimiter = "/"
+    if platform == "win32":
+        delimiter = "\\"
+    folder = "/".join(worker_log.split(delimiter)[:-1])
     labels = ax1.get_xticklabels()
     plt.setp(labels, rotation=45)
     print(folder)
