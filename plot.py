@@ -11,6 +11,7 @@ This module can generate two type of figure: Overview, Worker. The Overview figu
 import glob
 import json
 import math
+import os
 from datetime import datetime as dt, timedelta
 from pathlib import Path
 from sys import platform
@@ -806,7 +807,31 @@ def plot(folder):
                         exit(1)
                 plot_worker(app_id, app_info, worker_log, workers_dict[worker_log], config,
                             first_ts_worker)
+                print_cpu(app_id, app_info, worker_log, workers_dict[worker_log], config, folder, first_ts_worker)
         for app_id in app_info:
             plot_overview_cpu(app_id, app_info, workers_dict, config, folder)
     else:
         print("ERROR: SAR != WORKER LOGS")
+
+    rename_files(folder)
+
+def print_cpu(app_id, app_info, worker_log, worker_dict, config, folder, first_ts_worker):
+    sorted_sid = sorted(app_info[app_id])
+    if config["HDFS"]:
+        sorted_sid.remove(0)
+    filename = worker_log.split(".")[-2] + ".cpu_profile.txt"
+    with open(folder + filename, 'w') as file:
+        for sid in sorted_sid:
+            if sid in worker_dict[app_id]:
+                cpu = worker_dict[app_id][sid]["cpu"]
+                time = [t.timestamp() - first_ts_worker for t in worker_dict[app_id][sid]["time"]]
+                time = ["{:f}".format(a) for a in time]
+                text = str(list(zip(time, cpu))).replace("'", "")
+                file.write("SID " + str(sid) + " " + text + "\n")
+
+def rename_files(folder):
+    for filename in os.listdir(folder):
+        if filename.endswith(".err"):
+            os.rename(folder + filename, folder + "app.err")
+        elif filename.endswith(".dat") and filename.find("run") > -1:
+            os.rename(folder + filename, folder + "app.dat")

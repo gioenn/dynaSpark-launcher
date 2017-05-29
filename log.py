@@ -12,20 +12,23 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
 from datetime import timedelta
 
-from config import KEY_PAIR_PATH
-from util.cmdshell import sshclient_from_instance
+from config import PRIVATE_KEY_PATH, PROVIDER
 from util.utils import timing, string_to_datetime
+from util.ssh_client import sshclient_from_node
 
+import run
 
-def download_master(i, output_folder, log_folder, config):
+def download_master(node, output_folder, log_folder, config):
     """Download log from master instance
 
-    :param i: master instance
+    :param node: master instance
     :param output_folder: output folder where save the log
     :param log_folder: log folder on the master instance
     :return: output_folder and the app_id: the application id
     """
-    ssh_client = sshclient_from_instance(i, KEY_PAIR_PATH, user_name='ubuntu')
+
+    ssh_client = sshclient_from_node(node, ssh_key_file=PRIVATE_KEY_PATH, user_name='ubuntu')
+
     app_id = ""
     for file in ssh_client.listdir("" + config["Spark"]["SparkHome"] + "spark-events/"):
         print("BENCHMARK: " + file)
@@ -43,71 +46,84 @@ def download_master(i, output_folder, log_folder, config):
         print("Bzipping event log...")
         ssh_client.run("pbzip2 -9 -p" + str(
             config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz)
-        ssh_client.get_file(output_bz, output_folder + "/" + file + ".bz")
+        ssh_client.get(remotepath=output_bz, localpath=output_folder + "/" + file + ".bz")
     for file in ssh_client.listdir(log_folder):
         print(file)
         if file != "bench-report.dat":
             output_file = (output_folder + "/" + file).replace(":", "-")
-            ssh_client.get_file(log_folder + "/" + file, output_file)
+            ssh_client.get(remotepath=log_folder + "/" + file, localpath=output_file)
     return output_folder, app_id
 
 
-def download_slave(i, output_folder, app_id, config):
+def download_slave(node, output_folder, app_id, config):
     """Download log from slave instance:
     * The worker log that includes the controller output
     * The cpu monitoring log
 
-    :param i: the slave instance
+    :param node: the slave instance
     :param output_folder: the output folder where to save log
     :param app_id: the application
     :return: output_folder: the output folder
     """
-    ssh_client = sshclient_from_instance(i, KEY_PAIR_PATH, user_name='ubuntu')
-    print("Downloading log from slave: " + i.public_dns_name)
+    ssh_client = sshclient_from_node(node, ssh_key_file=PRIVATE_KEY_PATH, user_name='ubuntu')
+
+    print("Downloading log from slave: PublicIp=" + node.public_ips[0] + " PrivateIp=" + node.private_ips[0])
     try:
-        worker_ip_fixed = i.private_ip_address.replace(".", "-")
-        worker_log = "{0}logs/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-{1}.out".format(
-            config["Spark"]["SparkHome"], worker_ip_fixed)
+        worker_ip_fixed = node.private_ips[0].replace(".", "-")
+        if PROVIDER == "AWS_SPOT":
+            worker_log = "{0}logs/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-{1}.out".format(
+                config["Spark"]["SparkHome"], worker_ip_fixed)
+        elif PROVIDER == "AZURE":
+            worker_log = "{0}logs/spark-root-org.apache.spark.deploy.worker.Worker-1-{1}.out".format(
+                config["Spark"]["SparkHome"], node.extra["name"])
         print(worker_log)
         ssh_client.run(
             "screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
-        output_worker_log = "{0}/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-{1}.out".format(
-            output_folder, i.private_ip_address)
-        ssh_client.get_file(worker_log, output_worker_log)
-        ssh_client.get_file("sar-" + i.private_ip_address + ".log",
-                            output_folder + "/" + "sar-" + i.private_ip_address + ".log")
+        if PROVIDER == "AWS_SPOT":
+            output_worker_log = "{0}/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-{1}.out".format(
+                output_folder, node.private_ips[0])
+        elif PROVIDER == "AZURE":
+            output_worker_log = "{0}/spark-root-org.apache.spark.deploy.worker.Worker-1-{1}.out".format(
+                output_folder,  node.extra["name"])
+        ssh_client.get(remotepath=worker_log, localpath=output_worker_log)
+        ssh_client.get(remotepath="sar-" + node.private_ips[0] + ".log",
+                       localpath=output_folder + "/" + "sar-" + node.private_ips[0] + ".log")
     except FileNotFoundError:
         print("worker log not found")
     try:
         for file in ssh_client.listdir(config["Spark"]["SparkHome"] + "work/" + app_id + "/"):
             print("Executor ID: " + file)
-            ssh_client.get_file(
-                config["Spark"]["SparkHome"] + "work/" + app_id + "/" + file + "/stderr",
-                output_folder + "/" + i.public_dns_name + "-" + file + ".stderr")
+            ssh_client.get(
+                remotepath=config["Spark"]["SparkHome"] + "work/" + app_id + "/" + file + "/stderr",
+                localpath=output_folder + "/" + run.get_ip(node) + "-" + file + ".stderr")
     except FileNotFoundError:
         print("stderr not found")
     return output_folder
 
 
 @timing
-def download(log_folder, instances, master_dns, output_folder, config):
+def download(log_folder, nodes, master_ip, output_folder, config):
     """ Download the logs from the master and the worker nodes
 
     :param log_folder: the log folder of the application
-    :param instances: the instances of the cluster
-    :param master_dns: the dns of the master instances
+    :param nodes: the nodes of the cluster
+    :param master_ip: the ip of the master instances
     :param output_folder: the output folder where to save the logs
     :return: the output folder
     """
     # MASTER
-    print("Downloading log from Master: " + master_dns)
-    master_instance = [i for i in instances if i.public_dns_name == master_dns][0]
-    output_folder, app_id = download_master(master_instance, output_folder, log_folder, config)
+
+    master_node = [i for i in nodes if run.get_ip(i) == master_ip][0]
+
+    print("Downloading log from Master: PublicIp="+master_node.public_ips[0] +" PrivateIp=" + master_node.private_ips[0])
+
+    output_folder, app_id = download_master(master_node, output_folder, log_folder, config)
 
     # SLAVE
     with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
-        for i in instances:
-            if i.public_dns_name != master_dns:
+        for i in nodes:
+            ip = run.get_ip(i)
+            if ip != master_ip:
                 worker = executor.submit(download_slave, i, output_folder, app_id, config)
                 output_folder = worker.result()
     return output_folder
