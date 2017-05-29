@@ -1,4 +1,4 @@
-
+# edit and rename to credentials.py
 # AZURE CREDENTIALS
 
 AZ_TENANT_ID = ""
