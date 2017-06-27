@@ -1,7 +1,7 @@
 """
 
 """
-
+import difflib
 import glob
 import json
 import math
@@ -10,7 +10,8 @@ from pathlib import Path
 
 import numpy as np
 
-from log import load_app_data, load_worker_data
+from composite_utils import get_deadline
+from log import load_app_data, load_worker_data, load_worker_data_multiapp
 from util.utils import timing
 
 PLOT_SID_STAGE = 0
@@ -36,7 +37,7 @@ def load_config(folder):
         return CONFIG_DICT
 
 
-def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
+def compute_cpu_time(app_id, app_info, workers_dict, config, folder, multiapp = False):
     """
 
     :param app_id:
@@ -98,14 +99,20 @@ def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
     print("CPU TIME MAX: " + str(cpu_time_max))
     print("SID " + str(app_info[app_id].keys()))
     print("CHECK NON CONTROLLED STAGE FOR CPU_TIME")
-    with open(folder + "CPU_TIME.txt", "w") as cpu_time_f:
+
+    if multiapp:
+        out_folder = folder + app_id + "/"
+    else:
+        out_folder = folder
+
+    with open(out_folder + "CPU_TIME.txt", "w") as cpu_time_f:
         cpu_time_f.write("CPU_TIME " + str(cpu_time) + "\n")
         cpu_time_f.write("CPU_TIME_MAX " + str(cpu_time_max) + "\n")
         cpu_time_f.write("SPEED " + str(speed) + "\n")
         cpu_time_f.write("THROUGHPUT " + str(throughput) + "\n")
 
 
-def save_deadline_errors(folder, deadline_error, stage_errors):
+def save_deadline_errors(folder, deadline_error, stage_errors, app_id = None, multiapp=False):
     """Save the error of the application's stages in the folder
         with some statistics (mean, stddev, median, max, min)
 
@@ -114,7 +121,11 @@ def save_deadline_errors(folder, deadline_error, stage_errors):
     :param stage_errors: the list of the stages errors
     :return: Nothing
     """
-    with open(folder + "ERROR.txt", "w") as error_f:
+    if multiapp:
+        out_folder = folder + app_id + "/"
+    else:
+        out_folder = folder
+    with open(out_folder + "ERROR.txt", "w") as error_f:
         error_f.write("DEADLINE_ERROR " + str(abs(deadline_error)) + "\n")
         if len(stage_errors) > 0:
             error_f.write("MEAN_ERROR " + str(np.mean(stage_errors)) + "\n")
@@ -124,7 +135,7 @@ def save_deadline_errors(folder, deadline_error, stage_errors):
             error_f.write("MIN_ERROR: " + str(min(stage_errors)) + "\n")
 
 
-def compute_errors(app_id, app_dict, folder, config):
+def compute_errors(app_id, app_dict, folder, config, multiapp=False, filename=None):
     if len(app_dict) > 0:
         timestamps = []
         times = []
@@ -132,8 +143,12 @@ def compute_errors(app_id, app_dict, folder, config):
         first_ts = app_dict[PLOT_SID_STAGE]["start"].timestamp()
         for sid in sorted(app_dict):
             try:
-                app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(
-                    milliseconds=config["Deadline"])
+                if multiapp:
+                    app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(
+                        milliseconds=get_deadline(filename, config))
+                else:
+                    app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(
+                        milliseconds=config["Deadline"])
                 app_deadline = app_deadline.replace(microsecond=0)
                 for timestamp in app_dict[sid]["tasktimestamps"]:
                     if first_ts == 0:
@@ -148,8 +163,12 @@ def compute_errors(app_id, app_dict, folder, config):
             except KeyError:
                 None
 
-        app_alpha_deadline = app_deadline - timedelta(
-            milliseconds=((1 - float(config["Control"]["Alpha"])) * float(config["Deadline"])))
+        if multiapp:
+            app_alpha_deadline = app_deadline - timedelta(
+                milliseconds=((1 - float(config["Control"]["Alpha"])) * float(get_deadline(filename, config))))
+        else:
+            app_alpha_deadline = app_deadline - timedelta(
+                milliseconds=((1 - float(config["Control"]["Alpha"])) * float(config["Deadline"])))
         app_alpha_deadline_ts = app_alpha_deadline.timestamp() - first_ts
 
         # COMPUTE ERRORS
@@ -187,7 +206,7 @@ def compute_errors(app_id, app_dict, folder, config):
             print("MAX ERROR: " + str(max(stage_errors)))
             print("MIN ERROR: " + str(min(stage_errors)))
 
-        save_deadline_errors(folder, app_deadline_error, stage_errors)
+        save_deadline_errors(folder, app_deadline_error, stage_errors, app_id, multiapp)
 
 
 @timing
@@ -226,3 +245,43 @@ def compute_metrics(folder):
             compute_cpu_time(app_id, app_info, workers_dict, config, folder)
     else:
         print("ERROR: SAR != WORKER LOGS")
+
+def compute_metrics_multiapp(folder, app_ids):
+    print(folder)
+    if folder[-1] != "/":
+        folder += "/"
+    config = load_config(folder)
+    print(config)
+
+    global PLOT_SID_STAGE
+    PLOT_SID_STAGE = 1 if config["HDFS"] else 0
+
+    # load common worker log and sar log
+    worker_logs = glob.glob(folder + "*worker*.out")
+    cpu_logs = glob.glob(folder + "sar*.log")
+
+    if len(worker_logs) == len(cpu_logs):
+        workers_dict = {}
+        for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
+            worker_dict = load_worker_data_multiapp(worker_log, cpu_log, config)
+            workers_dict[worker_log] = worker_dict
+
+    app_id_to_filenames = {}
+
+    # load app logs of the specified app
+    app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
+
+    app_info = {}
+    for app_log in sorted(app_logs):
+        cur_app_info = load_app_data(app_log)
+        for app_id in cur_app_info:
+            app_id_to_filenames[app_id] = app_log
+        app_info.update(cur_app_info)
+    for app_id in app_info:
+        # True to save to app-id folder
+        print("computing errors for " + app_id)
+        compute_errors(app_id, app_info[app_id], folder, config, True, app_id_to_filenames[app_id])
+        if len(worker_logs) == len(cpu_logs):
+            compute_cpu_time(app_id, app_info, workers_dict, config, folder, True)
+        else:
+            print("ERROR: SAR != WORKER LOGS")

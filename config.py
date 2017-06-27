@@ -275,32 +275,212 @@ DELETE_HDFS = 1 if SCALE_FACTOR != PREV_SCALE_FACTOR else 0
 # HEURISTICS
 HEURISTIC = Heuristic.CONTROL_UNLIMITED
 
-# KMEANS
-STAGE_ALLOCATION = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
-CORE_ALLOCATION = [14.6552, 1.3668, 4.2932, 3.2259, 5.9839, 3.1770, 5.2449, 2.5064, 6.5889, 2.6935, 5.9204, 2.8042,
-                   9.6728, 1.7509, 3.8915, 0.7313, 12.2620, 3.1288]
-DEADLINE_ALLOCATION = [18584, 1733, 5444, 4090, 7588, 4028, 6651, 3178, 8355, 3415, 7507, 3556, 12266, 2220, 4934, 927,
-                       15549, 3967]
+ALLOCATION_DICT = {
+    "KMeans": {
+        "StageAllocation": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+        "CoreAllocation": [10.9914, 1.0251, 3.2199, 2.4194, 4.4879, 2.3828, 3.9337, 1.8798, 4.9417, 2.0201, 4.4403,
+                           2.1032, 7.2546, 1.3132, 2.9186, 0.5485, 9.1965, 2.3466],
+        "DeadlineAllocation": [24779, 2311, 7259, 5454, 10117, 5371, 8868, 4237, 11140, 4554, 10010, 4741, 16354, 2960,
+                               6579, 1236, 20732, 5290],
+        "Deadline": 160000
+    },
+    "PageRank": {
+        "StageAllocation": [0, 1, 2, 3, 4, 5, 6, 7, 13],
+        "CoreAllocation": [1.4627, 0.6024, 0.8787, 1.3136, 0.6964, 1.3104, 0.9905, 1.1176, 0.4977],
+        "DeadlineAllocation": [70494, 29031, 42349, 63310, 33564, 63157, 47738, 53866, 23988],
+        "Deadline": 450000
+    },
+    "SVM": {
+        "StageAllocation": [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 18, 23],
+        "CoreAllocation": [1.0, 3.8043, 0.3301, 0.6341, 0.2532, 2.006, 3.7827, 3.1837, 1.1007, 1.4372, 1.5777, 1.5367,
+                           0.4021],
+        "DeadlineAllocation": [1986, 44693, 3877, 7448, 2973, 23569, 44436, 37401, 12925, 16882, 18533, 18052, 4723],
+        "Deadline": 250000
+    },
+    "scala-agg-by-key": {
+        "StageAllocation": [0, 1],
+        "CoreAllocation": [6.3715, 2.2592],
+        "DeadlineAllocation": [84158, 29841],
+        "Deadline": 120000
+    },
+    "scala-agg-by-key-int": {
+        "StageAllocation": [0, 1],
+        "CoreAllocation": [4.9625, 2.0589],
+        "DeadlineAllocation": [107428, 44571],
+        "Deadline": 160000
+    },
+    "scala-agg-by-key-naive": {
+        "StageAllocation": [0, 1],
+        "CoreAllocation": [7.7674, 3.0333],
+        "DeadlineAllocation": [136639, 53360],
+        "Deadline": 200000
+    },
+    "scala-count": {
+        "StageAllocation": [0],
+        "CoreAllocation": [2.4494],
+        "DeadlineAllocation": [38000],
+        "Deadline": 40000
+    },
+    "scala-count-w-fltr": {
+        "StageAllocation": [0],
+        "CoreAllocation": [2.6900],
+        "DeadlineAllocation": [38000],
+        "Deadline": 40000
+    },
+    "scala-sort-by-key": {
+        "StageAllocation": [0, 1, 2],
+        "CoreAllocation": [2.7255, 4.2021, 6.0727],
+        "DeadlineAllocation": [33858, 52201, 75440],
+        "Deadline": 170000
+    },
+    "scala-sort-by-key-int": {
+        "StageAllocation": [0, 1, 2],
+        "CoreAllocation": [4.328, 5.644, 6.5725],
+        "DeadlineAllocation": [24851, 32408, 37739],
+        "Deadline": 100000
+    }
+}
 
-# SVM
-# STAGE_ALLOCATION = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 18, 23]
-# CORE_ALLOCATION = [0.3523, 7.9260, 0.6877, 1.3210, 0.5275, 4.1795, 7.8807, 6.6329, 2.2927, 2.9942, 3.2869, 3.2016,
-#                    0.8377]
-# DEADLINE_ALLOCATION = [953, 21451, 1861, 3575, 1427, 11312, 21329, 17952, 6205, 8103, 8896, 8665, 2267]
+STAGE_ALLOCATION = None
+CORE_ALLOCATION = None
+DEADLINE_ALLOCATION = None
 
-# AGG BY KEY
-# STAGE_ALLOCATION = [0, 1]
-# CORE_ALLOCATION = [6.3715 , 2.2592]
-# DEADLINE_ALLOCATION = [84158, 29841]
+BENCH_NAME = BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]
+if HEURISTIC == Heuristic.FIXED:
+    STAGE_ALLOCATION = ALLOCATION_DICT[BENCH_NAME]["StageAllocation"]
+    CORE_ALLOCATION = ALLOCATION_DICT[BENCH_NAME]["CoreAllocation"]
+    DEADLINE_ALLOCATION = ALLOCATION_DICT[BENCH_NAME]["DeadlineAllocation"]
+    DEADLINE = ALLOCATION_DICT[BENCH_NAME]["Deadline"]
 
-# STAGE_ALLOCATION = None
-# CORE_ALLOCATION = None
-# DEADLINE_ALLOCATION = None
+assert (isinstance(HEURISTIC, Heuristic))
 
-assert(isinstance(HEURISTIC, Heuristic))
-if(HEURISTIC == Heuristic.FIXED):
+if HEURISTIC == Heuristic.FIXED:
     assert (len(STAGE_ALLOCATION) == len(DEADLINE_ALLOCATION))
     assert (len(STAGE_ALLOCATION) == len(CORE_ALLOCATION))
+
+
+
+# Line needed for enabling/disabling benchmark in spark-perf config.py
+BENCH_LINES = {"scala-agg-by-key": ["225", "226"],
+               "scala-agg-by-key-int": ["229", "230"],
+               "scala-agg-by-key-naive": ["232", "233"],
+               "scala-sort-by-key": ["236", "237"],
+               "scala-sort-by-key-int": ["239", "240"],
+               "scala-count": ["242", "243"],
+               "scala-count-w-fltr": ["245", "246"]}
+
+# NEW
+PRIVATE_KEY_PATH = KEY_PAIR_PATH if PROVIDER == "AWS_SPOT" \
+    else AZ_PRV_KEY_PATH if PROVIDER == "AZURE" \
+    else None
+PRIVATE_KEY_NAME = DATA_AMI[REGION]["keypair"] + ".pem" if PROVIDER == "AWS_SPOT" \
+    else AZ_KEY_NAME if PROVIDER == "AZURE" \
+    else None
+TEMPORARY_STORAGE = "/dev/xvdb" if PROVIDER == "AWS_SPOT" \
+    else "/dev/sdb1" if PROVIDER == "AZURE" \
+    else None
+
+# Print what will run
+print("Schedule : "
+      + ("LAUNCH, " if (NUM_INSTANCE > 0) else "")
+      + ("REBOOT, " if REBOOT else "")
+      + ("RUN( " if RUN else "")
+      + (
+      "HDFS )" if (HDFS_MASTER == "" and RUN) else "SPARK " + HEURISTIC.name + " " + BENCH_NAME + " )" if (RUN) else "")
+      + ("TERMINATE" if TERMINATE else ""))
+
+UPDATE_SPARK_BENCH = False
+UPDATE_SPARK_PERF = False
+# GIT_BRANCH = "xSpark-1.0"
+GIT_BRANCH = "dev-multiapp-fix-2"
+
+PROFILING_FILES = {
+    "scala-agg-by-key": {
+        "Source": "TestRunner__aggregate-by-key_20170511110351.json",
+        "Destination": "TestRunner__aggregate-by-key.json",
+    },
+    "scala-agg-by-key-int": {
+        "Source": "TestRunner__aggregate-by-key-int_20170511112110.json",
+        "Destination": "TestRunner__aggregate-by-key-int.json",
+    },
+    "scala-agg-by-key-naive": {
+        "Source": "TestRunner__aggregate-by-key-naive_20170511114259.json",
+        "Destination": "TestRunner__aggregate-by-key-naive.json",
+    },
+    "scala-sort-by-key": {
+        "Source": "TestRunner__sort-by-key_20170511131321.json",
+        "Destination": "TestRunner__sort-by-key.json",
+    },
+    "scala-sort-by-key-int": {
+        "Source": "TestRunner__sort-by-key-int_20170511133334.json",
+        "Destination": "TestRunner__sort-by-key-int.json",
+    },
+    "scala-count": {
+        "Source": "TestRunner__count_20170511135036.json",
+        "Destination": "TestRunner__count.json",
+    },
+    "scala-count-w-fltr": {
+        "Source": "TestRunner__count-with-filter_20170511140627.json",
+        "Destination": "TestRunner__count-with-filter.json",
+    },
+    "PageRank": {
+        "Source": "Spark_PageRank_Application_20170531101020.json",
+        "Destination": "Spark_PageRank_Application.json",
+    },
+    "DecisionTree": {
+        "Source": "DecisionTree_classification_Example_20170523134646.json",
+        "Destination": "DecisionTree_classification_Example.json",
+    },
+    "KMeans": {
+        "Source": "Spark_KMeans_Example_20170509081738.json",
+        "Destination": "Spark_KMeans_Example.json",
+    },
+    "SVM": {
+        "Source": "SVM_Classifier_Example_20170509105715.json",
+        "Destination": "SVM_Classifier_Example.json",
+    }
+}
+
+PROFILE_SOURCE_FOLDER = "C:\\workspace\\spark-log-profiling\\output_json\\"
+PROFILE_DEST_FOLDER = "/usr/local/spark/conf/"
+
+PROFILING_MODE = False # True to delete profiles
+UPDATE_PROFILES = False # True to upload a local profile file
+
+COMPOSITE_BENCH = {
+    # "KMeans": {
+    #     "Delay": 0,
+    #     "Deadline": 160000
+    # },
+    # "SVM": {
+    #     "Delay": 30,
+    #     "Deadline": 250000
+    # },
+    # "scala-agg-by-key": {
+    #     "Delay": 60,
+    #     "Deadline": 120000
+    # },
+    # "scala-agg-by-key-int": {
+    #     "Delay": 90,
+    #     "Deadline": 160000
+    # }
+    "scala-agg-by-key": {
+        "Delay": 0,
+        "Deadline": 120000
+    },
+    "scala-agg-by-key-int": {
+        "Delay": 30,
+        "Deadline": 160000
+    },
+    "scala-agg-by-key-naive": {
+        "Delay": 60,
+        "Deadline": 200000
+    }
+}
+
+if len(COMPOSITE_BENCH) > 0:
+    RAM_EXEC = '"{}g"'.format(int(100/ len(COMPOSITE_BENCH)))
+    print(str(RAM_EXEC))
 
 # CONFIG JSON
 CONFIG_DICT = {
@@ -363,37 +543,5 @@ CONFIG_DICT = {
         "SparkHome": SPARK_HOME
     },
     "HDFS": bool(HDFS),
+    "CompositeBench": COMPOSITE_BENCH
 }
-
-# Line needed for enabling/disabling benchmark in spark-perf config.py
-BENCH_LINES = {"scala-agg-by-key": ["225", "226"],
-               "scala-agg-by-key-int": ["229", "230"],
-               "scala-agg-by-key-naive": ["232", "233"],
-               "scala-sort-by-key": ["236", "237"],
-               "scala-sort-by-key-int": ["239", "240"],
-               "scala-count": ["242", "243"],
-               "scala-count-w-fltr": ["245", "246"]}
-
-# NEW
-PRIVATE_KEY_PATH = KEY_PAIR_PATH if PROVIDER == "AWS_SPOT" \
-    else AZ_PRV_KEY_PATH if PROVIDER == "AZURE" \
-    else None
-PRIVATE_KEY_NAME = DATA_AMI[REGION]["keypair"] + ".pem" if PROVIDER == "AWS_SPOT" \
-    else AZ_KEY_NAME if PROVIDER == "AZURE" \
-    else None
-TEMPORARY_STORAGE = "/dev/xvdb" if PROVIDER == "AWS_SPOT" \
-    else "/dev/sdb1" if PROVIDER == "AZURE" \
-    else None
-
-# Print what will run
-print("Schedule : "
-      + ("LAUNCH, " if (NUM_INSTANCE > 0) else "")
-      + ("REBOOT, " if (REBOOT) else "")
-      + ("RUN( " if (RUN) else "")
-      + ("HDFS )" if (HDFS_MASTER == "" and RUN) else "SPARK )" if (RUN) else "")
-      + ("TERMINATE" if (TERMINATE) else ""))
-
-UPDATE_SPARK_BENCH = False
-UPDATE_SPARK_PERF = False
-
-

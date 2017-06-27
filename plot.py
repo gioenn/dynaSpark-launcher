@@ -7,7 +7,7 @@ This module can generate two type of figure: Overview, Worker. The Overview figu
  including the allocation of cpu.
 
 """
-
+import difflib
 import glob
 import json
 import math
@@ -15,12 +15,14 @@ import os
 from datetime import datetime as dt, timedelta
 from pathlib import Path
 from sys import platform
+import datetime
 
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_ticker
 
-from log import load_app_data, load_worker_data
+from composite_utils import get_deadline
+from log import load_app_data, load_worker_data, load_worker_data_multiapp
 from util.utils import timing
 
 Y_TICK_AGG = 40
@@ -87,7 +89,7 @@ def text_plotter_x(x_data, axis, labels):
                   size=LABEL_SIZE)
 
 
-def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_worker):
+def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_worker, multiapp=False):
     """
     Plot the progress of each stage in the worker with the controller's data
 
@@ -99,9 +101,12 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     :param first_ts_worker: the first start ts of PLOT_SID_STAGE
     :return: nothing; save the figure in the output folder
     """
+    print("Plotting worker "+worker_log+ " for app "+app_id)
+
     fig, ax1 = plt.subplots(figsize=(16, 5), dpi=300)
     times = []
     cpus = []
+    req_cpus = []
     label_to_plot = []
     ts_to_plot = []
     sorted_sid = sorted(app_info[app_id])
@@ -169,8 +174,13 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     ax1.set_ylim(0.0, 100.0)
 
     folder_split = worker_log.split("/")
-    name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
-           folder_split[-1].split("-")[-1].replace(".out", "")
+    print(folder_split)
+    if multiapp:
+        worker = worker_log.split("\\")[-1].split(".")[-2]
+        name = app_id + "-worker-" + worker
+    else:
+        name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
+               folder_split[-1].split("-")[-1].replace(".out", "")
     if "agg" in name:
         ax1.xaxis.set_major_locator(plt_ticker.MultipleLocator(base=Y_TICK_AGG))
     elif "sort" in name:
@@ -184,9 +194,11 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             time = [t.timestamp() - first_ts_worker for t in worker_dict[app_id][sid]["time"]]
             times += time
             cpus += worker_dict[app_id][sid]["cpu"]
+            req_cpus += worker_dict[app_id][sid]["req_cpu"]
             start_ts = app_info[app_id][sid]["start"].timestamp() - first_ts_worker
             times.insert(0, start_ts)
             cpus.insert(0, 0.01)
+            req_cpus.insert(0, 0.01)
             end_ts = app_info[app_id][sid]["end"].timestamp() - first_ts_worker
             dead_ts = app_info[app_id][sid]["deadline"].timestamp() - first_ts_worker
             next_time = time[-1] + (int(config["Control"]["TSample"]) / 1000)
@@ -196,42 +208,54 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             if end_ts < dead_ts and end_ts < next_time:
                 times.append(end_ts - 0.01)
                 cpus.append(cpus[-1])
+                req_cpus.append(req_cpus[-1])
                 if end_ts + 0.01 < next_start_ts:
                     times.append(end_ts + 0.01)
                 else:
                     times.append(end_ts)
                 cpus.append(0.01)
+                req_cpus.append(0.01)
             elif next_time <= end_ts:
                 times.append(next_time - 0.02)
                 cpus.append(cpus[-1])
+                req_cpus.append(req_cpus[-1])
                 times.append(next_time - 0.01)
                 cpus.append(0.01)
+                req_cpus.append(0.01)
                 if end_ts + 0.01 < next_start_ts:
                     times.append(end_ts + 0.01)
                     cpus.append(0.01)
+                    req_cpus.append(0.01)
                 else:
                     times.append(end_ts)
                     cpus.append(0.01)
+                    req_cpus.append(0.01)
                     # index_next = min(sorted(app_info[app_id]).index(sid) + 1, len(app_info[app_id]) - 1)
                     # times.append(
                     #     app_info[app_id][sorted(app_info[app_id])[index_next]][
                     #         "start"].timestamp() - first_ts_worker)
                     # cpus.append(0.0)
-                # start_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][0])
-                # end_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][-1])
-                #
-                # time_cpu = [t.timestamp() - first_ts_worker for t in worker_dict["time_cpu"]
-                # [start_index:end_index]]
-                # ax2.plot(time_cpu,
-                #          worker_dict["cpu_real"][start_index:end_index], ".g-",
-                #          label='CPU REAL')
+                    # start_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][0])
+                    # end_index = worker_dict["time_cpu"].index(worker_dict[app_id][sid]["time"][-1])
+                    #
+                    # time_cpu = [t.timestamp() - first_ts_worker for t in worker_dict["time_cpu"]
+                    # [start_index:end_index]]
+                    # ax2.plot(time_cpu,
+                    #          worker_dict["cpu_real"][start_index:end_index], ".g-",
+                    #          label='CPU REAL')
         except KeyError:
             print("SID " + str(sid) + " not executed by " + worker_log)
-
+    print(times)
+    print(cpus)
+    print(req_cpus)
+    times2 = list(times)
     times, cpus = (list(t) for t in zip(*sorted(zip(times, cpus))))
     # [print(t, c) for t, c in zip(times, cpus)]
     ax2.plot(times, cpus, ".b-", label='CPU')
+    times2, req_cpus = (list(t) for t in zip(*sorted(zip(times2, req_cpus))))
+    ax2.plot(times2, req_cpus, ".m-", label="REQ_CPU")
     ax2.fill_between(times, 0.0, cpus, facecolor="b", alpha=0.2)
+    ax2.fill_between(times2, cpus, req_cpus, facecolors="m", alpha=0.2)
     # handles_ax1, labels_ax1 = ax1.get_legend_handles_labels()
     # handles_ax2, labels_ax2 = ax2.get_legend_handles_labels()
     # handles = handles_ax1[:2] + handles_ax2[:2]
@@ -256,8 +280,12 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     ax1.set_zorder(ax2.get_zorder() + 1)
     ax1.patch.set_visible(False)
     folder_split = worker_log.split("/")
-    name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
-           folder_split[-1].split("-")[-1].replace(".out", "")
+    if multiapp:
+        worker = worker_log.split("\\")[-1].split(".")[-2]
+        name = app_id + "/" + app_id + "-worker-" + worker
+    else:
+        name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
+               folder_split[-1].split("-")[-1].replace(".out", "")
     delimiter = "/"
     if platform == "win32":
         delimiter = "\\"
@@ -272,7 +300,7 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     plt.close()
 
 
-def plot_app_overview(app_id, app_dict, folder, config):
+def plot_app_overview(app_id, app_dict, folder, config, multiapp=False, filename = None):
     """
     Plot only the application overview without the cpu data from the workers
 
@@ -282,16 +310,22 @@ def plot_app_overview(app_id, app_dict, folder, config):
     :param config: the config dict of the application
     :return: nothing; save the figure in the output folder
     """
-    print("Plotting APP Overview")
+    print("Plotting APP Overview: "+app_id)
     if len(app_dict) > 0:
         timestamps = []
         times = []
         first_ts = app_dict[PLOT_SID_STAGE]["start"].timestamp()
         for sid in sorted(app_dict):
             try:
-                app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(
-                    milliseconds=config["Deadline"])
-                app_deadline = app_deadline.replace(microsecond=0)
+                if multiapp:
+                    app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(
+                        milliseconds=get_deadline(filename, config)
+                    )
+                else:
+                    app_deadline = app_dict[PLOT_SID_STAGE]["start"] + timedelta(
+                        milliseconds=config["Deadline"])
+                    app_deadline = app_deadline.replace(microsecond=0)
+
                 for timestamp in app_dict[sid]["tasktimestamps"]:
                     if first_ts == 0:
                         timestamps.append(0.0)
@@ -364,17 +398,27 @@ def plot_app_overview(app_id, app_dict, folder, config):
                       str(config["Control"]["TSample"]) + " " +
                       str(config["Control"]["Alpha"]) + " " + str(config["Control"]["K"]))
         folder_split = folder.split("/")
-        name = folder_split[-4].lower() + "-overview-" + folder_split[-3].replace("%", "")
+        if multiapp:
+            name = app_id+"-overview"
+        else:
+            name = folder_split[-4].lower() + "-overview-" + folder_split[-3].replace("%", "")
         labels = ax1.get_xticklabels()
         plt.setp(labels, rotation=45)
-        if PDF:
-            plt.savefig(folder + name + ".png", bbox_inches='tight', dpi=300)
+
+        # Folder for multi app print
+        if multiapp:
+            out_folder = folder + app_id + "/"
         else:
-            plt.savefig(folder + name + ".pdf", bbox_inches='tight', dpi=300)
+            out_folder = folder
+
+        if PDF:
+            plt.savefig(out_folder + name + ".png", bbox_inches='tight', dpi=300)
+        else:
+            plt.savefig(out_folder + name + ".pdf", bbox_inches='tight', dpi=300)
         plt.close()
 
 
-def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
+def plot_overview_cpu(app_id, app_info, workers_dict, config, folder, multiapp=False, filename = None):
     """
     Function that plot the overview of the application aggregating the cpu data from all
     the workers showing the application progress and the division by stage
@@ -386,10 +430,13 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
     :param folder: the folder to output the image
     :return: nothing only save the figure at the end in the folder
     """
-    print("Plotting APP Overview")
+    print("Plotting CPU Overview: "+app_id)
     if len(app_info[app_id]) > 0:
         folder_split = folder.split("/")
-        name = folder_split[-4].lower() + "-overview-" + folder_split[-3].replace("%", "")
+        if multiapp:
+            name = app_id + "-overview"
+        else:
+            name = folder_split[-4].lower() + "-overview-" + folder_split[-3].replace("%", "")
         timestamps = [0]
         times = [0]
         app_deadline = dt.now()
@@ -399,8 +446,12 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
             sorted_sid.remove(0)
         for sid in sorted_sid:
             try:
-                app_deadline = app_info[app_id][PLOT_SID_STAGE]["start"] + timedelta(
-                    milliseconds=config["Deadline"])
+                if multiapp:
+                    app_deadline = app_info[app_id][PLOT_SID_STAGE]["start"] + timedelta(
+                        milliseconds=get_deadline(filename, config))
+                else:
+                    app_deadline = app_info[app_id][PLOT_SID_STAGE]["start"] + timedelta(
+                        milliseconds=config["Deadline"])
                 for timestamp in app_info[app_id][sid]["tasktimestamps"]:
                     if first_ts == 0:
                         first_ts = timestamp.timestamp()
@@ -424,7 +475,7 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         label_to_plot = {}
         original_ts = {}
         # app_dead_ts = app_deadline.timestamp() - first_ts
-        #ax1.axvline(app_dead_ts, color="red", linewidth=3)
+        # ax1.axvline(app_dead_ts, color="red", linewidth=3)
         if "agg" in name or "sort" in name:
             time_quantum = TQ_MICRO
         else:
@@ -438,8 +489,12 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         #     label_to_plot[tq_ts].append("D")
         # ax1.text(app_dead_ts, ymax + 0.5, 'D', weight="bold", horizontalalignment='center')
         # PLOT ALPHA DEADLINE
-        app_alpha_deadline = app_deadline - timedelta(
-            milliseconds=((1 - float(config["Control"]["Alpha"])) * float(config["Deadline"])))
+        if multiapp:
+            app_alpha_deadline = app_deadline - timedelta(
+                milliseconds=((1 - float(config["Control"]["Alpha"])) * float(get_deadline(filename, config))))
+        else:
+            app_alpha_deadline = app_deadline - timedelta(
+                milliseconds=((1 - float(config["Control"]["Alpha"])) * float(config["Deadline"])))
         app_alpha_deadline_ts = app_alpha_deadline.timestamp() - first_ts
         tq_ts = math.floor(app_alpha_deadline_ts / time_quantum) * time_quantum
         original_ts[tq_ts] = app_alpha_deadline_ts
@@ -551,7 +606,7 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                         # print(ts_cpu[s_index] != (time_cpu_ts - first_ts), abs(ts_cpu[s_index] - (time_cpu_ts - first_ts)) >= \
                         #           (config["Control"]["TSample"] / 1000))
                         if (sid == 1 and app_id == "app-20160930162120-0000") or (
-                                sid in [0, 1, 2] and app_id == "app-20160930170244-0000") \
+                                        sid in [0, 1, 2] and app_id == "app-20160930170244-0000") \
                                 or (app_id == "app-20161001190429-0000"):
                             # eval = abs(ts_cpu[s_index] - (time_cpu_ts - first_ts)) >= (config["Control"]["TSample"] / 1000)
                             eval = False
@@ -645,6 +700,9 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         # latexify(columns=1)
         # format_axes(ax1)
         # format_axes(ax2)
+
+        if multiapp:
+            name = app_id + "/" + name
         if PDF:
             plt.savefig(folder + name + ".pdf", bbox_inches='tight', dpi=300)
         else:
@@ -762,8 +820,6 @@ def plot_mean_comparision(folders):
     fig.savefig("hist.png")
 
 
-
-
 @timing
 def plot(folder):
     """
@@ -815,11 +871,71 @@ def plot(folder):
 
     rename_files(folder)
 
-def print_cpu(app_id, app_info, worker_log, worker_dict, config, folder, first_ts_worker):
+
+def plot_multiapp(folder, app_ids):
+    print(folder)
+    if folder[-1] != "/":
+        folder += "/"
+    config = load_config(folder)
+    print(config)
+
+    global PLOT_SID_STAGE
+    PLOT_SID_STAGE = 1 if config["HDFS"] else 0
+
+    app_id_to_filenames = {}
+
+    # load app logs of the specified app
+    app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
+    app_info = {}
+    for app_log in sorted(app_logs):
+        cur_app_info = load_app_data(app_log)
+        for app_id in cur_app_info:
+            app_id_to_filenames[app_id] = app_log
+        app_info.update(cur_app_info)
+    for app_id in app_info:
+        # True to save to app-id folder
+        print("plotting app overview for "+app_id)
+        plot_app_overview(app_id, app_info[app_id], folder, config, True, app_id_to_filenames[app_id])
+
+    # load common worker log and sar log
+    worker_logs = glob.glob(folder + "*worker*.out")
+    cpu_logs = glob.glob(folder + "sar*.log")
+
+    if len(worker_logs) == len(cpu_logs):
+        workers_dict = {}
+        for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
+            worker_dict = load_worker_data_multiapp(worker_log, cpu_log, config)
+            workers_dict[worker_log] = worker_dict
+
+        for app_id in app_info:
+            first_ts_worker = -1.0
+            for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
+                # Find app first timestamp
+                if first_ts_worker == -1.0:
+                    first_ts_worker = find_first_ts_worker(app_id, workers_dict)  # todo: check
+                    if first_ts_worker == -1.0:
+                        print("ERROR FIRST TS WORKER")
+                        exit(1)
+                # Plot worker
+                # True to save to app-id folder
+                # write_json(folder, workers_dict[worker_log], worker_log)
+                plot_worker(app_id, app_info, worker_log, workers_dict[worker_log], config,
+                            first_ts_worker, True)
+                print_cpu(app_id, app_info, worker_log, workers_dict[worker_log], config, folder, first_ts_worker, True)
+        for app_id in app_info:
+            # True to save to app-id folder
+            plot_overview_cpu(app_id, app_info, workers_dict, config, folder, True, app_id_to_filenames[app_id])
+    else:
+        print("ERROR: SAR != WORKER LOGS")
+
+
+def print_cpu(app_id, app_info, worker_log, worker_dict, config, folder, first_ts_worker, multiapp=False):
     sorted_sid = sorted(app_info[app_id])
     if config["HDFS"]:
         sorted_sid.remove(0)
     filename = worker_log.split(".")[-2] + ".cpu_profile.txt"
+    if multiapp:
+        filename = app_id + "/" + filename
     with open(folder + filename, 'w') as file:
         for sid in sorted_sid:
             if sid in worker_dict[app_id]:
@@ -828,6 +944,17 @@ def print_cpu(app_id, app_info, worker_log, worker_dict, config, folder, first_t
                 time = ["{:f}".format(a) for a in time]
                 text = str(list(zip(time, cpu))).replace("'", "")
                 file.write("SID " + str(sid) + " " + text + "\n")
+    if multiapp:
+        filename2 = app_id + "/" + worker_log.split(".")[-2] + ".req_cpu_profile.txt"
+        with open(folder+filename2, "w") as file:
+            for sid in sorted_sid:
+                if sid in worker_dict[app_id]:
+                    req_cpu = worker_dict[app_id][sid]["req_cpu"]
+                    time = [t.timestamp() - first_ts_worker for t in worker_dict[app_id][sid]["time"]]
+                    time = ["{:f}".format(a) for a in time]
+                    text = str(list(zip(time, req_cpu))).replace("'", "")
+                    file.write("SID " + str(sid) + " " + text + "\n")
+
 
 def rename_files(folder):
     for filename in os.listdir(folder):
@@ -835,3 +962,19 @@ def rename_files(folder):
             os.rename(folder + filename, folder + "app.err")
         elif filename.endswith(".dat") and filename.find("run") > -1:
             os.rename(folder + filename, folder + "app.dat")
+
+
+# def write_json(output_folder, dict, name):
+#     """
+#
+#     :param output_folder:
+#     :return:
+#     """
+#     with open(name+".json", "w") as config_out:
+#         json.dump(dict, config_out, sort_keys=True, indent=4, cls=CustomEncoder)
+#
+# class CustomEncoder(json.JSONEncoder):
+#     def default(self, o):
+#         if isinstance(o, datetime.datetime):
+#             return str(o)
+#         return json.JSONEncoder.default(self,o)

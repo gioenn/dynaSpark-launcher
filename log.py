@@ -8,6 +8,7 @@ Module that handles the cluster log:
 
 import multiprocessing
 import os
+import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
 from datetime import timedelta
@@ -16,7 +17,6 @@ from config import PRIVATE_KEY_PATH, PROVIDER
 from util.utils import timing, string_to_datetime
 from util.ssh_client import sshclient_from_node
 
-import run
 
 def download_master(node, output_folder, log_folder, config):
     """Download log from master instance
@@ -95,7 +95,7 @@ def download_slave(node, output_folder, app_id, config):
             print("Executor ID: " + file)
             ssh_client.get(
                 remotepath=config["Spark"]["SparkHome"] + "work/" + app_id + "/" + file + "/stderr",
-                localpath=output_folder + "/" + run.get_ip(node) + "-" + file + ".stderr")
+                localpath=output_folder + "/" + get_ip(node) + "-" + file + ".stderr")
     except FileNotFoundError:
         print("stderr not found")
     return output_folder
@@ -113,7 +113,7 @@ def download(log_folder, nodes, master_ip, output_folder, config):
     """
     # MASTER
 
-    master_node = [i for i in nodes if run.get_ip(i) == master_ip][0]
+    master_node = [i for i in nodes if get_ip(i) == master_ip][0]
 
     print("Downloading log from Master: PublicIp="+master_node.public_ips[0] +" PrivateIp=" + master_node.private_ips[0])
 
@@ -122,12 +122,138 @@ def download(log_folder, nodes, master_ip, output_folder, config):
     # SLAVE
     with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
         for i in nodes:
-            ip = run.get_ip(i)
+            ip = get_ip(i)
             if ip != master_ip:
                 worker = executor.submit(download_slave, i, output_folder, app_id, config)
                 output_folder = worker.result()
     return output_folder
 
+def download_sparkevents_multiapp(node, output_folder, config):
+    ssh_client = sshclient_from_node(node, ssh_key_file=PRIVATE_KEY_PATH, user_name='ubuntu')
+
+    app_ids = []
+
+    for app_id in ssh_client.listdir("" + config["Spark"]["SparkHome"] + "spark-events/"):
+        print("BENCHMARK: "+app_id)
+        app_folder = output_folder + app_id
+        try:
+            os.makedirs(app_folder)
+        except FileExistsError:
+            print("Output folder already exists")
+        input_file = config["Spark"]["SparkHome"] + "spark-events/" + app_id
+        output_bz = input_file + ".bz"
+        print("Bzipping event log...")
+        ssh_client.run("pbzip2 -9 -p" + str(
+            config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz)
+        ssh_client.get(remotepath=output_bz, localpath=app_folder + "/" + app_id + ".bz")
+        app_ids.append(app_id)
+
+    return app_ids
+
+def download_logs_multiapp(node, output_folder, log_folders, config):
+    ssh_client = sshclient_from_node(node, ssh_key_file=PRIVATE_KEY_PATH, user_name='ubuntu')
+
+    files = []
+
+    for log_folder in log_folders:
+        for file in ssh_client.listdir(log_folder):
+            print(file)
+            if file != "bench-report.dat" and ".out" not in file:
+                output_file = (output_folder + "/" + file).replace(":", "-")
+                files.append(file.replace(":", "-"))
+                ssh_client.get(remotepath=log_folder + "/" + file, localpath=output_file)
+
+    return files
+
+def download_slave_multiapp(node, output_folder, app_ids, config):
+    ssh_client = sshclient_from_node(node, ssh_key_file=PRIVATE_KEY_PATH, user_name='ubuntu')
+
+    print("Downloading log from slave: PublicIp=" + node.public_ips[0] + " PrivateIp=" + node.private_ips[0])
+
+    try:
+        worker_ip_fixed = node.private_ips[0].replace(".", "-")
+
+        # Download Spark Slave Log
+        if PROVIDER == "AWS_SPOT":
+            remote_worker_log = "{0}logs/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-{1}.out".format(
+                config["Spark"]["SparkHome"], worker_ip_fixed)
+        elif PROVIDER == "AZURE":
+            remote_worker_log = "{0}logs/spark-root-org.apache.spark.deploy.worker.Worker-1-{1}.out".format(
+                config["Spark"]["SparkHome"], node.extra["name"])
+
+        print(remote_worker_log)
+
+        ssh_client.run(
+            "screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -r kill")
+
+        if PROVIDER == "AWS_SPOT":
+            output_worker_log = "{0}/spark-ubuntu-org.apache.spark.deploy.worker.Worker-1-ip-{1}.out".format(
+                output_folder, node.private_ips[0])
+        elif PROVIDER == "AZURE":
+            output_worker_log = "{0}/spark-root-org.apache.spark.deploy.worker.Worker-1-{1}.out".format(
+                output_folder, node.extra["name"])
+
+        ssh_client.get(remotepath=remote_worker_log, localpath=output_worker_log)
+
+        # Download SAR log
+        ssh_client.get(remotepath="sar-" + node.private_ips[0] + ".log",
+                       localpath=output_folder + "/" + "sar-" + node.private_ips[0] + ".log")
+    except FileNotFoundError:
+        print("worker log not found")
+
+    # Download executor log
+    for app_id in app_ids:
+        try:
+            for file in ssh_client.listdir(config["Spark"]["SparkHome"] + "work/" + app_id + "/"):
+                print("Executor ID: " + file)
+                ssh_client.get(
+                    remotepath=config["Spark"]["SparkHome"] + "work/" + app_id + "/" + file + "/stderr",
+                    localpath=output_folder + "/" + app_id + "/" + get_ip(node) + "-" + file + ".stderr")
+        except FileNotFoundError:
+            print("stderr not found")
+
+def organize_app_logs(output_folder, files, app_ids):
+    pattern_app_id = re.compile("app-\d{14}-\d{4}")
+
+    organize_dict = {}
+
+    # match for app-xxxxxxxxxxxxxxx-xxxx
+    for file in files:
+        with open(output_folder + file) as log:
+            for line in log:
+                result = pattern_app_id.search(line)
+                if result!=None:
+                    app_id = result.group(0)
+                    organize_dict[file] = app_id
+                    break
+
+    for file in organize_dict:
+        os.rename(output_folder + file, output_folder + organize_dict[file] + "/" + file)
+
+
+def download_multiapp(log_folder_list, nodes, master_ip, output_folder, config):
+    master_node = [i for i in nodes if get_ip(i) == master_ip][0]
+    print("Downloading log from Master: PublicIp="+master_node.public_ips[0] +" PrivateIp=" + master_node.private_ips[0])
+
+    # MASTER
+    # download spark-events of each app
+    app_ids = download_sparkevents_multiapp(master_node, output_folder, config)
+    # download logs of each app
+    files = download_logs_multiapp(master_node, output_folder, log_folder_list, config)
+
+    # SLAVE
+    with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
+        for node in nodes:
+            ip = get_ip(node)
+            if ip != master_ip:
+                worker = executor.submit(download_slave_multiapp, node, output_folder, app_ids, config)
+                # wait for all worker to finish
+                worker.result()
+
+    # Organize app logs in folders
+    # organize_app_logs(output_folder, files, app_ids)
+
+    return app_ids
 
 def load_app_data(app_log_path):
     """
@@ -282,3 +408,88 @@ def load_worker_data(worker_log, cpu_log, config):
             del worker_dict[app_id]
     print(list(worker_dict.keys()))
     return worker_dict
+
+def load_worker_data_multiapp(worker_log, cpu_log, config):
+    """
+    Load the controller data from the worker_log and combine with the cpu_real data from cpu_log
+
+    :param worker_log: the path of the log of the worker
+    :param cpu_log:  the path of the cpu monitoring tool log of the worker
+    :param config: the configuration dictionary
+    :return: worker_dict the dictionary of the worker's  data
+    """
+    print(worker_log)
+    print(cpu_log)
+    worker_dict = {}
+    current_sid = {}
+    with open(worker_log) as wlog:
+        worker_dict["cpu_real"] = []
+        worker_dict["time_cpu"] = []
+        for line in wlog:
+            line = line.split(" ")
+            if len(line) > 3:
+                if line[4] == "Created":
+                    sid = int(line[8])
+                    app_id = line[16].replace("\n", "")
+                    current_sid[app_id] = sid
+                    if app_id not in worker_dict:
+                        worker_dict[app_id] = {}
+                    worker_dict[app_id][sid] = {}
+                    worker_dict[app_id][sid]["cpu"] = []
+                    worker_dict[app_id][sid]["req_cpu"] = []
+                    worker_dict[app_id][sid]["time"] = []
+                    worker_dict[app_id][sid]["sp_real"] = []
+                    worker_dict[app_id][sid]["sp"] = []
+                    worker_dict[app_id][sid]["cpu"].append(float(line[14]))
+                    worker_dict[app_id][sid]["req_cpu"].append(float(line[14])) # fake
+                    worker_dict[app_id][sid]["sp_real"].append(0.0)
+                    worker_dict[app_id][sid]["time"].append(string_to_datetime(line[1]))
+                    worker_dict[app_id][sid]["sp"].append(0.0)
+                if line[4] == "Scaled":
+                    app_id = line[10].replace("\n", "")
+                    if app_id not in worker_dict:
+                        worker_dict[app_id] = {}
+                if line[4] == "CoreToAllocate:":
+                    app_id = line[9].replace("\n", "")
+                    worker_dict[app_id][current_sid[app_id]]["cpu"].append(float(line[5]))
+                    worker_dict[app_id][current_sid[app_id]]["req_cpu"].append(float(line[7]))
+                if line[4] == "Real:":
+                    app_id = line[7].replace("\n", "")
+                    worker_dict[app_id][current_sid[app_id]]["sp_real"].append(
+                        float(line[5]))
+                if line[4] == "SP":
+                    app_id = line[8].replace("\n", "")
+                    worker_dict[app_id][current_sid[app_id]]["time"].append(string_to_datetime(line[1]))
+                    progress = float(line[6])
+                    if progress < 0.0:
+                        worker_dict[app_id][current_sid[app_id]]["sp"].append(abs(progress) / 100)
+                    else:
+                        worker_dict[app_id][current_sid[app_id]]["sp"].append(progress)
+
+    with open(cpu_log) as cpu_log_fp:
+        for line in cpu_log_fp:
+            line = line.split("    ")
+            if not ("Linux" in line[0].split(" ") or "\n" in line[0].split(" ")) \
+                    and line[1] != " CPU" and line[0] != "Average:":
+                worker_dict["time_cpu"].append(
+                    dt.strptime(line[0], '%I:%M:%S %p').replace(year=2016))
+                if config["Aws"]["HyperThreading"]:
+                    cpu_real = float(
+                        '{0:.2f}'.format((float(line[2]) * config["Control"]["CoreVM"] * 2) / 100))
+                else:
+                    cpu_real = float(
+                        '{0:.2f}'.format((float(line[2]) * config["Control"]["CoreVM"]) / 100))
+                worker_dict["cpu_real"].append(cpu_real)
+    for app_id in list(worker_dict):
+        print(app_id)
+        if not len(worker_dict[app_id]) > 0:
+            del worker_dict[app_id]
+    print(list(worker_dict.keys()))
+    print(worker_dict)
+    return worker_dict
+
+def get_ip(node):
+    if PROVIDER == "AWS_SPOT":
+        return node.extra['dns_name']
+    if PROVIDER == "AZURE":
+        return node.private_ips[0]
