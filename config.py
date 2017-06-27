@@ -397,3 +397,4 @@ UPDATE_SPARK_BENCH = False
 UPDATE_SPARK_PERF = False
 
 
+SPARK_PERF_FOLDER = "spark-perf-mod"

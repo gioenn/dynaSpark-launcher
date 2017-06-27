@@ -22,7 +22,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     RAM_DRIVER, BENCHMARK_PERF, BENCH_LINES, HDFS_MASTER, DATA_AMI, REGION, HADOOP_CONF, \
     CONFIG_DICT, HADOOP_HOME,\
     SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL, CORE_ALLOCATION,DEADLINE_ALLOCATION,\
-    UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC
+    UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC, SPARK_PERF_FOLDER
 
 from config import PRIVATE_KEY_PATH, PRIVATE_KEY_NAME, TEMPORARY_STORAGE, PROVIDER
 
@@ -333,13 +333,13 @@ def setup_master(node, slaves_ip):
             ssh_client.run(
                 "cd $HOME/wikixmlj && mvn package install -Dmaven.test.skip=true && cd $HOME")  # install wikixmlj
 
-        if "spark-perf" in files:
-            ssh_client.run("""cd $HOME/spark-perf && git status | grep "up-to-date" || eval `git pull && cp $HOME/spark-perf/config/config.py.template $HOME/spark-perf/config/config.py`""")
+        if SPARK_PERF_FOLDER in files:
+            ssh_client.run("""cd $HOME/"""+ SPARK_PERF_FOLDER +""" && git status | grep "up-to-date" || eval `git pull`""")
             ssh_client.run("cd $HOME")
-        else:
-            ssh_client.run("git clone https://github.com/databricks/spark-perf.git spark-perf")
-            ssh_client.run(
-                "cp $HOME/spark-perf/config/config.py.template $HOME/spark-perf/config/config.py")
+        # else:
+        #     ssh_client.run("git clone https://github.com/databricks/spark-perf.git spark-perf")
+        #     ssh_client.run(
+        #         "cp $HOME/spark-perf/config/config.py.template $HOME/spark-perf/config/config.py")
 
     if UPDATE_SPARK_BENCH:
         if "spark-bench" in files:
@@ -485,38 +485,22 @@ def setup_master(node, slaves_ip):
                        """{' ./spark-bench/conf/env.sh""")
 
         # CHANGE SPARK HOME DIR
-        ssh_client.run("sed -i '21s{.*{SPARK_HOME_DIR = \"" + SPARK_HOME + "\"{' ./spark-perf/config/config.py")
+        ssh_client.run("sed -i '21s{.*{SPARK_HOME_DIR = \"" + SPARK_HOME + "\"{' ./"+ SPARK_PERF_FOLDER +"/config/config.py")
 
         # CHANGE MASTER ADDRESS IN BENCHMARK
         ssh_client.run("""sed -i '30s{.*{SPARK_CLUSTER_URL = "spark://""" + master_ip +
-                       """:7077"{' ./spark-perf/config/config.py""")
+                       """:7077"{' ./"""+ SPARK_PERF_FOLDER +"""/config/config.py""")
 
         # CHANGE SCALE FACTOR LINE 127
         ssh_client.run(
-            "sed -i '127s{.*{SCALE_FACTOR = " + str(SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
+            "sed -i '127s{.*{SCALE_FACTOR = " + str(SCALE_FACTOR) + "{' ./"+ SPARK_PERF_FOLDER +"/config/config.py")
 
         # NO PROMPT
-        ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./spark-perf/config/config.py")
-
-        # Todo: extra for spark-perf ?
-        # DO NOT RESTART CLUSTER
-        # ssh_client.run("sed -i '72s{.*{RESTART_SPARK_CLUSTER = False{' ./spark-perf/config/config.py")
-
-        # IGNORED TRIALS
-        # ssh_client.run("sed -i '134s{.*{IGNORED_TRIALS = 0{' ./spark-perf/config/config.py")
-
-        # SET SPARK MEMORY FRACTION
-        # ssh_client.run("""sed -i '143s{.*{    JavaOptionSet("spark.memory.fraction", [0.6]),{' ./spark-perf/config/config.py""")
-
-        # DISABLE LOCALITY WAIT
-        # ssh_client.run("""sed -i '151s{.*{    #JavaOptionSet("spark.locality.wait", [str(60 * 1000 * 1000)]){' ./spark-perf/config/config.py""")
-
-        # COMMON NUM-TRIALS
-        # ssh_client.run("""sed -i '160s{.*{    OptionSet("num-trials", [1]),{' ./spark-perf/config/config.py""")
+        ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./"+ SPARK_PERF_FOLDER +"/config/config.py")
 
         # CHANGE RAM EXEC
         ssh_client.run(
-            """sed -i '146s{.*{    JavaOptionSet("spark.executor.memory", [""" + RAM_EXEC + """]),{' ./spark-perf/config/config.py""")
+            """sed -i '146s{.*{    JavaOptionSet("spark.executor.memory", [""" + RAM_EXEC + """]),{' ./"""+ SPARK_PERF_FOLDER +"""/config/config.py""")
 
         ssh_client.run(
             """sed -i '55s{.*{SPARK_EXECUTOR_MEMORY=""" + RAM_EXEC + """{' ./spark-bench/conf/env.sh""")
@@ -526,30 +510,30 @@ def setup_master(node, slaves_ip):
             "sed -i '26s{.*{spark.driver.memory " + RAM_DRIVER + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
         ssh_client.run(
-            "sed -i '154s{.*{SPARK_DRIVER_MEMORY = \""+RAM_DRIVER+"\"{' ./spark-perf/config/config.py")
+            "sed -i '154s{.*{SPARK_DRIVER_MEMORY = \""+RAM_DRIVER+"\"{' ./"+ SPARK_PERF_FOLDER +"/config/config.py")
 
 
         print("   Enabling/Disabling Benchmark")
         # ENABLE BENCHMARK
         for bench in BENCHMARK_PERF:
             for line_number in BENCH_LINES[bench]:
-                sed_command_line = "sed -i '" + line_number + " s/[#]//g' ./spark-perf/config/config.py"
+                sed_command_line = "sed -i '" + line_number + " s/[#]//g' ./"+ SPARK_PERF_FOLDER +"/config/config.py"
                 ssh_client.run(sed_command_line)
 
         # DISABLE BENCHMARK
         for bench in BENCH_LINES:
             if bench not in BENCHMARK_PERF:
                 for line_number in BENCH_LINES[bench]:
-                    ssh_client.run("sed -i '" + line_number + " s/^/#/' ./spark-perf/config/config.py")
+                    ssh_client.run("sed -i '" + line_number + " s/^/#/' ./"+ SPARK_PERF_FOLDER +"/config/config.py")
 
         # ENABLE HDFS
         # if HDFS:
         print("   Enabling HDFS in benchmarks")
-        ssh_client.run("sed -i '179s%memory%hdfs%g' ./spark-perf/config/config.py")
+        ssh_client.run("sed -i '179s%memory%hdfs%g' ./"+ SPARK_PERF_FOLDER +"/config/config.py")
 
     #if HDFS_MASTER != "":
         ssh_client.run(
-            """sed -i  '50s%.*%HDFS_URL = "hdfs://{0}:9000/test/"%' ./spark-perf/config/config.py""".format(
+            """sed -i  '50s%.*%HDFS_URL = "hdfs://{0}:9000/test/"%' ./"""+ SPARK_PERF_FOLDER +"""/config/config.py""".format(
                 HDFS_MASTER))
         ssh_client.run(
             """sed -i  '10s%.*%HDFS_URL="hdfs://{0}:9000"%' ./spark-bench/conf/env.sh""".format(
@@ -773,7 +757,7 @@ def run_benchmark(nodes):
         if len(BENCHMARK_PERF) > 0:
             print("Running Benchmark " + str(BENCHMARK_PERF))
             runout, runerr, runstatus = ssh_client.run(
-                'export SPARK_HOME="' + SPARK_HOME + '" && ./spark-perf/bin/run')
+                'export SPARK_HOME="' + SPARK_HOME + '" && ./'+ SPARK_PERF_FOLDER +'/bin/run')
 
             # FIND APP LOG FOLDER
             print("Finding log folder")
