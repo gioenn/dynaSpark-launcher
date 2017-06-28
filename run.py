@@ -736,11 +736,12 @@ def run_benchmark(nodes):
                                 'export SPARK_HOME="' + SPARK_HOME + '" && ./spark-perf/bin/run')
 
             # prepare threads
+            lock = threading.Lock()
             i = 0;
             threads = []
             log_folders = [None] * len(COMPOSITE_BENCH)
             for bench_name in COMPOSITE_BENCH:
-                thread = threading.Thread(name=bench_name + str(i), target=run_bench, args=(ssh_client, bench_name, COMPOSITE_BENCH[bench_name], log_folders, i))
+                thread = threading.Thread(name=bench_name + str(i), target=run_bench, args=(ssh_client, bench_name, COMPOSITE_BENCH[bench_name], log_folders, i, lock))
                 thread.setDaemon(True)
                 threads.append(thread)
                 i += 1
@@ -847,17 +848,19 @@ def configure_perf(ssh_client, bench_name):
         "sed -i '127s{.*{SCALE_FACTOR = " + str(scale_factor) + "{' ./spark-perf/config/config.py")
 
 
-def run_bench(ssh_client, bench_name, bench, results, index):
+def run_bench(ssh_client, bench_name, bench, results, index, lock):
     # ssh_client = sshclient_from_node(node, ssh_key_file=PRIVATE_KEY_PATH, user_name='ubuntu')
     print("Runner thread created for " + bench_name + ", waiting " + str(bench["Delay"]) + " seconds")
     time.sleep(bench["Delay"])
     print("Benchmark " + bench_name + " starting")
+    lock.acquire()
+    time.sleep(5)
     ssh_client.run("sed -i '35s{.*{spark.control.deadline " + str(
         bench["Deadline"]) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
     print("  Deadline set")
     # run a spark-bench benchmark
     if bench_name in ["KMeans", "SVM", "DecisionTree", "PageRank"]:
-        print("  Setting up spark-bench benchmark")
+        print("  "+bench_name+" setting up spark-bench")
         scale_factor = BENCH_CONF[bench_name]["NUM_OF_PARTITIONS"][1]
         num_task = scale_factor
         try:
@@ -873,15 +876,17 @@ def run_bench(ssh_client, bench_name, bench, results, index):
         ssh_client.run(
             "sed -i '55s{.*{spark.control.numtask " + str(
                 num_task) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
-        print("  Benchmark starting")
+        print("  "+bench_name+" starting")
+        lock.release()
         ssh_client.run(
             'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench_name + '/bin/run.sh')
+        print("  "+bench_name+" finish");
         logfolder = "/home/ubuntu/spark-bench/num"
-        print("  Benchmark completed, logfolder: "+logfolder)
+        print("  "+bench_name+" completed, logfolder: "+logfolder)
 
     # run a spark-perf benchmark
     else:
-        print("  Setting up spark-perf benchmark")
+        print("  "+bench_name+" setting up spark-perf")
         # ENABLE BENCHMARK
         for line_number in BENCH_LINES[bench_name]:
             sed_command_line = "sed -i '" + line_number + " s/[#]//g' ./spark-perf/config/config.py"
@@ -904,12 +909,14 @@ def run_bench(ssh_client, bench_name, bench, results, index):
             "sed -i '55s{.*{spark.control.numtask " + str(
                 num_task) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
-        print("  Benchmark starting")
+        print("  "+bench_name+" starting")
+        lock.release()
         runout, runerr, runstatus = ssh_client.run(
             'export SPARK_HOME="' + SPARK_HOME + '" && ./spark-perf/bin/run')
+        print("  "+bench_name+" finish");
         app_log = between(runout, "2>> ", ".err")
         logfolder = "/home/ubuntu/" + "/".join(app_log.split("/")[:-1])
-        print("  Benchmark completed, logfolder: "+logfolder)
+        print("  "+bench_name+" completed, logfolder: "+logfolder)
 
 
     results[index] = logfolder
