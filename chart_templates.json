@@ -1,0 +1,66 @@
+{ "Chart" : {   "Name"  : "", 
+			    "Type"  : "",
+			    "Title" : "",
+			    "XAxis" : { "B" : { "Limits" : { "Lower" : 0 , 
+	 							                 "Upper" : 0 }, 
+					                "TickBase" : 0,
+					                "Label" : "" 
+                                    }
+                            },
+			    "YAxis" : { "L" : { "Limits" : { "Lower" : 0, 
+                                                 "Upper" : 0 },
+					                "TickBase" : 0 , 
+					                "Label" : ""
+                                    },
+	 					    "R" : { "Limits" : { "Lower" : 0 , 
+	 							                 "Upper" : 0 }, 
+					               "TickBase" : 0, 
+					               "Label" : "" 
+                                   }
+                           },
+                "Stages"                : {},
+                "VLines"                : {},
+                "Labels"                : {},
+                "Timestamps"            : [],
+                "TimestampsReal"        : [], 
+                "TimestampsCpu"         : [], 
+                "Progress"              : [],    
+                "ProgressReal"          : [], 
+                "Cpu"                   : [],
+                "StartTimestamps"       : [],
+                "EndTimestamps"         : [],
+                "DeadlineTimestamps"    : [],
+                "StartLabels"           : [],
+                "EndLabels"             : [],
+                "DeadlineLabels"        : []
+            },   
+
+  "Stage"  :   { "Sid"    :  {  "Vlines" : {},
+  								"Labels" : {},
+  								"Timestamps" : [],
+                                "TimestampsReal" : [], 
+                                "TimestampsCpu" : [], 
+                                "Progress" : [],    
+                                "ProgressReal" : [], 
+                                "Cpu" : [],
+                                "StartTimestamp" : 0,
+                                "EndTimestamp" : 0,
+                                "DeadlineTimestamp" : 0, 
+                                "StartLabel" : "",
+                                "EndLabel" : "",
+                                "DeadlineLabel" : ""
+                           	}
+    		},
+    		
+  "Vline" : {  "Name" :  	{   "Type"  : "Start|End|Deadline",
+	                            "X" : 0, 
+	                            "Color" : "green|red", 
+	                            "Line"  : "-|--"
+	                            }
+                        },
+                        
+  "Label" : {  "Name" :  	{   "X" : 0, 
+                           		"Y" : 0
+                            }
+                        }    
+}
