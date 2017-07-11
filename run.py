@@ -22,7 +22,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     RAM_DRIVER, BENCHMARK_PERF, BENCH_LINES, HDFS_MASTER, DATA_AMI, REGION, HADOOP_CONF, \
     CONFIG_DICT, HADOOP_HOME,\
     SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL, CORE_ALLOCATION,DEADLINE_ALLOCATION,\
-    UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC, SPARK_PERF_FOLDER
+    UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC, SPARK_PERF_FOLDER, GIT_BRANCH
 
 from config import PRIVATE_KEY_PATH, PRIVATE_KEY_NAME, TEMPORARY_STORAGE, PROVIDER
 
@@ -237,6 +237,10 @@ def setup_slave(node, master_ip):
     if UPDATE_SPARK:
         print("   Updating Spark...")
         ssh_client.run(
+            """cd /usr/local/spark && git pull && git checkout """ + GIT_BRANCH)
+        # CLEAN UP EXECUTORS APP LOGS
+        ssh_client.run("sudo rm -r " + SPARK_HOME + "work/*")
+        ssh_client.run(
             """cd /usr/local/spark && git pull && build/mvn clean && build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
 
     # CLEAN UP EXECUTORS APP LOGS
@@ -366,6 +370,8 @@ def setup_master(node, slaves_ip):
 
     if UPDATE_SPARK_MASTER:
         print("   Updating Spark...")
+        ssh_client.run(
+            """cd /usr/local/spark && git pull && git checkout """ + GIT_BRANCH)
         ssh_client.run(
             """cd /usr/local/spark && git pull && build/mvn clean &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
 

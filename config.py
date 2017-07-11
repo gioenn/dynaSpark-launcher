@@ -302,6 +302,7 @@ if(HEURISTIC == Heuristic.FIXED):
     assert (len(STAGE_ALLOCATION) == len(DEADLINE_ALLOCATION))
     assert (len(STAGE_ALLOCATION) == len(CORE_ALLOCATION))
 
+GIT_BRANCH = "core_tasks_antiwindup"
 # CONFIG JSON
 CONFIG_DICT = {
     "Provider": PROVIDER,
