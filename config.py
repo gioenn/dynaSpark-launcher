@@ -22,20 +22,20 @@ AZ_SIZE = 'Standard_D14_v2_Promo'
 """AZURE VM Size"""
 AZ_IMAGE = 'Canonical:UbuntuServer:14.04.5-LTS:14.04.201703230'
 """AZURE VM Image"""
-AZ_VHD_IMAGE = {"StorageAccount": "csparkdisks2",
-                "BlobContainer": "vhds",
+AZ_VHD_IMAGE = {"StorageAccount": "sparkdisks",
+                "BlobContainer": "vhd",
                 "Name": "vm-os.vhd"}  # csparkvm13-os.vhd
 """AZURE VHD Image"""
 # ssh-keygen -t rsa -b 2048
 AZ_KEY_NAME = "id_rsa"
 """Name of the RSA 2048 key"""
-AZ_PUB_KEY_PATH = 'C:\\Users\\Simone Ripamonti\\Desktop\\' + AZ_KEY_NAME + '.pub'
+AZ_PUB_KEY_PATH = 'C:/Users/Davide/Desktop/' + AZ_KEY_NAME + '.pub'
 """AZURE Public Key Path (RSA 2048)"""
-AZ_PRV_KEY_PATH = 'C:\\Users\\Simone Ripamonti\\Desktop\\' + AZ_KEY_NAME
+AZ_PRV_KEY_PATH = 'C:/Users/Davide/Desktop/' + AZ_KEY_NAME
 """AZURE Private Key Path (RSA 2048)"""
-AZ_RESOURCE_GROUP = 'cspark'
+AZ_RESOURCE_GROUP = 'spark'
 """AZURE Resource Group"""
-AZ_STORAGE_ACCOUNT = 'csparkdisks2'
+AZ_STORAGE_ACCOUNT = 'sparkdisks'
 """AZURE Storage Group"""
 AZ_SA_SKU = "standard_lrs"
 """AZURE Storage SKU"""
@@ -66,7 +66,7 @@ REGION = "us-west-2"
 KEY_PAIR_PATH = "C:\\Users\\Simone Ripamonti\\Desktop\\" + DATA_AMI[REGION]["keypair"] + ".pem"
 """KeyPair path for the instance"""
 SECURITY_GROUP = "spark-cluster"
-"""Secutiry group of the instance"""
+"""Security group of the instance"""
 PRICE = DATA_AMI[REGION]["price"]
 INSTANCE_TYPE = "m3.medium"
 """Instance type"""
@@ -79,7 +79,10 @@ KILL_JAVA = 1
 """Kill every java application on the cluster"""
 NUM_RUN = 1
 """Number of run to repeat the benchmark"""
-
+PLOT_ON_SERVER = 1
+"""Download benchmark logs and generate plots on server """
+INSTALL_PYTHON3 = 1
+"""Install Pyhton3 on cspark master"""
 CLUSTER_ID = "CSPARKWORK"
 # CLUSTER_ID = "CSPARKHDFS"
 # CLUSTER_ID = "DEV"
@@ -92,7 +95,7 @@ TAG = [{
 
 # HDFS
 # HDFS_MASTER = "ec2-52-88-156-209.us-west-2.compute.amazonaws.com"
-HDFS_MASTER = "10.0.0.5"  # use private ip for azure!
+HDFS_MASTER = "10.0.0.4"  # use private ip for azure!
 # HDFS_MASTER = ""
 """Url of the HDFS NameNode if not set the cluster created is an HDFS Cluster"""
 # Spark config
@@ -135,7 +138,8 @@ ALPHA = 0.95
 BETA = 0.33
 # DEADLINE = 160000 # kmeans
 # DEADLINE = 120000 # agg by key
-DEADLINE = 37600
+# DEADLINE = 37600
+DEADLINE = 450000 # Pagerank
 
 # SVM
 # 0%  217500
@@ -178,9 +182,9 @@ BENCHMARK_PERF = [
 
 BENCHMARK_BENCH = [
     # "PageRank",
-    "DecisionTree",
+    # "DecisionTree",
     # "KMeans",
-    # "SVM"
+    "SVM"
 ]
 """Spark-bench benchmark to execute"""
 

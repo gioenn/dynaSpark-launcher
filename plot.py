@@ -19,6 +19,7 @@ from sys import platform
 
 import matplotlib
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')      # Added to avoid RuntimeError('Invalid DISPLAY variable') when run on linux server
 import matplotlib.ticker as plt_ticker
 
 from log import load_app_data, load_worker_data
@@ -173,7 +174,7 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             chart["Stages"][sid]["Labels"] = {}                                     # JSON Charts
             chart["Stages"][sid]["Labels"]["S" + str(sid)] = {}                     # JSON Charts
             chart["Stages"][sid]["Labels"]["S" + str(sid)]["X"] = start_ts            # JSON Charts
-            chart["Stages"][sid]["Labels"]["S" + str(sid)]["Y"] = 100.5             # JSON Charts
+            chart["Stages"][sid]["Labels"]["S" + str(sid)]["Y"] = 105             # JSON Charts
             chart["Stages"][sid]["VLines"]["E" + str(sid)] = {}                     # JSON Charts
             chart["Stages"][sid]["VLines"]["E" + str(sid)]["X"] = end_ts            # JSON Charts
             chart["Stages"][sid]["VLines"]["E" + str(sid)]["Type"] = "End"          # JSON Charts
@@ -181,7 +182,7 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             chart["Stages"][sid]["VLines"]["E" + str(sid)]["Line"] = "-"            # JSON Charts
             chart["Stages"][sid]["Labels"]["E" + str(sid)] = {}                     # JSON Charts
             chart["Stages"][sid]["Labels"]["E" + str(sid)]["X"] = end_ts            # JSON Charts
-            chart["Stages"][sid]["Labels"]["E" + str(sid)]["Y"] = 100.5             # JSON Charts
+            chart["Stages"][sid]["Labels"]["E" + str(sid)]["Y"] = 102             # JSON Charts
             chart["VLines"]["S" + str(sid)] = chart["Stages"][sid]["VLines"]["S" + str(sid)]     # JSON Charts
             chart["VLines"]["E" + str(sid)] = chart["Stages"][sid]["VLines"]["E" + str(sid)]     # JSON Charts
             chart["Labels"]["S" + str(sid)] = {}                                                 # JSON Charts
@@ -206,7 +207,7 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
             chart["Stages"][sid]["VLines"]["D" + str(sid)]["Line"] = "--"           # JSON Charts
             chart["Stages"][sid]["Labels"]["D" + str(sid)] = {}                     # JSON Charts
             chart["Stages"][sid]["Labels"]["D" + str(sid)]["X"] = dead_ts           # JSON Charts
-            chart["Stages"][sid]["Labels"]["D" + str(sid)]["Y"] = 108.5             # JSON Charts 
+            chart["Stages"][sid]["Labels"]["D" + str(sid)]["Y"] = 108               # JSON Charts 
             chart["VLines"]["D" + str(sid)] = chart["Stages"][sid]["VLines"]["D" + str(sid)]     # JSON Charts
             chart["Labels"]["D" + str(sid)] = {}                                                 # JSON Charts
             chart["Labels"]["D" + str(sid)] = chart["Stages"][sid]["Labels"]["D" + str(sid)]     # JSON Charts           
@@ -616,8 +617,7 @@ def plot_app_overview(app_id, app_dict, folder, config):
             plt.savefig(folder + name + ".pdf", bbox_inches='tight', dpi=300)
             suffix="_png" #Matlab
         plt.close()
-        m_script_name = folder + name + suffix + ".m"  #Matlab
-        # m_script_name = m_script_name.replace("-", "_") #Matlab doesn't like dashes in filename
+        m_script_name = folder + "/" + name.replace("-", "_") + suffix + ".m"  #Matlab doesn't like dashes in filenames
         with open(m_script_name, 'w') as file_handler:
             for line in m_script_content:
                 file_handler.write("{}\n".format(line))
@@ -743,7 +743,7 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
         # chart["VLines"].append({"X" : app_alpha_deadline_ts, "Color" : "red",  "Line" : "-"})       # JSON Charts
         chart["Labels"]["D"] = {}                                               # JSON Charts
         chart["Labels"]["D"]["X"] = app_alpha_deadline_ts                       # JSON Charts
-        chart["Labels"]["D"]["Y"] = 100.5                                       # JSON Charts
+        chart["Labels"]["D"]["Y"] = 102                                       # JSON Charts
         try:
             label_to_plot[tq_ts].append("D")
         except KeyError:
@@ -803,7 +803,7 @@ def plot_overview_cpu(app_id, app_info, workers_dict, config, folder):
                 chart["Stages"][sid]["Labels"] = {}                                     # JSON Charts
                 chart["Stages"][sid]["Labels"]["E" + str(sid)] = {}                     # JSON Charts
                 chart["Stages"][sid]["Labels"]["E" + str(sid)]["X"] = end_ts            # JSON Charts
-                chart["Stages"][sid]["Labels"]["E" + str(sid)]["Y"] = 100.5             # JSON Charts
+                chart["Stages"][sid]["Labels"]["E" + str(sid)]["Y"] = 102               # JSON Charts
                 chart["VLines"]["E" + str(sid)] = {}
                 chart["VLines"]["E" + str(sid)] = chart["Stages"][sid]["VLines"]["E" + str(sid)]   # JSON Charts
                 chart["Labels"]["E" + str(sid)] = {}
