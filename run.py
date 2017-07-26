@@ -595,7 +595,7 @@ def setup_master(node, slaves_ip):
         stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")     
         stdout, stderr, status = ssh_client.run("git clone -b plot-on-server --single-branch " + 
                                                 "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
-        """Cloning xSpark-benchmark on cspark master"""
+        """Clone xSpark-benchmark on cspark master"""
         print("Cloning xSpark-benchmark tool on cspark master:\n" + stdout)
         
         if not "id_rsa" in ssh_client.listdir("/home/ubuntu/"):
@@ -620,7 +620,7 @@ def setup_master(node, slaves_ip):
         
         stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
                                                 "sudo pip3 install -r requirements.txt")
-        """Installing xSpark-benchmark tool requirements"""
+        """Install xSpark-benchmark tool requirements"""
         print("Installing xSpark-benchmark tool requirements:\n" + stdout)
         
     return master_ip, node
@@ -848,7 +848,10 @@ def run_benchmark(nodes):
             output_folder = "home/ubuntu/spark-bench/num/"
 
         # RODO: DOWNLOAD LOGS
-        if PLOT_ON_SERVER:
+        if PLOT_ON_SERVER == 1:
+            for file in os.listdir("./"):
+                if file.endswith(".pickle"):
+                    os.remove(file)
             with open('nodes_ids.pickle', 'wb') as f:
                 pickle.dump([n.id for n in [i for i in nodes[:end_index]]], f)       
             ssh_client.put(localpath="nodes_ids.pickle", remotepath="/home/ubuntu/xSpark-bench/nodes_ids.pickle")
