@@ -25,7 +25,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     CONFIG_DICT, HADOOP_HOME,\
     SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL, CORE_ALLOCATION,DEADLINE_ALLOCATION,\
     UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC, \
-    PLOT_ON_SERVER, INSTALL_PYTHON3
+    PLOT_ON_SERVER, INSTALL_PYTHON3, AZ_PUB_KEY_PATH
 
 from config import PRIVATE_KEY_PATH, PRIVATE_KEY_NAME, TEMPORARY_STORAGE, PROVIDER
 
@@ -584,8 +584,8 @@ def setup_master(node, slaves_ip):
             'export SPARK_HOME="{d}" && {d}sbin/start-master.sh -h {0}'.format(
                 master_ip, d=SPARK_HOME))
 
-    # PLOT GENERATIONON MASTER
-    if PLOT_ON_SERVER == 1:
+    # SETUP CSPARK WORK MASTER FOR PLOT GENERATION
+    if HDFS_MASTER != "" and PLOT_ON_SERVER == 1:
         if INSTALL_PYTHON3 == 1:
             stdout, stderr, status = ssh_client.run("sudo apt-get update && sudo apt-get install -y python3-pip && " +
                                                     "sudo apt-get build-dep -y matplotlib && "+
@@ -862,19 +862,19 @@ def run_benchmark(nodes):
                 pickle.dump(master_ip, f)       
             ssh_client.put(localpath="master_ip.pickle", remotepath="/home/ubuntu/xSpark-bench/master_ip.pickle")        
             stdout, stderr, status = ssh_client.run("cd xSpark-bench && sudo python3 run_on_server.py")
-            print("PLOT_ON_SERVER:\n" + stdout)
+            print("Plotting on server:\n" + stdout)
             master_node = [i for i in nodes if get_ip(i) == master_ip][0]
             print("Downloading plots from server...")
             for dir in ssh_client.listdir("xSpark-bench/home/ubuntu/spark-bench/num/"):
                 print("folder: " + dir)
                 try:
                     os.makedirs(output_folder + dir)
+                    for file in ssh_client.listdir("xSpark-bench/home/ubuntu/spark-bench/num/" + dir + "/"):
+                        output_file = (output_folder + dir + "/" + file)
+                        print("file: " + output_file)
+                        ssh_client.get(remotepath="xSpark-bench/" + output_file, localpath=output_file)
                 except FileExistsError:
-                    print("Output folder already exists")
-                for file in ssh_client.listdir("xSpark-bench/home/ubuntu/spark-bench/num/" + dir + "/"):
-                    output_file = (output_folder + "/" + file)
-                    print("file: " + output_file)
-                    ssh_client.get(remotepath="xSpark-bench/" + output_file, localpath=output_file)
+                    print("Output folder already exists: no files downloaded")    
         else:    
             output_folder = log.download(logfolder, [i for i in nodes[:end_index]], master_ip,
                                          output_folder, CONFIG_DICT)
