@@ -592,7 +592,7 @@ def setup_master(node, slaves_ip):
                                                     "sudo apt-get install -y build-essential libssl-dev libffi-dev python-dev python3-dev")
             """Install python3 on cSpark master"""
             print("Installing Python3 on cspark master:\n" + stdout)
-                
+        stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")     
         stdout, stderr, status = ssh_client.run("git clone -b plot-on-server --single-branch " + 
                                                 "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
         """Cloning xSpark-benchmark on cspark master"""
