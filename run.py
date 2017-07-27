@@ -608,20 +608,26 @@ def setup_master(node, slaves_ip):
                 ssh_client.run("chmod 400 /home/ubuntu/id_rsa.pub")
         """load public key to home directory"""
         
+        ssh_client.run("sudo rm /home/ubuntu/credentials.py")
         ssh_client.put(localpath="credentials.py", remotepath="/home/ubuntu/xSpark-bench/credentials.py")
-        """load credentials"""
+        """load credentials.py"""
+        
+        ssh_client.run("sudo rm /home/ubuntu/config.py")
+        ssh_client.put(localpath="config.py", remotepath="/home/ubuntu/xSpark-bench/config.py")
+        """Load config.py"""
         
         stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
                                                 "sed -i -r 's%^KEY_PAIR_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%KEY_PAIR_PATH = \"/home/ubuntu/\" + %' config.py && " +
-                                                "sed -i -r 's%^AZ_PRV_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PRV_KEY_PATH = \"/home/ubuntu/\" + %' config.py && "+
-                                                "sed -i -r 's%^AZ_PUB_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PUB_KEY_PATH = \"/home/ubuntu/\" + %' config.py")
-        """define private and public key paths in config.py"""
-        print("Defining private and public key paths in config.py:\n" + stdout)
+                                                "sed -i -r 's%^AZ_PRV_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PRV_KEY_PATH = \"/home/ubuntu/\" + %' config.py && " +
+                                                "sed -i -r 's%^AZ_PUB_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PUB_KEY_PATH = \"/home/ubuntu/\" + %' config.py && " +
+                                                "cat config.py | grep -e ^KEY_PAIR_PATH -e ^AZ_PRV_KEY_PATH -e ^AZ_PUB_KEY_PATH")
+        """re-define private and public key paths"""
+        print("Re-defining private and public key paths in config.py\n" + stdout)
         
         stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
                                                 "sudo pip3 install -r requirements.txt")
         """Install xSpark-benchmark tool requirements"""
-        print("Installing xSpark-benchmark tool requirements:\n" + stdout)
+        print("Installing xSpark-benchmark tool requirements\n" + stdout)
         
     return master_ip, node
 

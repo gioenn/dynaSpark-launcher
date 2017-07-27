@@ -64,10 +64,6 @@ with open('master_ip.pickle', 'rb') as f:
 nodes = [n for n in nodes if n.id in nodes_ids]
 end_index = min(len(nodes), MAX_EXECUTOR + 1)
 # DOWNLOAD LOGS
-
-"""start debug code"""
-print("end_index:"+str(end_index))
-print("debug run_on_server: output_folder=" +output_folder+"; logfolder="+logfolder+"; master_ip="+str(master_ip))
 output_folder = log.download(logfolder, [i for i in nodes[:end_index]], master_ip,
                              output_folder, CONFIG_DICT)
 
