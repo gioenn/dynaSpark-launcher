@@ -617,9 +617,12 @@ def setup_master(node, slaves_ip):
         """Load config.py"""
         
         stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
-                                                "sed -i -r 's%^KEY_PAIR_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%KEY_PAIR_PATH = \"/home/ubuntu/\" + %' config.py && " +
-                                                "sed -i -r 's%^AZ_PRV_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PRV_KEY_PATH = \"/home/ubuntu/\" + %' config.py && " +
-                                                "sed -i -r 's%^AZ_PUB_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PUB_KEY_PATH = \"/home/ubuntu/\" + %' config.py && " +
+                                                "sed -i -r 's%^KEY_PAIR_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%KEY_PAIR_PATH = \"/home/ubuntu/\" + %' config.py")
+        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
+                                                "sed -i -r 's%^AZ_PRV_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PRV_KEY_PATH = \"/home/ubuntu/\" + %' config.py")
+        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
+                                                "sed -i -r 's%^AZ_PUB_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PUB_KEY_PATH = \"/home/ubuntu/\" + %' config.py")
+        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
                                                 "cat config.py | grep -e ^KEY_PAIR_PATH -e ^AZ_PRV_KEY_PATH -e ^AZ_PUB_KEY_PATH")
         """re-define private and public key paths"""
         print("Re-defining private and public key paths in config.py\n" + stdout)
