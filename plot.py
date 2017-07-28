@@ -454,11 +454,16 @@ def plot_worker(app_id, app_info, worker_log, worker_dict, config, first_ts_work
     ax1.patch.set_visible(False)
     # tbd equivalent Matlab code #Matlab 
     folder_split = worker_log.split("/")
-    name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
-           folder_split[-1].split("-")[-1].replace(".out", "")
+    #name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
+    #       folder_split[-1].split("-")[-1].replace(".out", "")
     delimiter = "/"
     if platform == "win32":
+        name = folder_split[-3].lower() + "-worker-" + folder_split[-2].replace("%", "") + "-" + \
+                folder_split[-1].split("-")[-1].replace(".out", "")
         delimiter = "\\"
+    else:
+        name = folder_split[-4].lower() + "-worker-" + folder_split[-3].replace("%", "") + "-" + \
+                folder_split[-1].split("-")[-1].replace(".out", "")
     folder = "/".join(worker_log.split(delimiter)[:-1])
     labels = ax1.get_xticklabels()
     plt.setp(labels, rotation=45)
