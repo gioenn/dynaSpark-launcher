@@ -878,8 +878,7 @@ def run_benchmark(nodes):
                 try:
                     os.makedirs(output_folder + dir)
                     for file in ssh_client.listdir("xSpark-bench/home/ubuntu/spark-bench/num/" + dir + "/"):
-                        #output_file = (output_folder + dir + "/" + file)
-                        output_file = (output_folder + dir + file)
+                        output_file = (output_folder + dir + "/" + file)
                         print("file: " + output_file)
                         ssh_client.get(remotepath="xSpark-bench/" + output_file, localpath=output_file)
                 except FileExistsError:
