@@ -615,19 +615,15 @@ def setup_master(node, slaves_ip):
         ssh_client.run("sudo rm /home/ubuntu/config.py")
         ssh_client.put(localpath="config.py", remotepath="/home/ubuntu/xSpark-bench/config.py")
         """Load config.py"""
-        
-        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
-                                                "sed -i -r 's%^KEY_PAIR_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%KEY_PAIR_PATH = \"/home/ubuntu/\" + %' config.py")
-        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
-                                                "sed -i -r 's%^AZ_PRV_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PRV_KEY_PATH = \"/home/ubuntu/\" + %' config.py")
-        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
-                                                "sed -i -r 's%^AZ_PUB_KEY_PATH( *= *[\"\x27].*[\"\x27]) *\+ *%AZ_PUB_KEY_PATH = \"/home/ubuntu/\" + %' config.py")
-        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
-                                                "cat config.py | grep -e ^KEY_PAIR_PATH -e ^AZ_PRV_KEY_PATH -e ^AZ_PUB_KEY_PATH")
-        """re-define private and public key paths"""
+
+        stdout, stderr, status = ssh_client.run("""sed -i -r 's{^KEY_PAIR_PATH( *= *["'"'"'].*["'"'"']) *\+ *{KEY_PAIR_PATH = \"/home/ubuntu/\" + {' /home/ubuntu/xSpark-bench/config.py""")
+        stdout, stderr, status = ssh_client.run("""sed -i -r 's{^AZ_PRV_KEY_PATH( *= *["'"'"'].*["'"'"']) *\+ *{AZ_PRV_KEY_PATH = \"/home/ubuntu/\" + {' /home/ubuntu/xSpark-bench/config.py""")
+        stdout, stderr, status = ssh_client.run("""sed -i -r 's{^AZ_PUB_KEY_PATH( *= *["'"'"'].*["'"'"']) *\+ *{AZ_PUB_KEY_PATH = \"/home/ubuntu/\" + {' /home/ubuntu/xSpark-bench/config.py""")
+        stdout, stderr, status = ssh_client.run("cat /home/ubuntu/xSpark-bench/config.py | grep -e ^KEY_PAIR_PATH -e ^AZ_PRV_KEY_PATH -e ^AZ_PUB_KEY_PATH")
+        """Re-define private and public key paths"""
         print("Re-defining private and public key paths in config.py\n" + stdout)
         
-        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench &&" +
+        stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-bench && " +
                                                 "sudo pip3 install -r requirements.txt")
         """Install xSpark-benchmark tool requirements"""
         print("Installing xSpark-benchmark tool requirements\n" + stdout)
@@ -882,7 +878,8 @@ def run_benchmark(nodes):
                 try:
                     os.makedirs(output_folder + dir)
                     for file in ssh_client.listdir("xSpark-bench/home/ubuntu/spark-bench/num/" + dir + "/"):
-                        output_file = (output_folder + dir + "/" + file)
+                        #output_file = (output_folder + dir + "/" + file)
+                        output_file = (output_folder + dir + file)
                         print("file: " + output_file)
                         ssh_client.get(remotepath="xSpark-bench/" + output_file, localpath=output_file)
                 except FileExistsError:

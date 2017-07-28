@@ -1210,7 +1210,7 @@ def plot(folder):
         for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
             worker_dict = load_worker_data(worker_log, cpu_log, config)
             workers_dict[worker_log] = worker_dict
-
+            print("worker_log: "+worker_log) # **********************debug line***************************************
         first_ts_worker = -1.0
         for worker_log, cpu_log in zip(sorted(worker_logs), sorted(cpu_logs)):
             for app_id in app_info:
