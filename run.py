@@ -25,7 +25,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     CONFIG_DICT, HADOOP_HOME,\
     SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL, CORE_ALLOCATION,DEADLINE_ALLOCATION,\
     UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC, \
-    PLOT_ON_SERVER, INSTALL_PYTHON3, AZ_PUB_KEY_PATH
+    RUN_ON_SERVER, INSTALL_PYTHON3, AZ_PUB_KEY_PATH
 
 from config import PRIVATE_KEY_PATH, PRIVATE_KEY_NAME, TEMPORARY_STORAGE, PROVIDER
 
@@ -584,8 +584,8 @@ def setup_master(node, slaves_ip):
             'export SPARK_HOME="{d}" && {d}sbin/start-master.sh -h {0}'.format(
                 master_ip, d=SPARK_HOME))
 
-    # SETUP CSPARK WORK MASTER FOR PLOT GENERATION
-    if HDFS_MASTER != "" and PLOT_ON_SERVER == 1:
+    # SETUP CSPARKWORK MASTER FOR PROCESSING LOGS ON SERVER
+    if HDFS_MASTER != "" and RUN_ON_SERVER == 1:
         if INSTALL_PYTHON3 == 1:
             stdout, stderr, status = ssh_client.run("sudo apt-get update && sudo apt-get install -y python3-pip && " +
                                                     "sudo apt-get build-dep -y matplotlib && "+
@@ -853,7 +853,7 @@ def run_benchmark(nodes):
             output_folder = "home/ubuntu/spark-bench/num/"
 
         # RODO: DOWNLOAD LOGS
-        if PLOT_ON_SERVER == 1:
+        if RUN_ON_SERVER == 1:
             for file in os.listdir("./"):
                 if file.endswith(".pickle"):
                     os.remove(file)

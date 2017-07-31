@@ -17,6 +17,7 @@ from util.utils import timing, string_to_datetime
 from util.ssh_client import sshclient_from_node
 
 import run
+from config import RUN_ON_SERVER
 
 def download_master(node, output_folder, log_folder, config):
     """Download log from master instance
@@ -42,11 +43,16 @@ def download_master(node, output_folder, log_folder, config):
         except FileExistsError:
             print("Output folder already exists")
         input_file = config["Spark"]["SparkHome"] + "spark-events/" + file
-        output_bz = input_file + ".bz"
-        print("Bzipping event log...")
-        ssh_client.run("pbzip2 -9 -p" + str(
-            config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz)
-        ssh_client.get(remotepath=output_bz, localpath=output_folder + "/" + file + ".bz")
+        local_file = file
+        if not RUN_ON_SERVER:
+            output_file = input_file + ".bz"
+            local_file += ".bz"
+            print("Bzipping event log...")
+            ssh_client.run("pbzip2 -9 -p" + str(
+                config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_file)
+        else:
+            ssh_client.run("cp input_file output_file")
+        ssh_client.get(remotepath=output_file, localpath=output_folder + "/" + local_file)
     for file in ssh_client.listdir(log_folder):
         print(file)
         if file != "bench-report.dat":

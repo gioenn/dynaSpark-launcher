@@ -79,7 +79,7 @@ KILL_JAVA = 1
 """Kill every java application on the cluster"""
 NUM_RUN = 1
 """Number of run to repeat the benchmark"""
-PLOT_ON_SERVER = 1
+RUN_ON_SERVER = 1
 """Download benchmark logs and generate plots on server """
 INSTALL_PYTHON3 = 1
 """Install Pyhton3 on cspark master"""
@@ -267,7 +267,7 @@ else:
 BENCH_CONF[BENCHMARK_PERF[0] if len(BENCHMARK_PERF) > 0 else BENCHMARK_BENCH[0]][
     "NumTrials"] = BENCH_NUM_TRIALS
 
-# Terminate istance after benchmark
+# Terminate instance after benchmark
 TERMINATE = 0
 
 # HDFS
