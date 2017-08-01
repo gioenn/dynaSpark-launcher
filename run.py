@@ -8,6 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import log
+import processing
 import metrics
 import plot
 import pickle
@@ -886,7 +887,8 @@ def run_benchmark(nodes):
         else:    
             output_folder = log.download(logfolder, [i for i in nodes[:end_index]], master_ip,
                                          output_folder, CONFIG_DICT)
-    
+            processing.main()
+            
             write_config(output_folder)
     
             # PLOT LOGS

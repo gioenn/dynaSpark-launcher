@@ -1,6 +1,7 @@
 import pickle
 import run
 import log
+import processing
 import metrics
 import plot
 from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC_TIME, \
@@ -66,6 +67,8 @@ end_index = min(len(nodes), MAX_EXECUTOR + 1)
 # DOWNLOAD LOGS
 output_folder = log.download(logfolder, [i for i in nodes[:end_index]], master_ip,
                              output_folder, CONFIG_DICT)
+
+processing.main()
 
 run.write_config(output_folder)
 
