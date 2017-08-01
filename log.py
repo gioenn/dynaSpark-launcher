@@ -56,7 +56,8 @@ def download_master(node, output_folder, log_folder, config):
             ssh_client.get(remotepath=output_bz, localpath=output_folder + "/" + file + ".bz")
             if most_recent_events_logfile < output_bz:
                 most_recent_events_logfile = output_bz
-        ssh_client.get(remotepath=most_recent_events_logfile, localpath="input_logs/" + most_recent_events_logfile)
+        print("most_recent_events_logfile: " + most_recent_events_logfile)
+        ssh_client.get(remotepath=most_recent_events_logfile, localpath="xSpark-bench/input_logs/" + most_recent_events_logfile)
     for file in ssh_client.listdir(log_folder):
         print(file)
         if file != "bench-report.dat":
