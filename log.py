@@ -37,6 +37,8 @@ def download_master(node, output_folder, log_folder, config):
         print("LOG FOLDER: " + log_folder)
         print("OUTPUT FOLDER: " + output_folder)
         app_id = file
+        if most_recent_events_logfile < file:
+                most_recent_events_logfile = file
         if log_folder != output_folder:
             output_folder = output_folder + app_id
         try:
@@ -45,17 +47,15 @@ def download_master(node, output_folder, log_folder, config):
             print("Output folder already exists")
         input_file = config["Spark"]["SparkHome"] + "spark-events/" + file
         if RUN_ON_SERVER:
-            ssh_client.get(remotepath=input_file, localpath=output_folder + "/" + file)
-            if most_recent_events_logfile < file:
-                most_recent_events_logfile = file 
+            ssh_client.get(remotepath=input_file, localpath=output_folder + "/" + file) 
         else:
             output_bz = input_file + ".bz"
             print("Bzipping event log...")
             ssh_client.run("pbzip2 -9 -p" + str(
                 config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz)
             ssh_client.get(remotepath=output_bz, localpath=output_folder + "/" + file + ".bz")
-            if most_recent_events_logfile < file  + ".bz":
-                most_recent_events_logfile = file  + ".bz"
+    if not RUN_ON_SERVER:
+        most_recent_events_logfile += ".bz" 
     print("most_recent_events_logfile: " + most_recent_events_logfile)
     ssh_client.get(remotepath=output_folder + "/" + most_recent_events_logfile, localpath="xSpark-bench/input_logs/" + most_recent_events_logfile)
     for file in ssh_client.listdir(log_folder):
