@@ -4,6 +4,7 @@ import log
 import processing
 import metrics
 import plot
+import os
 import shutil
 from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC_TIME, \
     KEY_PAIR_PATH, \
