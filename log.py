@@ -38,11 +38,11 @@ def download_master(node, output_folder, log_folder, config):
         print("LOG FOLDER: " + log_folder)
         print("OUTPUT FOLDER: " + output_folder)
         app_id = file
+        if log_folder != output_folder:
+            output_folder = output_folder + app_id
         if most_recent_events_logfile < file:
                 most_recent_events_logfile = file
                 most_recent_events_logfile_folder = output_folder
-        if log_folder != output_folder:
-            output_folder = output_folder + app_id
         try:
             os.makedirs(output_folder)
         except FileExistsError:
