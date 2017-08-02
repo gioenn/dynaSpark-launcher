@@ -854,7 +854,7 @@ def run_benchmark(nodes):
             output_folder = "home/ubuntu/spark-bench/num/"
 
         # RODO: DOWNLOAD LOGS
-        if RUN_ON_SERVER == 1:
+        if RUN_ON_SERVER:
             for file in os.listdir("./"):
                 if file.endswith(".pickle"):
                     os.remove(file)

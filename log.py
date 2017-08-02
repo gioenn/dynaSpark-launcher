@@ -32,6 +32,7 @@ def download_master(node, output_folder, log_folder, config):
 
     app_id = ""
     most_recent_events_logfile = ""
+    most_recent_events_logfile_folder = ""
     for file in ssh_client.listdir("" + config["Spark"]["SparkHome"] + "spark-events/"):
         print("BENCHMARK: " + file)
         print("LOG FOLDER: " + log_folder)
@@ -39,6 +40,7 @@ def download_master(node, output_folder, log_folder, config):
         app_id = file
         if most_recent_events_logfile < file:
                 most_recent_events_logfile = file
+                most_recent_events_logfile_folder = output_folder
         if log_folder != output_folder:
             output_folder = output_folder + app_id
         try:
@@ -56,8 +58,8 @@ def download_master(node, output_folder, log_folder, config):
             ssh_client.get(remotepath=output_bz, localpath=output_folder + "/" + file + ".bz")
     if not RUN_ON_SERVER:
         most_recent_events_logfile += ".bz" 
-    print("most_recent_events_logfile: " + most_recent_events_logfile)
-    ssh_client.get(remotepath=output_folder + "/" + most_recent_events_logfile, localpath="xSpark-bench/input_logs/" + most_recent_events_logfile)
+    print("most_recent_events_logfile: " + most_recent_events_logfile_folder + "/" + most_recent_events_logfile)
+    ssh_client.get(remotepath=most_recent_events_logfile_folder + "/" + most_recent_events_logfile, localpath="xSpark-bench/input_logs/" + most_recent_events_logfile)
     for file in ssh_client.listdir(log_folder):
         print(file)
         if file != "bench-report.dat":
