@@ -4,6 +4,7 @@ import log
 import processing
 import metrics
 import plot
+import shutil
 from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC_TIME, \
     KEY_PAIR_PATH, \
     UPDATE_SPARK, \
@@ -68,7 +69,9 @@ end_index = min(len(nodes), MAX_EXECUTOR + 1)
 output_folder = log.download(logfolder, [i for i in nodes[:end_index]], master_ip,
                              output_folder, CONFIG_DICT)
 
-processing.main()
+processing.main()                                                                   # Profiling
+for filename in os.listdir('./output_json/'):                                       # Profilimg
+        shutil.copy('./output_json/' + filename, output_folder + "/" + filename)    # Profiling
 
 run.write_config(output_folder)
 

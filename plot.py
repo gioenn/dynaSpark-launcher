@@ -1239,7 +1239,11 @@ def plot(folder):
     for filename in os.listdir(source):                             # JSON Charts
         if filename.endswith('.m'):                                 # JSON Charts
             shutil.copy(source+filename, folder+filename)           # JSON Charts
-            
+    
+    # moved to run.py and run_on_server.py
+    # for filename in os.listdir('./output_json/'):                   # Profiling on server
+    #     shutil.copy('./output_json/' + filename, folder + filename)     # Profiling on server
+               
     rename_files(folder)
 
 def print_cpu(app_id, app_info, worker_log, worker_dict, config, folder, first_ts_worker):

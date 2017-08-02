@@ -17,6 +17,7 @@ from util.utils import timing, string_to_datetime
 from util.ssh_client import sshclient_from_node
 
 import run
+import shutil
 from config import RUN_ON_SERVER
 
 def download_master(node, output_folder, log_folder, config):
@@ -57,9 +58,10 @@ def download_master(node, output_folder, log_folder, config):
                 config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz)
             ssh_client.get(remotepath=output_bz, localpath=output_folder + "/" + file + ".bz")
     if not RUN_ON_SERVER:
-        most_recent_events_logfile += ".bz" 
+        most_recent_events_logfile += ".bz"
     print("most_recent_events_logfile: " + most_recent_events_logfile_folder + "/" + most_recent_events_logfile)
-    ssh_client.get(remotepath=most_recent_events_logfile_folder + "/" + most_recent_events_logfile, localpath="input_logs/" + most_recent_events_logfile)
+    # ssh_client.get(remotepath=most_recent_events_logfile_folder + "/" + most_recent_events_logfile, localpath="input_logs/" + most_recent_events_logfile)
+    shutil.copy(most_recent_events_logfile_folder + "/" + most_recent_events_logfile, "input_logs/" + most_recent_events_logfile)
     for file in ssh_client.listdir(log_folder):
         print(file)
         if file != "bench-report.dat":
