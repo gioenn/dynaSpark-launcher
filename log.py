@@ -54,7 +54,7 @@ def download_master(node, output_folder, log_folder, config):
             input_file = config["Spark"]["SparkHome"] + "spark-events/" + file
             if RUN_ON_SERVER:
                 # ssh_client.get(remotepath=input_file, localpath=output_folder + "/" + file)
-                shutil.copy("../" + input_file, localpath=output_folder + "/" + file)
+                shutil.copy(input_file, output_folder + "/" + file)
                 previous_file = output_folder + "/" + file
             else:
                 output_bz = input_file + ".bz"
