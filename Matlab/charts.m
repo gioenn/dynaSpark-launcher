@@ -12,7 +12,9 @@ TEXTFIT_ANNOTATION_LABEL_PLACEMENT = 1; % Automatic placement of adjacent labels
                                         % properties text editor (no "drag&drop" manual editing), 
                                         % and aided interactive click-try-&-chose label placement loop, 
                                         % keyboard 's' to skip current label, 'n' to skip current figure, 
-                                        % 'return' to confirm last mouse click 'try' placement                                    
+                                        % 'return' to confirm last mouse click 'try' placement
+ZOOMABLE_TEXT_LABELS = 1;
+
 Grey=[0.5   0.5   0.5];
 CornflowerBlue=[0.3906    0.5820    0.9258];
 LightSteelBlue=[0.6875    0.7656    0.8672];
@@ -269,6 +271,9 @@ for cn = 1:length(chart.Charts)
                 %[x, y] = nfu2ds(hax(1), xg, yg);
                 set(ah,'X',x); % the location in data units
                 set(ah,'Y',y); % the location in data units
+                %axes('position', [200, 10, 205, 12]);
+                %axes('position', [x(1), y(1), x(2), y(2)]);                
+                %imshow(im);
                 %set(ah,'HeadStyle','ellipse');
                 set(ah,'HeadStyle','none');
                 set(ah,'HeadSize', 3);
@@ -284,7 +289,16 @@ for cn = 1:length(chart.Charts)
                 end
                 %% DaVinci is much better - license to use arrows is free
                 davinci( 'arrow', 'X', x, 'Y', y, 'Head.Length', ahl, 'Head.Width', ahw);    % Draw an arrow.
+                %axis(axis);
+                %ar=arrow([x(1), y(1)],[x(2),y(2)]);    % Draw an arrow.
                 uistack(ah,'top');
+                %uistack(ar,'top');
+                if ZOOMABLE_TEXT_LABELS
+                    im = image(str2im(ah.String, [1 0 0 5], 'back', 'y'));
+                    im.XData=[x(1)-10 x(1)];
+                    im.YData=[y(1)+3.0 y(1)];
+                    delete(ah)
+                end
             end                   
             %delete(textfit_h);
         else
