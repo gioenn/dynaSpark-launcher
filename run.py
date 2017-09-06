@@ -504,6 +504,12 @@ def setup_master(node, slaves_ip):
         # NO PROMPT
         ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./"+ SPARK_PERF_FOLDER +"/config/config.py")
 
+        if len(BENCHMARK_PERF)>0 and SPARK_PERF_FOLDER == "spark-perf-gioenn":
+            print("   Setting up skewed test")
+            ssh_client.run("""sed -i '164s{.*{OptionSet("skew", ["""+str(BENCH_CONF[BENCHMARK_PERF[0]]["skew"])+"""]){' ./""" + SPARK_PERF_FOLDER + "/config/config.py")
+            ssh_client.run("""sed -i '185s{.*{OptionSet("unique-keys",["""+str(BENCH_CONF[BENCHMARK_PERF[0]]["unique-keys"])+"""], False),{' ./""" + SPARK_PERF_FOLDER + "/config/config.py")
+            ssh_client.run("""sed -i '170s{.*{OptionSet("num-partitions", ["""+str(BENCH_CONF[BENCHMARK_PERF[0]]["num-partitions"])+"""], can_scale=False),{' ./""" + SPARK_PERF_FOLDER + "/config/config.py")
+            ssh_client.run("""sed -i '172s{.*{OptionSet("reduce-tasks", ["""+str(BENCH_CONF[BENCHMARK_PERF[0]]["reduce-tasks"])+"""], can_scale=False),{' ./""" + SPARK_PERF_FOLDER + "/config/config.py")
         # CHANGE RAM EXEC
         ssh_client.run(
             """sed -i '146s{.*{    JavaOptionSet("spark.executor.memory", [""" + RAM_EXEC + """]),{' ./"""+ SPARK_PERF_FOLDER +"""/config/config.py""")
@@ -539,8 +545,8 @@ def setup_master(node, slaves_ip):
 
     #if HDFS_MASTER != "":
         ssh_client.run(
-            """sed -i  '50s%.*%HDFS_URL = "hdfs://{0}:9000/test/"%' ./"""+ SPARK_PERF_FOLDER +"""/config/config.py""".format(
-                HDFS_MASTER))
+            """sed -i  '50s%.*%HDFS_URL = "hdfs://{0}:9000/test/"%' ./{1}/config/config.py""".format(
+                HDFS_MASTER, SPARK_PERF_FOLDER))
         ssh_client.run(
             """sed -i  '10s%.*%HDFS_URL="hdfs://{0}:9000"%' ./spark-bench/conf/env.sh""".format(
                 HDFS_MASTER))

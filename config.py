@@ -192,32 +192,55 @@ if len(BENCHMARK_PERF) + len(BENCHMARK_BENCH) > 1 or len(BENCHMARK_PERF) + len(
 # config: (line, value)
 BENCH_CONF = {
     "scala-agg-by-key": {
-        "ScaleFactor": 5
+        "ScaleFactor": 25,
+        "skew": 3,
+        "num-partitions": 128,
+        "unique-keys": 128,
     },
     "scala-agg-by-key-int": {
-        "ScaleFactor": 5
+        "ScaleFactor": 1,
+        "skew": 3,
+        "num-partitions": 20,
+        "unique-keys": 20,
     },
     "scala-agg-by-key-naive": {
-        "ScaleFactor": 5
+        "ScaleFactor": 5,
+        "skew": 2,
+        "num-partitions": 1000,
+        "unique-keys": 32,
+        "reduce-tasks": 32,
     },
     "scala-sort-by-key": {
-        "ScaleFactor": 25
+        "ScaleFactor": 25,
+        "skew": 0,
+        "num-partitions": 20,
+        "unique-keys": 20,
     },
     "scala-sort-by-key-int": {
-        "ScaleFactor": 25
+        "ScaleFactor": 25,
+        "skew": 0,
+        "num-partitions": 20,
+        "unique-keys": 20,
     },
     "scala-count": {
-        "ScaleFactor": 25
+        "ScaleFactor": 25,
+        "skew": 0,
+        "num-partitions": 20,
+        "unique-keys": 20,
     },
     "scala-count-w-fltr": {
-        "ScaleFactor": 25
+        "ScaleFactor": 25,
+        "skew": 0,
+        "num-partitions": 20,
+        "unique-keys": 20,
     },
     "PageRank": {
         "NUM_OF_PARTITIONS": (3, 1000),
         # "NUM_OF_PARTITIONS": (3, 10),
         "numV": (2, 3000000),  # 7000000
-        # "numV": (2, 50000),
+        # "numV": (2, 10000),
         "mu": (4, 3.0),
+        # "mu": (4, 2.0),
         "MAX_ITERATION": (8, 1),
         "NumTrials": 1
     },
@@ -302,7 +325,44 @@ if(HEURISTIC == Heuristic.FIXED):
     assert (len(STAGE_ALLOCATION) == len(DEADLINE_ALLOCATION))
     assert (len(STAGE_ALLOCATION) == len(CORE_ALLOCATION))
 
-GIT_BRANCH = "core_tasks_antiwindup"
+
+
+# Line needed for enabling/disabling benchmark in spark-perf config.py
+BENCH_LINES = {"scala-agg-by-key": ["225", "226"],
+               "scala-agg-by-key-int": ["229", "230"],
+               "scala-agg-by-key-naive": ["232", "233"],
+               "scala-sort-by-key": ["236", "237"],
+               "scala-sort-by-key-int": ["239", "240"],
+               "scala-count": ["242", "243"],
+               "scala-count-w-fltr": ["245", "246"]}
+
+# NEW
+PRIVATE_KEY_PATH = KEY_PAIR_PATH if PROVIDER == "AWS_SPOT" \
+    else AZ_PRV_KEY_PATH if PROVIDER == "AZURE" \
+    else None
+PRIVATE_KEY_NAME = DATA_AMI[REGION]["keypair"] + ".pem" if PROVIDER == "AWS_SPOT" \
+    else AZ_KEY_NAME if PROVIDER == "AZURE" \
+    else None
+TEMPORARY_STORAGE = "/dev/xvdb" if PROVIDER == "AWS_SPOT" \
+    else "/dev/sdb1" if PROVIDER == "AZURE" \
+    else None
+
+# Print what will run
+print("Schedule : "
+      + ("LAUNCH, " if (NUM_INSTANCE > 0) else "")
+      + ("REBOOT, " if (REBOOT) else "")
+      + ("RUN( " if (RUN) else "")
+      + ("HDFS )" if (HDFS_MASTER == "" and RUN) else "SPARK )" if (RUN) else "")
+      + ("TERMINATE" if (TERMINATE) else ""))
+
+UPDATE_SPARK_BENCH = False
+UPDATE_SPARK_PERF = False
+GIT_BRANCH="xSpark-1.0"
+# GIT_BRANCH = "core_tasks_antiwindup"
+
+# SPARK_PERF_FOLDER = "spark-perf-gioenn"
+SPARK_PERF_FOLDER = "spark-perf"
+
 # CONFIG JSON
 CONFIG_DICT = {
     "Provider": PROVIDER,
@@ -366,36 +426,5 @@ CONFIG_DICT = {
     "HDFS": bool(HDFS),
 }
 
-# Line needed for enabling/disabling benchmark in spark-perf config.py
-BENCH_LINES = {"scala-agg-by-key": ["225", "226"],
-               "scala-agg-by-key-int": ["229", "230"],
-               "scala-agg-by-key-naive": ["232", "233"],
-               "scala-sort-by-key": ["236", "237"],
-               "scala-sort-by-key-int": ["239", "240"],
-               "scala-count": ["242", "243"],
-               "scala-count-w-fltr": ["245", "246"]}
-
-# NEW
-PRIVATE_KEY_PATH = KEY_PAIR_PATH if PROVIDER == "AWS_SPOT" \
-    else AZ_PRV_KEY_PATH if PROVIDER == "AZURE" \
-    else None
-PRIVATE_KEY_NAME = DATA_AMI[REGION]["keypair"] + ".pem" if PROVIDER == "AWS_SPOT" \
-    else AZ_KEY_NAME if PROVIDER == "AZURE" \
-    else None
-TEMPORARY_STORAGE = "/dev/xvdb" if PROVIDER == "AWS_SPOT" \
-    else "/dev/sdb1" if PROVIDER == "AZURE" \
-    else None
-
-# Print what will run
-print("Schedule : "
-      + ("LAUNCH, " if (NUM_INSTANCE > 0) else "")
-      + ("REBOOT, " if (REBOOT) else "")
-      + ("RUN( " if (RUN) else "")
-      + ("HDFS )" if (HDFS_MASTER == "" and RUN) else "SPARK )" if (RUN) else "")
-      + ("TERMINATE" if (TERMINATE) else ""))
-
-UPDATE_SPARK_BENCH = False
-UPDATE_SPARK_PERF = False
-
-
-SPARK_PERF_FOLDER = "spark-perf-mod"
+if len(BENCHMARK_PERF) > 0 and SPARK_PERF_FOLDER == "spark-perf-gioenn":
+    CONFIG_DICT["SparkPerf"] = BENCH_CONF[BENCHMARK_PERF[0]]
