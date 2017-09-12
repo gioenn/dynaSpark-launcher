@@ -115,11 +115,11 @@ LOCALITY_WAIT_PROCESS = 1
 LOCALITY_WAIT_RACK = 0
 CPU_TASK = 1
 RAM_DRIVER = "100g"
-RAM_EXEC = '"100g"' if "r3" not in INSTANCE_TYPE else '"100g"'
-OFF_HEAP = False
+RAM_EXEC = '"100g"' #if "r3" not in INSTANCE_TYPE else '"100g"'
+OFF_HEAP = True
 if OFF_HEAP:
-    RAM_EXEC = '"30g"' if "r3" not in INSTANCE_TYPE else '"70g"'
-OFF_HEAP_BYTES = 30720000000
+    RAM_EXEC = '"30g"' #if "r3" not in INSTANCE_TYPE else '"70g"'
+OFF_HEAP_BYTES = 70000000000
 
 # Core Config
 CORE_VM = 16
@@ -161,7 +161,7 @@ CPU_PERIOD = 100000
 # BENCHMARK
 RUN = 1
 SYNC_TIME = 1
-PREV_SCALE_FACTOR = 0
+PREV_SCALE_FACTOR = 1000
 """*Important Settings* if it is equals to SCALE_FACTOR no need to generate new data on HDFS"""
 BENCH_NUM_TRIALS = 1
 
@@ -177,8 +177,8 @@ BENCHMARK_PERF = [
 """Spark-perf benchmark to execute"""
 
 BENCHMARK_BENCH = [
-    # "PageRank",
-    "DecisionTree",
+    "PageRank",
+    # "DecisionTree",
     # "KMeans",
     # "SVM"
 ]
@@ -404,7 +404,9 @@ PROFILING_FILES = {
         "Destination": "TestRunner__aggregate-by-key-int.json",
     },
     "scala-agg-by-key-naive": {
-        "Source": "TestRunner__aggregate-by-key-naive_20170511114259.json",
+        "Source": "TestRunner__aggregate-by-key-naive_20170511114259.json",   # heap 100
+        # "Source": "TestRunner__aggregate-by-key-naive_20170907125704.json",   # heap 50 offheap 50
+        # "Source": "TestRunner__aggregate-by-key-naive_20170907130939.json",   # heap 10 offheap 90
         "Destination": "TestRunner__aggregate-by-key-naive.json",
     },
     "scala-sort-by-key": {
@@ -424,7 +426,12 @@ PROFILING_FILES = {
         "Destination": "TestRunner__count-with-filter.json",
     },
     "PageRank": {
-        "Source": "Spark_PageRank_Application_20170531101020.json",
+        "Source": "Spark_PageRank_Application_20170531101020.json", # heap 100
+        # "Source": "Spark_PageRank_Application_20170907161119.json",     # heap 50 offheap 50 MEMORY_AND_DISK
+        # "Source": "Spark_PageRank_Application_20170907162208.json",   # heap 10 offheap 90 MEMORY_AND_DISK
+        # "Source": "Spark_PageRank_Application_20170908135313.json",  # heap 50 offheap 50 OFF_HEAP
+        # "Source": "Spark_PageRank_Application_20170908140455.json",  # heap 10 offheap 90 OFF_HEAP
+
         "Destination": "Spark_PageRank_Application.json",
     },
     "DecisionTree": {
@@ -445,7 +452,8 @@ PROFILE_SOURCE_FOLDER = "C:\\workspace\\spark-log-profiling\\output_json\\"
 PROFILE_DEST_FOLDER = "/usr/local/spark/conf/"
 
 PROFILING_MODE = False # True to delete profiles
-UPDATE_PROFILES = False # True to upload a local profile file
+UPDATE_PROFILES = True # True to upload a local profile file
+# Todo: update profiles for all the benchmarks
 
 COMPOSITE_BENCH = {
     # "KMeans": {
@@ -455,6 +463,10 @@ COMPOSITE_BENCH = {
     # "SVM": {
     #     "Delay": 30,
     #     "Deadline": 250000
+    # },
+    # "PageRank": {
+    #     "Delay": 0,
+    #     "Deadline": 250000,
     # },
     # "scala-agg-by-key": {
     #     "Delay": 60,
@@ -469,18 +481,18 @@ COMPOSITE_BENCH = {
         "Deadline": 120000
     },
     "scala-agg-by-key-int": {
-        "Delay": 30,
+        "Delay": 80,
         "Deadline": 160000
     },
     "scala-agg-by-key-naive": {
-        "Delay": 60,
+        "Delay": 40,
         "Deadline": 200000
     }
 }
 
-if len(COMPOSITE_BENCH) > 0:
-    RAM_EXEC = '"{}g"'.format(int(100/ len(COMPOSITE_BENCH)))
-    print(str(RAM_EXEC))
+# if len(COMPOSITE_BENCH) > 0:
+#     RAM_EXEC = '"{}g"'.format(int(100/ len(COMPOSITE_BENCH)))
+#     print(str(RAM_EXEC))
 
 # CONFIG JSON
 CONFIG_DICT = {
@@ -534,6 +546,8 @@ CONFIG_DICT = {
     "Spark": {
         "ExecutorCore": CORE_VM,
         "ExecutorMemory": RAM_EXEC,
+        "OffHeapMemoryEnabled": OFF_HEAP,
+        "OffHeapMemorySize": OFF_HEAP_BYTES,
         "ExternalShuffle": ENABLE_EXTERNAL_SHUFFLE,
         "LocalityWait": LOCALITY_WAIT,
         "LocalityWaitProcess": LOCALITY_WAIT_PROCESS,

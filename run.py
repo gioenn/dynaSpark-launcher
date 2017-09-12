@@ -100,12 +100,6 @@ def common_setup(ssh_client):
 
             ssh_client.run("source $HOME/.bashrc")
 
-        if PROFILING_MODE:
-            ssh_client.run("rm " + PROFILE_DEST_FOLDER + PROFILING_FILES[BENCH_NAME]["Destination"])
-        if UPDATE_PROFILES:
-            ssh_client.run("rm " + PROFILE_DEST_FOLDER + PROFILING_FILES[BENCH_NAME]["Destination"])
-            ssh_client.put(localpath=PROFILE_SOURCE_FOLDER + PROFILING_FILES[BENCH_NAME]["Source"],
-                           remotepath=PROFILE_DEST_FOLDER + PROFILING_FILES[BENCH_NAME]["Destination"])
 
     if PROVIDER == "AWS_SPOT":
         ssh_client.run("echo 'export JAVA_HOME=/usr/lib/jvm/java-8-oracle' >> $HOME/.bashrc")
@@ -124,6 +118,15 @@ def common_setup(ssh_client):
         ssh_client.run("source $HOME/.bashrc")
 
     ssh_client.run("export GOMAXPROCS=`nproc`")
+
+    if PROFILING_MODE:
+        print("  Removing profiling file")
+        ssh_client.run("rm " + PROFILE_DEST_FOLDER + PROFILING_FILES[BENCH_NAME]["Destination"])
+    if UPDATE_PROFILES:
+        print("  Updating profiling file")
+        ssh_client.run("rm " + PROFILE_DEST_FOLDER + PROFILING_FILES[BENCH_NAME]["Destination"])
+        ssh_client.put(localpath=PROFILE_SOURCE_FOLDER + PROFILING_FILES[BENCH_NAME]["Source"],
+                       remotepath=PROFILE_DEST_FOLDER + PROFILING_FILES[BENCH_NAME]["Destination"])
 
     if UPDATE_SPARK_DOCKER:
         print("   Updating Spark Docker Image...")
@@ -433,6 +436,13 @@ def setup_master(node, slaves_ip):
                        """{' ./spark-bench/conf/env.sh""")
         ssh_client.run("""sed -i '63s{.*{NUM_TRIALS=""" + str(BENCH_NUM_TRIALS) +
                        """{' ./spark-bench/conf/env.sh""")
+
+        # ENABLE OFF HEAP IN SPARK-BENCH
+        if OFF_HEAP:
+            ssh_client.run("""sed -i '58s{.*{STORAGE_LEVEL=OFF_HEAP{' ./spark-bench/conf/env.sh""")
+        else:
+            ssh_client.run("""sed -i '58s{.*{STORAGE_LEVEL=MEMORY_AND_DISK{' ./spark-bench/conf/env.sh""")
+
 
         # CHANGE SPARK HOME DIR
         ssh_client.run("sed -i '21s{.*{SPARK_HOME_DIR = \"" + SPARK_HOME + "\"{' ./spark-perf/config/config.py")
