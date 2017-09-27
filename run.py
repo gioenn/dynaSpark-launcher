@@ -600,14 +600,14 @@ def setup_master(node, slaves_ip):
         """Clone xSpark-benchmark on cspark master"""
         print("Cloning xSpark-benchmark tool on cspark master:\n" + stdout)
         
-        #if not "id_rsa" in ssh_client.listdir("/home/ubuntu/"):
-        ssh_client.put(localpath=PRIVATE_KEY_PATH, remotepath="/home/ubuntu/id_rsa")
-        ssh_client.run("chmod 400 /home/ubuntu/id_rsa")
+        if not "id_rsa" in ssh_client.listdir("/home/ubuntu/"):
+                ssh_client.put(localpath=PRIVATE_KEY_PATH, remotepath="/home/ubuntu/id_rsa")
+                ssh_client.run("chmod 400 /home/ubuntu/id_rsa")
         """load private key to home directory"""
         
-        #if not "id_rsa.pub" in ssh_client.listdir("/home/ubuntu/"):
-        ssh_client.put(localpath=AZ_PUB_KEY_PATH, remotepath="/home/ubuntu/id_rsa.pub")
-        ssh_client.run("chmod 400 /home/ubuntu/id_rsa.pub")
+        if not "id_rsa.pub" in ssh_client.listdir("/home/ubuntu/"):
+                ssh_client.put(localpath=AZ_PUB_KEY_PATH, remotepath="/home/ubuntu/id_rsa.pub")
+                ssh_client.run("chmod 400 /home/ubuntu/id_rsa.pub")
         """load public key to home directory"""
         
         ssh_client.run("sudo rm /home/ubuntu/credentials.py")
