@@ -79,12 +79,12 @@ KILL_JAVA = 1
 """Kill every java application on the cluster"""
 NUM_RUN = 1
 """Number of run to repeat the benchmark"""
-RUN_ON_SERVER = 1
+PROCESS_ON_SERVER = 1
 """Download benchmark logs and generate plots on server """
 INSTALL_PYTHON3 = 1
 """Install Pyhton3 on cspark master"""
-CLUSTER_ID = "CSPARKWORK"
-# CLUSTER_ID = "CSPARKHDFS"
+# CLUSTER_ID = "CSPARKWORK"
+CLUSTER_ID = "CSPARKHDFS"
 # CLUSTER_ID = "DEV"
 """Id of the cluster with the launched instances"""
 print("Cluster ID : " + str(CLUSTER_ID))
@@ -95,8 +95,8 @@ TAG = [{
 
 # HDFS
 # HDFS_MASTER = "ec2-52-88-156-209.us-west-2.compute.amazonaws.com"
-HDFS_MASTER = "10.0.0.4"  # use private ip for azure!
-# HDFS_MASTER = ""
+# HDFS_MASTER = "10.0.0.4"  # use private ip for azure!
+HDFS_MASTER = ""
 """Url of the HDFS NameNode if not set the cluster created is an HDFS Cluster"""
 # Spark config
 SPARK_2_HOME = "/opt/spark/"

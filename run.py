@@ -27,7 +27,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     CONFIG_DICT, HADOOP_HOME,\
     SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL, CORE_ALLOCATION,DEADLINE_ALLOCATION,\
     UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC, \
-    RUN_ON_SERVER, INSTALL_PYTHON3, AZ_PUB_KEY_PATH
+    PROCESS_ON_SERVER, INSTALL_PYTHON3, AZ_PUB_KEY_PATH
 
 from config import PRIVATE_KEY_PATH, PRIVATE_KEY_NAME, TEMPORARY_STORAGE, PROVIDER
 
@@ -587,7 +587,7 @@ def setup_master(node, slaves_ip):
                 master_ip, d=SPARK_HOME))
 
     # SETUP CSPARKWORK MASTER FOR PROCESSING LOGS ON SERVER
-    if HDFS_MASTER != "" and RUN_ON_SERVER == 1:
+    if HDFS_MASTER != "" and PROCESS_ON_SERVER == 1:
         if INSTALL_PYTHON3 == 1:
             stdout, stderr, status = ssh_client.run("sudo apt-get update && sudo apt-get install -y python3-pip && " +
                                                     "sudo apt-get build-dep -y matplotlib && "+
@@ -600,14 +600,14 @@ def setup_master(node, slaves_ip):
         """Clone xSpark-benchmark on cspark master"""
         print("Cloning xSpark-benchmark tool on cspark master:\n" + stdout)
         
-        if not "id_rsa" in ssh_client.listdir("/home/ubuntu/"):
-                ssh_client.put(localpath=PRIVATE_KEY_PATH, remotepath="/home/ubuntu/id_rsa")
-                ssh_client.run("chmod 400 /home/ubuntu/id_rsa")
+        #if not "id_rsa" in ssh_client.listdir("/home/ubuntu/"):
+        ssh_client.put(localpath=PRIVATE_KEY_PATH, remotepath="/home/ubuntu/id_rsa")
+        ssh_client.run("chmod 400 /home/ubuntu/id_rsa")
         """load private key to home directory"""
         
-        if not "id_rsa.pub" in ssh_client.listdir("/home/ubuntu/"):
-                ssh_client.put(localpath=AZ_PUB_KEY_PATH, remotepath="/home/ubuntu/id_rsa.pub")
-                ssh_client.run("chmod 400 /home/ubuntu/id_rsa.pub")
+        #if not "id_rsa.pub" in ssh_client.listdir("/home/ubuntu/"):
+        ssh_client.put(localpath=AZ_PUB_KEY_PATH, remotepath="/home/ubuntu/id_rsa.pub")
+        ssh_client.run("chmod 400 /home/ubuntu/id_rsa.pub")
         """load public key to home directory"""
         
         ssh_client.run("sudo rm /home/ubuntu/credentials.py")
@@ -855,7 +855,7 @@ def run_benchmark(nodes):
             output_folder = "home/ubuntu/spark-bench/num/"
 
         # RODO: DOWNLOAD LOGS
-        if RUN_ON_SERVER:
+        if PROCESS_ON_SERVER:
             for file in os.listdir("./"):
                 if file.endswith(".pickle"):
                     os.remove(file)
@@ -871,7 +871,7 @@ def run_benchmark(nodes):
             with open('master_ip.pickle', 'wb') as f:
                 pickle.dump(master_ip, f)       
             ssh_client.put(localpath="master_ip.pickle", remotepath="/home/ubuntu/xSpark-bench/master_ip.pickle")        
-            stdout, stderr, status = ssh_client.run("cd xSpark-bench && sudo python3 run_on_server.py")
+            stdout, stderr, status = ssh_client.run("cd xSpark-bench && sudo python3 process_on_server.py")
             print("Plotting on server:\n" + stdout)
             master_node = [i for i in nodes if get_ip(i) == master_ip][0]
             print("Downloading plots from server...")

@@ -1240,7 +1240,7 @@ def plot(folder):
         if filename.endswith('.m'):                                 # JSON Charts
             shutil.copy(source+filename, folder+filename)           # JSON Charts
     
-    # moved to run.py and run_on_server.py
+    # moved to run.py and process_on_server.py
     # for filename in os.listdir('./output_json/'):                   # Profiling on server
     #     shutil.copy('./output_json/' + filename, folder + filename)     # Profiling on server
                

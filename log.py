@@ -18,7 +18,7 @@ from util.ssh_client import sshclient_from_node
 
 import run
 import shutil
-from config import RUN_ON_SERVER
+from config import PROCESS_ON_SERVER
 
 def download_master(node, output_folder, log_folder, config):
     """Download log from master instance
@@ -52,7 +52,7 @@ def download_master(node, output_folder, log_folder, config):
             if previous_file != "":
                 os.remove(previous_file)
             input_file = config["Spark"]["SparkHome"] + "spark-events/" + file
-            if RUN_ON_SERVER:
+            if PROCESS_ON_SERVER:
                 # ssh_client.get(remotepath=input_file, localpath=output_folder + "/" + file)
                 shutil.copy(input_file, output_folder + "/" + file)
                 previous_file = output_folder + "/" + file
@@ -63,7 +63,7 @@ def download_master(node, output_folder, log_folder, config):
                     config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz)
                 ssh_client.get(remotepath=output_bz, localpath=output_folder + "/" + file + ".bz")
                 previous_file = output_folder + "/" + file + ".bz"
-    if not RUN_ON_SERVER:
+    if not PROCESS_ON_SERVER:
         most_recent_events_logfile += ".bz"
     print("most_recent_events_logfile: " + most_recent_events_logfile_folder + "/" + most_recent_events_logfile)
     # ssh_client.get(remotepath="xSpark-bench/" + most_recent_events_logfile_folder + "/" + most_recent_events_logfile, localpath="input_logs/" + most_recent_events_logfile)
