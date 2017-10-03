@@ -105,13 +105,15 @@ def compute_cpu_time(app_id, app_info, workers_dict, config, folder):
         cpu_time_f.write("THROUGHPUT " + str(throughput) + "\n")
 
 
-def save_deadline_errors(folder, deadline_error, stage_errors):
+def save_deadline_errors(folder, deadline_error, real_deadline_error, stage_errors, total_duration):
     """Save the error of the application's stages in the folder
         with some statistics (mean, stddev, median, max, min)
 
     :param folder: the output folder
-    :param deadline_error: the application's deadline error
+    :param deadline_error: the application's deadline error (with alpha)
+    :param real_deadline_error: the application's deadline error (with no alpha)
     :param stage_errors: the list of the stages errors
+    :param total_duration: duration of the application in seconds
     :return: Nothing
     """
     with open(folder + "ERROR.txt", "w") as error_f:
@@ -122,6 +124,9 @@ def save_deadline_errors(folder, deadline_error, stage_errors):
             error_f.write("MEDIAN_ERROR: " + str(np.median(stage_errors)) + "\n")
             error_f.write("MAX_ERROR: " + str(max(stage_errors)) + "\n")
             error_f.write("MIN_ERROR: " + str(min(stage_errors)) + "\n")
+        error_f.write("TOTAL DURATION " + str(int(total_duration)) + "\n")
+        error_f.write("REAL DEADLINE ERROR " + str(real_deadline_error) + "\n")
+
 
 
 def compute_errors(app_id, app_dict, folder, config):
@@ -177,7 +182,8 @@ def compute_errors(app_id, app_dict, folder, config):
         print(abs(app_alpha_deadline.timestamp() - end), total_duration, end)
         app_deadline_error = round(
             round(((abs(app_alpha_deadline.timestamp() - end)) / total_duration), 4) * 100, 3)
-
+        total_duration_real = (end - app_dict[PLOT_SID_STAGE]["start"].timestamp())*1000
+        app_real_deadline_error = round(round(((abs(float(config["Deadline"]) - total_duration_real)) / float(config["Deadline"])), 4) * 100, 3)
         stage_errors = np.array(errors)
         print("DEADLINE_ERROR " + str(app_deadline_error))
         if len(stage_errors) > 0:
@@ -186,8 +192,9 @@ def compute_errors(app_id, app_dict, folder, config):
             print("MEDIAN ERROR: " + str(np.median(stage_errors)))
             print("MAX ERROR: " + str(max(stage_errors)))
             print("MIN ERROR: " + str(min(stage_errors)))
-
-        save_deadline_errors(folder, app_deadline_error, stage_errors)
+        print("TOTAL DURATION " + str(int(total_duration_real)))
+        print("REAL DEADLINE ERROR "+str(app_real_deadline_error))
+        save_deadline_errors(folder, app_deadline_error, app_real_deadline_error, stage_errors, total_duration_real)
 
 
 @timing
