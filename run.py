@@ -596,7 +596,8 @@ def setup_master(node, slaves_ip):
             print("Installing Python3 on cspark master:\n" + stdout)
         stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")     
         stdout, stderr, status = ssh_client.run("git clone -b process-on-server --single-branch " + 
-                                                "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
+        #                                        "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
+                                                "https://github.com/gioenn/xSpark-bench.git /home/ubuntu/xSpark-bench")
         """Clone xSpark-benchmark on cspark master"""
         print("Cloning xSpark-benchmark tool on cspark master:\n" + stdout)
         
