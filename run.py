@@ -26,7 +26,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL, CORE_ALLOCATION, DEADLINE_ALLOCATION, \
     UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC, GIT_BRANCH, \
     PROFILING_MODE, UPDATE_PROFILES, PROFILE_SOURCE_FOLDER, PROFILE_DEST_FOLDER, BENCH_NAME, PROFILING_FILES, \
-    COMPOSITE_BENCH
+    COMPOSITE_BENCH, POLLON
 
 from config import PRIVATE_KEY_PATH, PRIVATE_KEY_NAME, TEMPORARY_STORAGE, PROVIDER
 
@@ -99,7 +99,6 @@ def common_setup(ssh_client):
                 "echo 'export LD_LIBRARY_PATH=$HADOOP_INSTALL/lib/native:$LD_LIBRARY_PATH' >> $HOME/.bashrc")  # to fix "unable to load native hadoop lib" in spark
 
             ssh_client.run("source $HOME/.bashrc")
-
 
     if PROVIDER == "AWS_SPOT":
         ssh_client.run("echo 'export JAVA_HOME=/usr/lib/jvm/java-8-oracle' >> $HOME/.bashrc")
@@ -233,6 +232,9 @@ def setup_slave(node, master_ip):
 
         ssh_client.run("sed -i '41s{.*{spark.control.cpuperiod " + str(
             CPU_PERIOD) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+
+        ssh_client.run("sed -i '60s{.*{spark.control.pollon " + str(
+            POLLON.value) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     if HDFS == 0:
         print("   Starting Spark Slave")
@@ -442,7 +444,6 @@ def setup_master(node, slaves_ip):
             ssh_client.run("""sed -i '58s{.*{STORAGE_LEVEL=OFF_HEAP{' ./spark-bench/conf/env.sh""")
         else:
             ssh_client.run("""sed -i '58s{.*{STORAGE_LEVEL=MEMORY_AND_DISK{' ./spark-bench/conf/env.sh""")
-
 
         # CHANGE SPARK HOME DIR
         ssh_client.run("sed -i '21s{.*{SPARK_HOME_DIR = \"" + SPARK_HOME + "\"{' ./spark-perf/config/config.py")
@@ -737,7 +738,7 @@ def run_benchmark(nodes):
                             'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench_name + '/bin/gen_data.sh')
                 # setup for spark-perf benchmarks
                 else:
-                    if not configured_perf :
+                    if not configured_perf:
                         configure_perf(ssh_client, bench_name)
                         configured_perf = True
                         if DELETE_HDFS:
@@ -751,7 +752,8 @@ def run_benchmark(nodes):
             threads = []
             log_folders = [None] * len(COMPOSITE_BENCH)
             for bench_name in COMPOSITE_BENCH:
-                thread = threading.Thread(name=bench_name + str(i), target=run_bench, args=(ssh_client, bench_name, COMPOSITE_BENCH[bench_name], log_folders, i, lock))
+                thread = threading.Thread(name=bench_name + str(i), target=run_bench, args=(
+                ssh_client, bench_name, COMPOSITE_BENCH[bench_name], log_folders, i, lock))
                 thread.setDaemon(True)
                 threads.append(thread)
                 i += 1
@@ -767,7 +769,7 @@ def run_benchmark(nodes):
             # results will contain all log folders to be processed, remove duplicates
             log_folders = set(log_folders)
 
-            output_folder = "composite_bench_"+ str(datetime.datetime.now().strftime('%Y%m%d%H%M%S')+"/")
+            output_folder = "composite_bench_" + str(datetime.datetime.now().strftime('%Y%m%d%H%M%S') + "/")
 
             print(log_folders)
 
@@ -841,6 +843,7 @@ def configure_bench(ssh_client, bench_name):
                     BENCH_CONF[bench_name][config][0], config, BENCH_CONF[bench_name][config][1],
                     bench_name))
 
+
 def configure_perf(ssh_client, bench_name):
     print("  Setting up spark-perf benchmark")
     # ENABLE BENCHMARK
@@ -870,7 +873,7 @@ def run_bench(ssh_client, bench_name, bench, results, index, lock):
     print("  Deadline set")
     # run a spark-bench benchmark
     if bench_name in ["KMeans", "SVM", "DecisionTree", "PageRank"]:
-        print("  "+bench_name+" setting up spark-bench")
+        print("  " + bench_name + " setting up spark-bench")
         scale_factor = BENCH_CONF[bench_name]["NUM_OF_PARTITIONS"][1]
         num_task = scale_factor
         try:
@@ -886,17 +889,17 @@ def run_bench(ssh_client, bench_name, bench, results, index, lock):
         ssh_client.run(
             "sed -i '55s{.*{spark.control.numtask " + str(
                 num_task) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
-        print("  "+bench_name+" starting")
+        print("  " + bench_name + " starting")
         lock.release()
         ssh_client.run(
             'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench_name + '/bin/run.sh')
-        print("  "+bench_name+" finish");
+        print("  " + bench_name + " finish");
         logfolder = "/home/ubuntu/spark-bench/num"
-        print("  "+bench_name+" completed, logfolder: "+logfolder)
+        print("  " + bench_name + " completed, logfolder: " + logfolder)
 
     # run a spark-perf benchmark
     else:
-        print("  "+bench_name+" setting up spark-perf")
+        print("  " + bench_name + " setting up spark-perf")
         # ENABLE BENCHMARK
         for line_number in BENCH_LINES[bench_name]:
             sed_command_line = "sed -i '" + line_number + " s/[#]//g' ./spark-perf/config/config.py"
@@ -919,14 +922,13 @@ def run_bench(ssh_client, bench_name, bench, results, index, lock):
             "sed -i '55s{.*{spark.control.numtask " + str(
                 num_task) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
-        print("  "+bench_name+" starting")
+        print("  " + bench_name + " starting")
         lock.release()
         runout, runerr, runstatus = ssh_client.run(
             'export SPARK_HOME="' + SPARK_HOME + '" && ./spark-perf/bin/run')
-        print("  "+bench_name+" finish");
+        print("  " + bench_name + " finish");
         app_log = between(runout, "2>> ", ".err")
         logfolder = "/home/ubuntu/" + "/".join(app_log.split("/")[:-1])
-        print("  "+bench_name+" completed, logfolder: "+logfolder)
-
+        print("  " + bench_name + " completed, logfolder: " + logfolder)
 
     results[index] = logfolder

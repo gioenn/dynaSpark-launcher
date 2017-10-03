@@ -5,6 +5,13 @@ class Heuristic(Enum):
     FIXED = 1
     CONTROL_UNLIMITED = 2
 
+class Pollon(Enum):
+    PROPORTIONAL = "proportional"
+    EDF_PURE = "edf_pure"
+    EDF_PROPORTIONAL = "edf_proportional"
+    SPEED = "speed"
+    MIXED_SPEED_EDF = "mixed_speed_edf"
+
 """
 Configuration module of cSpark test benchmark
 """
@@ -274,6 +281,11 @@ DELETE_HDFS = 1 if SCALE_FACTOR != PREV_SCALE_FACTOR else 0
 
 # HEURISTICS
 HEURISTIC = Heuristic.CONTROL_UNLIMITED
+assert (isinstance(HEURISTIC, Heuristic))
+
+# POLLON
+POLLON = Pollon.PROPORTIONAL
+assert (isinstance(POLLON, Pollon))
 
 ALLOCATION_DICT = {
     "KMeans": {
@@ -352,7 +364,6 @@ if HEURISTIC == Heuristic.FIXED:
     DEADLINE_ALLOCATION = ALLOCATION_DICT[BENCH_NAME]["DeadlineAllocation"]
     DEADLINE = ALLOCATION_DICT[BENCH_NAME]["Deadline"]
 
-assert (isinstance(HEURISTIC, Heuristic))
 
 if HEURISTIC == Heuristic.FIXED:
     assert (len(STAGE_ALLOCATION) == len(DEADLINE_ALLOCATION))
