@@ -113,8 +113,11 @@ UPDATE_SPARK = 0
 """Git pull and build Spark of all the cluster"""
 UPDATE_SPARK_MASTER = 0
 """Git pull and build Spark only of the master node"""
-UPDATE_SPARK_DOCKER = 0
+UPDATE_SPARK_DOCKER = 1
 """Pull the docker image in each node of the cluster"""
+
+DOCKER_IMAGE = "xspark/docker-spark:dev-multiapp"
+
 ENABLE_EXTERNAL_SHUFFLE = "true"
 LOCALITY_WAIT = 0
 LOCALITY_WAIT_NODE = 0
@@ -168,7 +171,7 @@ CPU_PERIOD = 100000
 # BENCHMARK
 RUN = 1
 SYNC_TIME = 1
-PREV_SCALE_FACTOR = 1000
+PREV_SCALE_FACTOR = 0
 """*Important Settings* if it is equals to SCALE_FACTOR no need to generate new data on HDFS"""
 BENCH_NUM_TRIALS = 1
 
@@ -287,6 +290,8 @@ assert (isinstance(HEURISTIC, Heuristic))
 POLLON = Pollon.PROPORTIONAL
 assert (isinstance(POLLON, Pollon))
 
+POLLON_ALPHA = 1
+
 ALLOCATION_DICT = {
     "KMeans": {
         "StageAllocation": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
@@ -403,7 +408,7 @@ print("Schedule : "
 UPDATE_SPARK_BENCH = False
 UPDATE_SPARK_PERF = False
 # GIT_BRANCH = "xSpark-1.0"
-GIT_BRANCH = "dev-multiapp-fix-2"
+GIT_BRANCH = "dev-multiapp"
 
 PROFILING_FILES = {
     "scala-agg-by-key": {
@@ -463,7 +468,7 @@ PROFILE_SOURCE_FOLDER = "C:\\workspace\\spark-log-profiling\\output_json\\"
 PROFILE_DEST_FOLDER = "/usr/local/spark/conf/"
 
 PROFILING_MODE = False # True to delete profiles
-UPDATE_PROFILES = True # True to upload a local profile file
+UPDATE_PROFILES = False # True to upload a local profile file
 # Todo: update profiles for all the benchmarks
 
 COMPOSITE_BENCH = {

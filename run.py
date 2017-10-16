@@ -26,7 +26,7 @@ from config import UPDATE_SPARK_DOCKER, DELETE_HDFS, SPARK_HOME, KILL_JAVA, SYNC
     SPARK_2_HOME, BENCHMARK_BENCH, BENCH_CONF, LOG_LEVEL, CORE_ALLOCATION, DEADLINE_ALLOCATION, \
     UPDATE_SPARK_BENCH, UPDATE_SPARK_PERF, NUM_INSTANCE, STAGE_ALLOCATION, HEURISTIC, GIT_BRANCH, \
     PROFILING_MODE, UPDATE_PROFILES, PROFILE_SOURCE_FOLDER, PROFILE_DEST_FOLDER, BENCH_NAME, PROFILING_FILES, \
-    COMPOSITE_BENCH, POLLON
+    COMPOSITE_BENCH, POLLON, DOCKER_IMAGE, POLLON_ALPHA
 
 from config import PRIVATE_KEY_PATH, PRIVATE_KEY_NAME, TEMPORARY_STORAGE, PROVIDER
 
@@ -129,7 +129,7 @@ def common_setup(ssh_client):
 
     if UPDATE_SPARK_DOCKER:
         print("   Updating Spark Docker Image...")
-        ssh_client.run("docker pull elfolink/spark:2.0")
+        ssh_client.run("docker pull " + DOCKER_IMAGE)
 
     if DELETE_HDFS:
         ssh_client.run("sudo umount /mnt")
@@ -235,6 +235,12 @@ def setup_slave(node, master_ip):
 
         ssh_client.run("sed -i '60s{.*{spark.control.pollon " + str(
             POLLON.value) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+
+        ssh_client.run(
+            "sed -i '61s{.*{spark.docker.image " + str(DOCKER_IMAGE) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+
+        ssh_client.run("sed -i '62s{.*{spark.control.pollon.alpha " + str(
+            POLLON_ALPHA) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
     if HDFS == 0:
         print("   Starting Spark Slave")
@@ -433,6 +439,10 @@ def setup_master(node, slaves_ip):
         ssh_client.run(
             "sed -i '55s{.*{spark.control.numtask " + str(
                 NUM_TASK) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
+
+        # CHANGE DOCKER IMAGE
+        ssh_client.run(
+            "sed -i '61s{.*{spark.docker.image " + str(DOCKER_IMAGE) + "{' " + SPARK_HOME + "conf/spark-defaults.conf")
 
         ssh_client.run("""sed -i '3s{.*{master=""" + master_ip +
                        """{' ./spark-bench/conf/env.sh""")
@@ -753,7 +763,7 @@ def run_benchmark(nodes):
             log_folders = [None] * len(COMPOSITE_BENCH)
             for bench_name in COMPOSITE_BENCH:
                 thread = threading.Thread(name=bench_name + str(i), target=run_bench, args=(
-                ssh_client, bench_name, COMPOSITE_BENCH[bench_name], log_folders, i, lock))
+                    ssh_client, bench_name, COMPOSITE_BENCH[bench_name], log_folders, i, lock))
                 thread.setDaemon(True)
                 threads.append(thread)
                 i += 1

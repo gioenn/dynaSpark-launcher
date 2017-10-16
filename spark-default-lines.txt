@@ -28,3 +28,5 @@
 58 spark.control.stagecores
 59 spark.control.stagedeadlines
 60 spark.control.pollon
+61 spark.docker.image
+62 spark.control.pollon.alpha
