@@ -591,7 +591,8 @@ def setup_master(node, slaves_ip):
         if INSTALL_PYTHON3 == 1:
             stdout, stderr, status = ssh_client.run("sudo apt-get update && sudo apt-get install -y python3-pip && " +
                                                     "sudo apt-get build-dep -y matplotlib && "+
-                                                    "sudo apt-get install -y build-essential libssl-dev libffi-dev python-dev python3-dev")
+                                                    "sudo apt-get install -y build-essential libssl-dev libffi-dev python-dev python3-dev && "+
+                                                    "sudo pip3 install --upgrade setuptools")
             """Install python3 on cSpark master"""
             print("Installing Python3 on cspark master:\n" + stdout)
         stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")     
@@ -854,6 +855,7 @@ def run_benchmark(nodes):
                 'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh')
             logfolder = "/home/ubuntu/spark-bench/num"
             output_folder = "home/ubuntu/spark-bench/num/"
+            stdout, stderr, status = ssh_client.run("cd "+ logfolder + " && sudo rm -r old") # ensure there is no directory named 'old' in log folder
 
         # RODO: DOWNLOAD LOGS
         if PROCESS_ON_SERVER:
