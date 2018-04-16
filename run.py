@@ -636,8 +636,10 @@ def setup_master(node, slaves_ip, hdfs_master):
                                                         "sudo pip3 install --upgrade setuptools")
                 """Install python3 on cSpark master"""
                 print("Installing Python3 on cspark master:\n" + stdout)
-            #stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")                                     #vboxvm
-            #stdout, stderr, status = ssh_client.run("git clone -b process-on-server --single-branch " +                         #vboxvm
+            stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")                                     #vboxvm
+            stdout, stderr, status = ssh_client.run("git clone -b final-nocloud --single-branch " +                             #vboxvm
+                                                    "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")    #vboxvm
+            #stdout, stderr, status = ssh_client.run("git clone -b process-on-server --single-branch " +                        #vboxvm
             #                                        "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
             #                                        "https://github.com/gioenn/xSpark-bench.git /home/ubuntu/xSpark-bench")
             """Clone xSpark-benchmark on cspark master"""
