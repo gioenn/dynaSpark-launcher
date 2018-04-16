@@ -141,3 +141,23 @@ def sshclient_from_node(node, ssh_key_file,  host_key_file='~/.ssh/known_hosts',
                                key_files=ssh_key_file)
     client.connect()
     return client
+
+
+def sshclient_from_ip(ip, ssh_key_file,  host_key_file='~/.ssh/known_hosts', user_name='root', ssh_pwd=None):
+    """
+    Creates an ssh client to connect to the node
+
+    :param ip: ip to which you want to connect
+    :param ssh_key_file: ssh key file
+    :param host_key_file: host key file
+    :param user_name: username
+    :param ssh_pwd: password
+    :return: a connected ssh client
+    """
+    client = CustomSSHClient(hostname=ip,
+                             port=22,
+                             username=user_name,
+                             password=ssh_pwd,
+                             key_files=ssh_key_file)
+    client.connect()
+    return client

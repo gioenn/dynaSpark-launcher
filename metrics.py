@@ -27,13 +27,13 @@ def load_config(folder):
     if config_file.exists():
         config = json.load(open(folder + "config.json"))
         if len(config) == 0:
-            from config import CONFIG_DICT
-            return CONFIG_DICT
+            from configure import config_instance as c
+            return c.CONFIG_DICT
         else:
             return config
     else:
-        from config import CONFIG_DICT
-        return CONFIG_DICT
+        from configure import config_instance as c
+        return c.CONFIG_DICT
 
 
 def compute_cpu_time(app_id, app_info, workers_dict, config, folder):

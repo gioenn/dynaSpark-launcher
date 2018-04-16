@@ -15,7 +15,10 @@ def set_azurearm_driver():
     driver_module = "drivers.azurearm.driver"
     driver_klass = "CustomAzureNodeDriver"
     driver_provider = "CustomAzureArm"
-    set_driver(driver_provider, driver_module, driver_klass)
+    try:
+        set_driver(driver_provider, driver_module, driver_klass)
+    except AttributeError as e:  # usually raised when AzureArm is already registered
+        print(str(e))
 
 
 class AzureResourceGroup(object):

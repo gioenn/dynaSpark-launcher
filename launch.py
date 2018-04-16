@@ -19,8 +19,8 @@ from drivers.ccglibcloud.ec2spot import SpotRequestState
 
 import copy
 
-from config import PROVIDER, CONFIG_DICT, CLUSTER_ID
-
+#from config import PROVIDER, CONFIG_DICT, CLUSTER_ID
+from configure import config_instance as c
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
@@ -82,10 +82,10 @@ def wait_ping_libcloud(driver, instance_ids, pending_instance_ids):
     :param pending_instance_ids: id of remaining nodes to ping
     :return: Exit when all nodes are reachable on port 22
     """
-    if (PROVIDER == "AWS_SPOT"):
+    if (c.PROVIDER == "AWS_SPOT"):
         nodes = driver.list_nodes(ex_node_ids=pending_instance_ids)
-    elif (PROVIDER == "AZURE"):
-        nodes = driver.list_nodes(ex_resource_group=CONFIG_DICT["Azure"]["ResourceGroup"])
+    elif (c.PROVIDER == "AZURE"):
+        nodes = driver.list_nodes(ex_resource_group=c.CONFIG_DICT["Azure"]["ResourceGroup"])
         nodes = [n for n in nodes if n.id in pending_instance_ids]
     for node in nodes:
         if ping(node.public_ips[0], 22) == 22:
@@ -108,22 +108,26 @@ def wait_for_running_libcloud(driver, instance_ids, pending_instance_ids):
     :param pending_instance_ids: the remaining node ids to check
     :return: when all nodes are running
     """
-    if (PROVIDER == "AWS_SPOT"):
+    if (c.PROVIDER == "AWS_SPOT"):
         nodes = driver.list_nodes(ex_node_ids=pending_instance_ids)
-    elif (PROVIDER == "AZURE"):
-        nodes = driver.list_nodes(ex_resource_group=CONFIG_DICT["Azure"]["ResourceGroup"])
+    elif (c.PROVIDER == "AZURE"):
+        nodes = driver.list_nodes(ex_resource_group=c.CONFIG_DICT["Azure"]["ResourceGroup"])
         nodes = [n for n in nodes if n.id in pending_instance_ids]
     for node in nodes:
         if node.state == NodeState.RUNNING:
             pending_instance_ids.pop(pending_instance_ids.index(node.id))
             print("node {} running!".format(node.id))
         else:
+            if node.state == NodeState.ERROR:
+                print("error detected while launching node {}!\naborting...".format(node.id))
+                return False
             print("waiting on {}".format(node.id))
     if len(pending_instance_ids) == 0:
         print("all nodes running")
+        return True
     else:
         time.sleep(10)
-        wait_for_running_libcloud(driver, instance_ids, pending_instance_ids)
+        return wait_for_running_libcloud(driver, instance_ids, pending_instance_ids)
 
 
 def wait_for_fulfillment_libcloud(driver, request_ids, pending_request_ids):
@@ -185,7 +189,7 @@ def check_spot_price(driver, config):
         exit(1)
 
 
-def launch_libcloud(driver, num_instance, config):
+def launch_libcloud(driver, num_instance, config, cluster_id=c.CLUSTER_ID, assume_yes=False):
     """Launch num_instance instances on the desired provider given by the driver, using a provider depended config
 
     :param driver: the desired provider driver
@@ -193,8 +197,9 @@ def launch_libcloud(driver, num_instance, config):
     :param config: the configuration dictionary of the user
     :return: list of the created nodes, if provider AWS_SPOT also list of spot request is returned
     """
-    if query_yes_no("Are you sure to launch " + str(num_instance) + " new instance?", "no"):
-        if (PROVIDER == "AWS_SPOT"):
+    proceed = True if assume_yes else query_yes_no("Are you sure to launch " + str(num_instance) + " new instances on " + cluster_id + "?", "no")
+    if proceed:
+        if (c.PROVIDER == "AWS_SPOT"):
             check_spot_price(driver, config)
 
             # pick size and images
@@ -251,7 +256,7 @@ def launch_libcloud(driver, num_instance, config):
 
             return nodes, spot_request_updates
 
-        if PROVIDER == "AZURE":
+        if c.PROVIDER == "AZURE":
             # obtain size
             print("Collecting node size")
             sizes = driver.list_sizes()
@@ -401,7 +406,7 @@ def launch_libcloud(driver, num_instance, config):
 
             # public ips
             print("Create public ips")
-            public_ips = [driver.ex_create_public_ip(name="{}ip{}".format(CLUSTER_ID, i),
+            public_ips = [driver.ex_create_public_ip(name="{}ip{}".format(cluster_id, i),
                                                     #name="testip",
                                                      resource_group=config["Azure"]["ResourceGroup"]) for i in
                           range(num_instance)]
@@ -409,7 +414,7 @@ def launch_libcloud(driver, num_instance, config):
             # network interface
             print("Create network interfaces")
             network_interfaces = [
-                driver.ex_create_network_interface(name="{}nic{}".format(CLUSTER_ID, i),
+                driver.ex_create_network_interface(name="{}nic{}".format(cluster_id, i),
                                                    #name="testnic",
                                                    subnet=subnet,
                                                    resource_group=config["Azure"]["ResourceGroup"],
@@ -427,7 +432,7 @@ def launch_libcloud(driver, num_instance, config):
 
             # create nodes
             print("Beginning node creation")
-            nodes = [driver.create_node(name="{}node{}".format(CLUSTER_ID, i),
+            nodes = [driver.create_node(name="{}node{}".format(cluster_id, i),
                                         #name="vm",
                                         size=size,
                                         image=image,

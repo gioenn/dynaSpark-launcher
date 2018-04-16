@@ -67,13 +67,13 @@ def load_config(folder):
     if config_file.exists():
         config = json.load(open(folder + "config.json"))
         if len(config) == 0:
-            from config import CONFIG_DICT
-            return CONFIG_DICT
+            from configure import config_instance as c
+            return c.CONFIG_DICT
         else:
             return config
     else:
-        from config import CONFIG_DICT
-        return CONFIG_DICT
+        from configure import config_instance as c
+        return c.CONFIG_DICT
 
 
 def text_plotter_x(x_data, axis, labels):
@@ -607,7 +607,7 @@ def plot_app_overview(app_id, app_dict, folder, config):
                       str(config["Control"]["TSample"]) + " " +
                       str(config["Control"]["Alpha"]) + " " + str(config["Control"]["K"]))
             title = app_id + " " + str(config["Deadline"]) + " " + \
-                    str(config["Control"]["TSample"]) + " " + \
+                    str(["Control"]["TSample"]) + " " + \
                     str(config["Control"]["Alpha"]) + " " + str(config["Control"]["K"])
             m_script_content.append("title(hax, '"+title+"');") #Matlab
         folder_split = folder.split("/")
@@ -1194,7 +1194,7 @@ def plot(folder):
     if folder[-1] != "/":
         folder += "/"
     config = load_config(folder)
-    print(config)
+    #print(config)
 
     global PLOT_SID_STAGE
     PLOT_SID_STAGE = 1 if config["HDFS"] else 0

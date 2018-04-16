@@ -1,0 +1,2348 @@
+Spark Command: /usr/lib/jvm/java-8-oracle/jre/bin/java -cp /usr/local/spark/conf/:/usr/local/spark/assembly/target/scala-2.11/jars/* -Xmx1g org.apache.spark.deploy.worker.Worker --webui-port 8081 10.0.0.9:7077 -h 10.0.0.10 --port 9999 -c 16
+========================================
+17/10/23 11:46:33.083 INFO Worker: Started daemon with process name: 2749@CSPARKWORKnode1
+17/10/23 11:46:33.128 INFO SignalUtils: Registered signal handler for TERM
+17/10/23 11:46:33.133 INFO SignalUtils: Registered signal handler for HUP
+17/10/23 11:46:33.133 INFO SignalUtils: Registered signal handler for INT
+17/10/23 11:46:34.797 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+17/10/23 11:46:35.042 INFO SecurityManager: Changing view acls to: root
+17/10/23 11:46:35.042 INFO SecurityManager: Changing modify acls to: root
+17/10/23 11:46:35.043 INFO SecurityManager: Changing view acls groups to: 
+17/10/23 11:46:35.049 INFO SecurityManager: Changing modify acls groups to: 
+17/10/23 11:46:35.080 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(root); groups with view permissions: Set(); users  with modify permissions: Set(root); groups with modify permissions: Set()
+17/10/23 11:46:36.641 INFO Utils: Successfully started service 'sparkWorker' on port 9999.
+17/10/23 11:46:37.126 INFO Worker: Starting Spark worker 10.0.0.10:9999 with 16 cores, 109.2 GB RAM
+17/10/23 11:46:37.148 INFO Worker: Running Spark version 2.0.3-SNAPSHOT
+17/10/23 11:46:37.149 INFO Worker: Spark home: /usr/local/spark
+17/10/23 11:46:37.166 INFO ExternalShuffleService: Starting shuffle service on port 7337 with useSasl = false
+17/10/23 11:46:37.732 INFO Utils: Successfully started service 'WorkerUI' on port 8081.
+17/10/23 11:46:37.736 INFO WorkerWebUI: Bound WorkerWebUI to 0.0.0.0, and started at http://10.0.0.10:8081
+17/10/23 11:46:37.738 INFO Worker: Connecting to master 10.0.0.9:7077...
+17/10/23 11:46:37.831 INFO TransportClientFactory: Successfully created connection to /10.0.0.9:7077 after 37 ms (0 ms spent in bootstraps)
+17/10/23 11:46:37.949 INFO Worker: Successfully registered with master spark://10.0.0.9:7077
+17/10/23 11:47:08.279 INFO Worker: Asked to launch executor app-20171023114708-0000/0 for SVMGenerator
+17/10/23 11:47:08.289 INFO Worker: CREATING PROXY FOR DRIVER: spark://CoarseGrainedScheduler@10.0.0.9:44182
+17/10/23 11:47:08.292 INFO SecurityManager: Changing view acls to: root
+17/10/23 11:47:08.292 INFO SecurityManager: Changing modify acls to: root
+17/10/23 11:47:08.293 INFO SecurityManager: Changing view acls groups to: 
+17/10/23 11:47:08.293 INFO SecurityManager: Changing modify acls groups to: 
+17/10/23 11:47:08.293 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(root); groups with view permissions: Set(); users  with modify permissions: Set(root); groups with modify permissions: Set()
+17/10/23 11:47:08.303 INFO Utils: Successfully started service 'Controller' on port 5555.
+17/10/23 11:47:08.310 INFO TransportClientFactory: Successfully created connection to /10.0.0.9:44182 after 3 ms (0 ms spent in bootstraps)
+17/10/23 11:47:08.337 INFO Worker: PROXY ADDRESS:spark://ControllerProxy-44182-0@10.0.0.10:5555
+17/10/23 11:47:08.340 INFO Worker: Command(org.apache.spark.executor.CoarseGrainedExecutorBackend,List(--driver-url, spark://ControllerProxy-44182-0@10.0.0.10:5555, --executor-id, {{EXECUTOR_ID}}, --hostname, {{HOSTNAME}}, --cores, {{CORES}}, --app-id, {{APP_ID}}, --worker-url, {{WORKER_URL}}),Map(SPARK_USER -> ubuntu, SPARK_EXECUTOR_MEMORY -> 102400m),List(),List(),ArraySeq(-Dspark.driver.port=44182, -XX:+UseG1GC))
+17/10/23 11:47:08.346 INFO SecurityManager: Changing view acls to: root
+17/10/23 11:47:08.347 INFO SecurityManager: Changing modify acls to: root
+17/10/23 11:47:08.347 INFO SecurityManager: Changing view acls groups to: 
+17/10/23 11:47:08.347 INFO SecurityManager: Changing modify acls groups to: 
+17/10/23 11:47:08.347 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(root); groups with view permissions: Set(); users  with modify permissions: Set(root); groups with modify permissions: Set()
+17/10/23 11:47:08.360 INFO ExecutorRunner: Launch command: "docker" "run" "-P" "--net=host" "-v" "/tmp:/tmp" "-v" "/usr/local/spark/conf:/usr/local/spark/conf" "-m" "112640m" "--cpu-period=100000" "--cpu-quota=1600000" "--name=app-20171023114708-0000.0" "elfolink/spark:2.0" "/usr/lib/jvm/java-8-oracle/jre/bin/java" "-cp" "/usr/local/spark/conf/:/usr/local/spark/assembly/target/scala-2.11/jars/*" "-Xmx102400M" "-Dspark.driver.port=44182" "-XX:+UseG1GC" "org.apache.spark.executor.CoarseGrainedExecutorBackend" "--driver-url" "spark://ControllerProxy-44182-0@10.0.0.10:5555" "--executor-id" "0" "--hostname" "10.0.0.10" "--cores" "16" "--app-id" "app-20171023114708-0000" "--worker-url" "spark://Worker@10.0.0.10:9999"
+17/10/23 11:48:19.154 INFO ControllerProxy$ProxyEndpoint: Connecting to driver: spark://CoarseGrainedScheduler@10.0.0.9:44182
+17/10/23 11:48:19.211 INFO ControllerProxy$ProxyEndpoint: 10.0.0.9:44182
+17/10/23 11:48:19.216 INFO ControllerProxy$ProxyEndpoint: Already Registered Before ACK also driver knows about executor
+17/10/23 11:48:19.277 INFO ExternalShuffleBlockResolver: Registered executor AppExecId{appId=app-20171023114708-0000, execId=0} with ExecutorShuffleInfo{localDirs=[/tmp/blockmgr-0801934c-0b50-4885-ad13-b072150d6d09], subDirsPerLocalDir=64, shuffleManager=org.apache.spark.shuffle.sort.SortShuffleManager}
+17/10/23 11:48:56.223 INFO Worker: Asked to scale executor /0
+17/10/23 11:48:56.241 INFO Worker: Scaled executorId 0  of appId app-20171023114708-0000 to  16.000000 Core
+17/10/23 11:48:56.245 INFO ControllerProxy$ProxyEndpoint: CORES: 16.000000, RUNNING: 0, DELTA: 16
+17/10/23 11:48:56.246 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 0
+app-20171023114708-0000.0
+17/10/23 11:49:14.915 INFO ControllerProxy$ProxyEndpoint: Asked to terminate Executor
+17/10/23 11:49:14.923 INFO Worker: Asked to kill executor app-20171023114708-0000/0
+17/10/23 11:49:14.925 INFO ExecutorRunner: Runner thread for executor app-20171023114708-0000/0 interrupted
+17/10/23 11:49:14.926 INFO ExecutorRunner: Killing process!
+app-20171023114708-0000.0
+17/10/23 11:49:16.186 INFO Worker: Executor app-20171023114708-0000/0 finished with state KILLED exitStatus 141
+17/10/23 11:49:16.188 INFO Worker: Cleaning up local directories for application app-20171023114708-0000
+17/10/23 11:49:16.190 INFO ExternalShuffleBlockResolver: Application app-20171023114708-0000 removed, cleanupLocalDirs = true
+17/10/23 11:49:16.191 INFO ExternalShuffleBlockResolver: Cleaning up executor AppExecId{appId=app-20171023114708-0000, execId=0}'s 1 local dirs
+17/10/23 11:49:25.814 INFO Worker: Asked to launch executor app-20171023114926-0001/0 for SVM Classifier Example
+17/10/23 11:49:25.815 INFO Worker: CREATING PROXY FOR DRIVER: spark://CoarseGrainedScheduler@10.0.0.9:36618
+17/10/23 11:49:25.819 INFO SecurityManager: Changing view acls to: root
+17/10/23 11:49:25.819 INFO SecurityManager: Changing modify acls to: root
+17/10/23 11:49:25.819 INFO SecurityManager: Changing view acls groups to: 
+17/10/23 11:49:25.819 INFO SecurityManager: Changing modify acls groups to: 
+17/10/23 11:49:25.819 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(root); groups with view permissions: Set(); users  with modify permissions: Set(root); groups with modify permissions: Set()
+17/10/23 11:49:25.830 WARN Utils: Service 'Controller' could not bind on port 5555. Attempting port 5556.
+17/10/23 11:49:25.836 INFO Utils: Successfully started service 'Controller' on port 5556.
+17/10/23 11:49:25.842 INFO TransportClientFactory: Successfully created connection to /10.0.0.9:36618 after 4 ms (0 ms spent in bootstraps)
+17/10/23 11:49:25.872 INFO Worker: PROXY ADDRESS:spark://ControllerProxy-36618-0@10.0.0.10:5556
+17/10/23 11:49:25.873 INFO Worker: Command(org.apache.spark.executor.CoarseGrainedExecutorBackend,List(--driver-url, spark://ControllerProxy-36618-0@10.0.0.10:5556, --executor-id, {{EXECUTOR_ID}}, --hostname, {{HOSTNAME}}, --cores, {{CORES}}, --app-id, {{APP_ID}}, --worker-url, {{WORKER_URL}}),Map(SPARK_USER -> ubuntu, SPARK_EXECUTOR_MEMORY -> 102400m),List(),List(),ArraySeq(-Dspark.driver.port=36618, -XX:+UseG1GC))
+17/10/23 11:49:25.874 INFO SecurityManager: Changing view acls to: root
+17/10/23 11:49:25.874 INFO SecurityManager: Changing modify acls to: root
+17/10/23 11:49:25.874 INFO SecurityManager: Changing view acls groups to: 
+17/10/23 11:49:25.874 INFO SecurityManager: Changing modify acls groups to: 
+17/10/23 11:49:25.874 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(root); groups with view permissions: Set(); users  with modify permissions: Set(root); groups with modify permissions: Set()
+17/10/23 11:49:25.876 INFO ExecutorRunner: Launch command: "docker" "run" "-P" "--net=host" "-v" "/tmp:/tmp" "-v" "/usr/local/spark/conf:/usr/local/spark/conf" "-m" "112640m" "--cpu-period=100000" "--cpu-quota=1600000" "--name=app-20171023114926-0001.0" "elfolink/spark:2.0" "/usr/lib/jvm/java-8-oracle/jre/bin/java" "-cp" "/usr/local/spark/conf/:/usr/local/spark/assembly/target/scala-2.11/jars/*" "-Xmx102400M" "-Dspark.driver.port=36618" "-XX:+UseG1GC" "org.apache.spark.executor.CoarseGrainedExecutorBackend" "--driver-url" "spark://ControllerProxy-36618-0@10.0.0.10:5556" "--executor-id" "0" "--hostname" "10.0.0.10" "--cores" "16" "--app-id" "app-20171023114926-0001" "--worker-url" "spark://Worker@10.0.0.10:9999"
+17/10/23 11:49:28.258 INFO ControllerProxy$ProxyEndpoint: Connecting to driver: spark://CoarseGrainedScheduler@10.0.0.9:36618
+17/10/23 11:49:28.265 INFO ControllerProxy$ProxyEndpoint: 10.0.0.9:36618
+17/10/23 11:49:28.273 INFO ControllerProxy$ProxyEndpoint: Already Registered Before ACK also driver knows about executor
+17/10/23 11:49:28.322 INFO ExternalShuffleBlockResolver: Registered executor AppExecId{appId=app-20171023114926-0001, execId=0} with ExecutorShuffleInfo{localDirs=[/tmp/blockmgr-a0b152a4-d1a3-4d64-a71a-c4b2cca826db], subDirsPerLocalDir=64, shuffleManager=org.apache.spark.shuffle.sort.SortShuffleManager}
+17/10/23 11:49:36.868 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:49:36.872 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  8.000000 Core
+17/10/23 11:49:36.872 INFO ControllerProxy$ProxyEndpoint: CORES: 8.000000, RUNNING: 0, DELTA: 8
+17/10/23 11:49:36.884 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 0
+17/10/23 11:49:36.887 INFO Worker: Created ControllerExecutor: 0 , 0 , 481 , 1 , 8.000000
+app-20171023114926-0001.0
+17/10/23 11:49:37.891 INFO ControllerExecutor: SP Updated: 1.0
+17/10/23 11:49:37.892 INFO ControllerExecutor: Real: 0.0
+17/10/23 11:49:37.892 INFO ControllerExecutor: CoreToAllocate: 16.0
+17/10/23 11:49:37.895 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  16.000000 Core
+17/10/23 11:49:37.909 INFO ControllerProxy$ProxyEndpoint: CORES: 16.000000, RUNNING: 1, DELTA: 15
+app-20171023114926-0001.0
+17/10/23 11:49:38.975 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:49:38.978 INFO ControllerProxy$ProxyEndpoint: CORES: 3.750000, RUNNING: 0, DELTA: 4
+17/10/23 11:49:38.981 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.750000 Core
+17/10/23 11:49:38.981 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 1
+17/10/23 11:49:38.981 INFO Worker: Created ControllerExecutor: 0 , 1 , 66843 , 250 , 3.750000
+app-20171023114926-0001.0
+17/10/23 11:49:39.982 INFO ControllerExecutor: SP Updated: 0.014960429663539937
+17/10/23 11:49:39.982 INFO ControllerExecutor: Real: 0.004
+17/10/23 11:49:39.982 INFO ControllerExecutor: CoreToAllocate: 4.3500000000000005
+17/10/23 11:49:39.994 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  4.350000 Core
+17/10/23 11:49:39.994 INFO ControllerProxy$ProxyEndpoint: CORES: 4.350000, RUNNING: 4, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:40.981 INFO ControllerExecutor: SP Updated: 0.029920859327079875
+17/10/23 11:49:40.982 INFO ControllerExecutor: Real: 0.036
+17/10/23 11:49:40.982 INFO ControllerExecutor: CoreToAllocate: 3.5
+17/10/23 11:49:40.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.500000 Core
+17/10/23 11:49:40.985 INFO ControllerProxy$ProxyEndpoint: CORES: 3.500000, RUNNING: 4, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:41.981 INFO ControllerExecutor: SP Updated: 0.044881288990619814
+17/10/23 11:49:41.981 INFO ControllerExecutor: Real: 0.052
+17/10/23 11:49:41.981 INFO ControllerExecutor: CoreToAllocate: 3.45
+17/10/23 11:49:41.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.450000 Core
+17/10/23 11:49:41.988 INFO ControllerProxy$ProxyEndpoint: CORES: 3.450000, RUNNING: 4, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:49:42.983 INFO ControllerExecutor: SP Updated: 0.05984171865415975
+17/10/23 11:49:42.983 INFO ControllerExecutor: Real: 0.08
+17/10/23 11:49:42.983 INFO ControllerExecutor: CoreToAllocate: 2.75
+17/10/23 11:49:42.987 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.750000 Core
+17/10/23 11:49:42.987 INFO ControllerProxy$ProxyEndpoint: CORES: 2.750000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:43.982 INFO ControllerExecutor: SP Updated: 0.07480214831769968
+17/10/23 11:49:43.982 INFO ControllerExecutor: Real: 0.092
+17/10/23 11:49:43.982 INFO ControllerExecutor: CoreToAllocate: 2.85
+17/10/23 11:49:43.994 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.850000 Core
+17/10/23 11:49:43.994 INFO ControllerProxy$ProxyEndpoint: CORES: 2.850000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:44.981 INFO ControllerExecutor: SP Updated: 0.08976257798123963
+17/10/23 11:49:44.981 INFO ControllerExecutor: Real: 0.104
+17/10/23 11:49:44.981 INFO ControllerExecutor: CoreToAllocate: 2.95
+17/10/23 11:49:44.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.950000 Core
+17/10/23 11:49:44.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.950000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:45.982 INFO ControllerExecutor: SP Updated: 0.10472300764477957
+17/10/23 11:49:45.982 INFO ControllerExecutor: Real: 0.128
+17/10/23 11:49:45.982 INFO ControllerExecutor: CoreToAllocate: 2.45
+17/10/23 11:49:45.991 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.450000 Core
+17/10/23 11:49:45.991 INFO ControllerProxy$ProxyEndpoint: CORES: 2.450000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:49:46.981 INFO ControllerExecutor: SP Updated: 0.11968343730831951
+17/10/23 11:49:46.981 INFO ControllerExecutor: Real: 0.14
+17/10/23 11:49:46.981 INFO ControllerExecutor: CoreToAllocate: 2.5500000000000003
+17/10/23 11:49:46.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.550000 Core
+17/10/23 11:49:46.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.550000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:49:47.983 INFO ControllerExecutor: SP Updated: 0.13464386697185945
+17/10/23 11:49:47.983 INFO ControllerExecutor: Real: 0.156
+17/10/23 11:49:47.983 INFO ControllerExecutor: CoreToAllocate: 2.45
+17/10/23 11:49:47.987 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.450000 Core
+17/10/23 11:49:47.988 INFO ControllerProxy$ProxyEndpoint: CORES: 2.450000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:49:48.981 INFO ControllerExecutor: SP Updated: 0.1496042966353994
+17/10/23 11:49:48.981 INFO ControllerExecutor: Real: 0.176
+17/10/23 11:49:48.981 INFO ControllerExecutor: CoreToAllocate: 2.1
+17/10/23 11:49:48.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.100000 Core
+17/10/23 11:49:48.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.100000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:49.981 INFO ControllerExecutor: SP Updated: 0.16456472629893934
+17/10/23 11:49:49.981 INFO ControllerExecutor: Real: 0.184
+17/10/23 11:49:49.981 INFO ControllerExecutor: CoreToAllocate: 2.4000000000000004
+17/10/23 11:49:49.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.400000 Core
+17/10/23 11:49:49.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.400000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:50.981 INFO ControllerExecutor: SP Updated: 0.17952515596247928
+17/10/23 11:49:50.981 INFO ControllerExecutor: Real: 0.192
+17/10/23 11:49:50.981 INFO ControllerExecutor: CoreToAllocate: 2.7
+17/10/23 11:49:50.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.700000 Core
+17/10/23 11:49:50.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.700000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:49:51.981 INFO ControllerExecutor: SP Updated: 0.19448558562601923
+17/10/23 11:49:51.982 INFO ControllerExecutor: Real: 0.208
+17/10/23 11:49:51.982 INFO ControllerExecutor: CoreToAllocate: 2.6
+17/10/23 11:49:51.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.600000 Core
+17/10/23 11:49:51.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.600000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:52.983 INFO ControllerExecutor: SP Updated: 0.20944601528955917
+17/10/23 11:49:52.983 INFO ControllerExecutor: Real: 0.224
+17/10/23 11:49:52.983 INFO ControllerExecutor: CoreToAllocate: 2.5
+17/10/23 11:49:52.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.500000 Core
+17/10/23 11:49:52.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.500000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:53.981 INFO ControllerExecutor: SP Updated: 0.2244064449530991
+17/10/23 11:49:53.982 INFO ControllerExecutor: Real: 0.24
+17/10/23 11:49:53.982 INFO ControllerExecutor: CoreToAllocate: 2.4000000000000004
+17/10/23 11:49:53.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.400000 Core
+17/10/23 11:49:53.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.400000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:49:54.981 INFO ControllerExecutor: SP Updated: 0.23936687461663905
+17/10/23 11:49:54.982 INFO ControllerExecutor: Real: 0.252
+17/10/23 11:49:54.982 INFO ControllerExecutor: CoreToAllocate: 2.5
+17/10/23 11:49:54.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.500000, RUNNING: 2, DELTA: 1
+17/10/23 11:49:54.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.500000 Core
+app-20171023114926-0001.0
+17/10/23 11:49:55.982 INFO ControllerExecutor: SP Updated: 0.25432730428017897
+17/10/23 11:49:55.982 INFO ControllerExecutor: Real: 0.268
+17/10/23 11:49:55.982 INFO ControllerExecutor: CoreToAllocate: 2.4000000000000004
+17/10/23 11:49:55.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.400000, RUNNING: 3, DELTA: -1
+17/10/23 11:49:55.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.400000 Core
+app-20171023114926-0001.0
+17/10/23 11:49:56.981 INFO ControllerExecutor: SP Updated: 0.2692877339437189
+17/10/23 11:49:56.981 INFO ControllerExecutor: Real: 0.28
+17/10/23 11:49:56.981 INFO ControllerExecutor: CoreToAllocate: 2.5500000000000003
+17/10/23 11:49:56.983 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.550000 Core
+17/10/23 11:49:56.983 INFO ControllerProxy$ProxyEndpoint: CORES: 2.550000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:49:57.983 INFO ControllerExecutor: SP Updated: 0.28424816360725885
+17/10/23 11:49:57.983 INFO ControllerExecutor: Real: 0.296
+17/10/23 11:49:57.983 INFO ControllerExecutor: CoreToAllocate: 2.45
+17/10/23 11:49:57.987 INFO ControllerProxy$ProxyEndpoint: CORES: 2.450000, RUNNING: 3, DELTA: -1
+17/10/23 11:49:57.987 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.450000 Core
+app-20171023114926-0001.0
+17/10/23 11:49:58.981 INFO ControllerExecutor: SP Updated: 0.2992085932707988
+17/10/23 11:49:58.981 INFO ControllerExecutor: Real: 0.312
+17/10/23 11:49:58.981 INFO ControllerExecutor: CoreToAllocate: 2.35
+17/10/23 11:49:58.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.350000 Core
+17/10/23 11:49:58.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.350000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:49:59.981 INFO ControllerExecutor: SP Updated: 0.31416902293433874
+17/10/23 11:49:59.981 INFO ControllerExecutor: Real: 0.32
+17/10/23 11:49:59.981 INFO ControllerExecutor: CoreToAllocate: 2.7
+17/10/23 11:49:59.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.700000 Core
+17/10/23 11:49:59.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.700000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:50:00.981 INFO ControllerExecutor: SP Updated: 0.3291294525978787
+17/10/23 11:50:00.982 INFO ControllerExecutor: Real: 0.34
+17/10/23 11:50:00.982 INFO ControllerExecutor: CoreToAllocate: 2.45
+17/10/23 11:50:00.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.450000 Core
+17/10/23 11:50:00.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.450000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:50:01.982 INFO ControllerExecutor: SP Updated: 0.3440898822614186
+17/10/23 11:50:01.983 INFO ControllerExecutor: Real: 0.352
+17/10/23 11:50:01.983 INFO ControllerExecutor: CoreToAllocate: 2.6
+17/10/23 11:50:01.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.600000, RUNNING: 2, DELTA: 1
+17/10/23 11:50:01.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.600000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:02.983 INFO ControllerExecutor: SP Updated: 0.35905031192495857
+17/10/23 11:50:02.983 INFO ControllerExecutor: Real: 0.372
+17/10/23 11:50:02.983 INFO ControllerExecutor: CoreToAllocate: 2.3000000000000003
+17/10/23 11:50:02.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.300000 Core
+17/10/23 11:50:02.987 INFO ControllerProxy$ProxyEndpoint: CORES: 2.300000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:50:03.982 INFO ControllerExecutor: SP Updated: 0.3740107415884985
+17/10/23 11:50:03.982 INFO ControllerExecutor: Real: 0.384
+17/10/23 11:50:03.982 INFO ControllerExecutor: CoreToAllocate: 2.45
+17/10/23 11:50:03.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.450000 Core
+17/10/23 11:50:03.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.450000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:04.981 INFO ControllerExecutor: SP Updated: 0.38897117125203845
+17/10/23 11:50:04.981 INFO ControllerExecutor: Real: 0.392
+17/10/23 11:50:04.981 INFO ControllerExecutor: CoreToAllocate: 2.8000000000000003
+17/10/23 11:50:04.983 INFO ControllerProxy$ProxyEndpoint: CORES: 2.800000, RUNNING: 1, DELTA: 2
+17/10/23 11:50:04.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.800000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:05.981 INFO ControllerExecutor: SP Updated: 0.4039316009155784
+17/10/23 11:50:05.982 INFO ControllerExecutor: Real: 0.416
+17/10/23 11:50:05.982 INFO ControllerExecutor: CoreToAllocate: 2.3000000000000003
+17/10/23 11:50:05.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.300000 Core
+17/10/23 11:50:05.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.300000, RUNNING: 4, DELTA: -2
+app-20171023114926-0001.0
+17/10/23 11:50:06.981 INFO ControllerExecutor: SP Updated: 0.41889203057911834
+17/10/23 11:50:06.982 INFO ControllerExecutor: Real: 0.432
+17/10/23 11:50:06.982 INFO ControllerExecutor: CoreToAllocate: 2.2
+17/10/23 11:50:06.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.200000 Core
+17/10/23 11:50:06.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.200000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:07.983 INFO ControllerExecutor: SP Updated: 0.4338524602426583
+17/10/23 11:50:07.983 INFO ControllerExecutor: Real: 0.448
+17/10/23 11:50:07.983 INFO ControllerExecutor: CoreToAllocate: 2.1
+17/10/23 11:50:07.987 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.100000 Core
+17/10/23 11:50:07.987 INFO ControllerProxy$ProxyEndpoint: CORES: 2.100000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:08.981 INFO ControllerExecutor: SP Updated: 0.4488128899061982
+17/10/23 11:50:08.982 INFO ControllerExecutor: Real: 0.456
+17/10/23 11:50:08.982 INFO ControllerExecutor: CoreToAllocate: 2.45
+17/10/23 11:50:08.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.450000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:08.992 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.450000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:09.981 INFO ControllerExecutor: SP Updated: 0.46377331956973816
+17/10/23 11:50:09.981 INFO ControllerExecutor: Real: 0.472
+17/10/23 11:50:09.981 INFO ControllerExecutor: CoreToAllocate: 2.4000000000000004
+17/10/23 11:50:09.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.400000 Core
+17/10/23 11:50:09.989 INFO ControllerProxy$ProxyEndpoint: CORES: 2.400000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:10.981 INFO ControllerExecutor: SP Updated: 0.4787337492332781
+17/10/23 11:50:10.981 INFO ControllerExecutor: Real: 0.488
+17/10/23 11:50:10.981 INFO ControllerExecutor: CoreToAllocate: 2.35
+17/10/23 11:50:10.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.350000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:10.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.350000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:11.982 INFO ControllerExecutor: SP Updated: 0.49369417889681805
+17/10/23 11:50:11.982 INFO ControllerExecutor: Real: 0.496
+17/10/23 11:50:11.984 INFO ControllerExecutor: CoreToAllocate: 2.7
+17/10/23 11:50:11.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.700000, RUNNING: 2, DELTA: 1
+17/10/23 11:50:11.987 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.700000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:12.983 INFO ControllerExecutor: SP Updated: 0.5086546085603579
+17/10/23 11:50:12.983 INFO ControllerExecutor: Real: 0.516
+17/10/23 11:50:12.983 INFO ControllerExecutor: CoreToAllocate: 2.45
+17/10/23 11:50:12.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.450000 Core
+17/10/23 11:50:12.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.450000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:50:13.981 INFO ControllerExecutor: SP Updated: 0.5236150382238979
+17/10/23 11:50:13.982 INFO ControllerExecutor: Real: 0.528
+17/10/23 11:50:13.982 INFO ControllerExecutor: CoreToAllocate: 2.6
+17/10/23 11:50:13.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.600000 Core
+17/10/23 11:50:13.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.600000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:50:14.981 INFO ControllerExecutor: SP Updated: 0.5385754678874378
+17/10/23 11:50:14.981 INFO ControllerExecutor: Real: 0.548
+17/10/23 11:50:14.981 INFO ControllerExecutor: CoreToAllocate: 2.35
+17/10/23 11:50:14.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.350000, RUNNING: 3, DELTA: -1
+17/10/23 11:50:14.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.350000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:15.982 INFO ControllerExecutor: SP Updated: 0.5535358975509778
+17/10/23 11:50:15.982 INFO ControllerExecutor: Real: 0.568
+17/10/23 11:50:15.982 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:50:15.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:15.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:16.981 INFO ControllerExecutor: SP Updated: 0.5684963272145177
+17/10/23 11:50:16.981 INFO ControllerExecutor: Real: 0.576
+17/10/23 11:50:16.981 INFO ControllerExecutor: CoreToAllocate: 2.4000000000000004
+17/10/23 11:50:16.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.400000 Core
+17/10/23 11:50:16.989 INFO ControllerProxy$ProxyEndpoint: CORES: 2.400000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:17.983 INFO ControllerExecutor: SP Updated: 0.5834567568780576
+17/10/23 11:50:17.983 INFO ControllerExecutor: Real: 0.592
+17/10/23 11:50:17.983 INFO ControllerExecutor: CoreToAllocate: 2.35
+17/10/23 11:50:17.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.350000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:17.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.350000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:18.981 INFO ControllerExecutor: SP Updated: 0.5984171865415976
+17/10/23 11:50:18.981 INFO ControllerExecutor: Real: 0.608
+17/10/23 11:50:18.981 INFO ControllerExecutor: CoreToAllocate: 2.3000000000000003
+17/10/23 11:50:18.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.300000 Core
+17/10/23 11:50:18.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.300000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:19.981 INFO ControllerExecutor: SP Updated: 0.6133776162051375
+17/10/23 11:50:19.981 INFO ControllerExecutor: Real: 0.616
+17/10/23 11:50:19.982 INFO ControllerExecutor: CoreToAllocate: 2.6500000000000004
+17/10/23 11:50:19.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.650000 Core
+17/10/23 11:50:19.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.650000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:50:20.982 INFO ControllerExecutor: SP Updated: 0.6283380458686775
+17/10/23 11:50:20.982 INFO ControllerExecutor: Real: 0.632
+17/10/23 11:50:20.982 INFO ControllerExecutor: CoreToAllocate: 2.6
+17/10/23 11:50:20.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.600000 Core
+17/10/23 11:50:20.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.600000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:21.981 INFO ControllerExecutor: SP Updated: 0.6432984755322174
+17/10/23 11:50:21.982 INFO ControllerExecutor: Real: 0.652
+17/10/23 11:50:21.982 INFO ControllerExecutor: CoreToAllocate: 2.35
+17/10/23 11:50:21.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.350000 Core
+17/10/23 11:50:21.987 INFO ControllerProxy$ProxyEndpoint: CORES: 2.350000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:50:22.982 INFO ControllerExecutor: SP Updated: 0.6582589051957574
+17/10/23 11:50:22.983 INFO ControllerExecutor: Real: 0.664
+17/10/23 11:50:22.983 INFO ControllerExecutor: CoreToAllocate: 2.5
+17/10/23 11:50:22.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.500000, RUNNING: 2, DELTA: 1
+17/10/23 11:50:22.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.500000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:23.981 INFO ControllerExecutor: SP Updated: 0.6732193348592973
+17/10/23 11:50:23.981 INFO ControllerExecutor: Real: 0.684
+17/10/23 11:50:23.981 INFO ControllerExecutor: CoreToAllocate: 2.25
+17/10/23 11:50:23.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.250000 Core
+17/10/23 11:50:23.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.250000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:50:24.981 INFO ControllerExecutor: SP Updated: 0.6881797645228372
+17/10/23 11:50:24.981 INFO ControllerExecutor: Real: 0.696
+17/10/23 11:50:24.981 INFO ControllerExecutor: CoreToAllocate: 2.4000000000000004
+17/10/23 11:50:24.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.400000 Core
+17/10/23 11:50:24.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.400000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:25.981 INFO ControllerExecutor: SP Updated: 0.7031401941863772
+17/10/23 11:50:25.981 INFO ControllerExecutor: Real: 0.716
+17/10/23 11:50:25.981 INFO ControllerExecutor: CoreToAllocate: 2.1
+17/10/23 11:50:25.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.100000 Core
+17/10/23 11:50:25.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.100000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:26.981 INFO ControllerExecutor: SP Updated: 0.7181006238499171
+17/10/23 11:50:26.982 INFO ControllerExecutor: Real: 0.732
+17/10/23 11:50:26.983 INFO ControllerExecutor: CoreToAllocate: 2.0
+app-20171023114926-0001.0
+17/10/23 11:50:27.099 INFO ControllerProxy$ProxyEndpoint: CORES: 2.000000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:27.099 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.000000 Core
+17/10/23 11:50:27.983 INFO ControllerExecutor: SP Updated: 0.7330610535134571
+17/10/23 11:50:27.983 INFO ControllerExecutor: Real: 0.744
+17/10/23 11:50:27.983 INFO ControllerExecutor: CoreToAllocate: 2.15
+17/10/23 11:50:27.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.150000 Core
+17/10/23 11:50:27.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.150000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:28.981 INFO ControllerExecutor: SP Updated: 0.748021483176997
+17/10/23 11:50:28.981 INFO ControllerExecutor: Real: 0.76
+17/10/23 11:50:28.981 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:50:28.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+17/10/23 11:50:28.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:29.981 INFO ControllerExecutor: SP Updated: 0.762981912840537
+17/10/23 11:50:29.981 INFO ControllerExecutor: Real: 0.776
+17/10/23 11:50:29.981 INFO ControllerExecutor: CoreToAllocate: 1.9500000000000002
+17/10/23 11:50:29.984 INFO ControllerProxy$ProxyEndpoint: CORES: 1.950000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:29.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.950000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:30.981 INFO ControllerExecutor: SP Updated: 0.7779423425040769
+17/10/23 11:50:30.981 INFO ControllerExecutor: Real: 0.788
+17/10/23 11:50:30.981 INFO ControllerExecutor: CoreToAllocate: 2.1
+17/10/23 11:50:30.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.100000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:30.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.100000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:31.982 INFO ControllerExecutor: SP Updated: 0.7929027721676168
+17/10/23 11:50:31.982 INFO ControllerExecutor: Real: 0.804
+17/10/23 11:50:31.982 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:50:31.991 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:31.991 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:32.983 INFO ControllerExecutor: SP Updated: 0.8078632018311568
+17/10/23 11:50:32.983 INFO ControllerExecutor: Real: 0.816
+17/10/23 11:50:32.983 INFO ControllerExecutor: CoreToAllocate: 2.2
+17/10/23 11:50:32.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.200000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:32.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.200000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:33.981 INFO ControllerExecutor: SP Updated: 0.8228236314946967
+17/10/23 11:50:33.981 INFO ControllerExecutor: Real: 0.836
+17/10/23 11:50:33.981 INFO ControllerExecutor: CoreToAllocate: 1.9000000000000001
+17/10/23 11:50:33.983 INFO ControllerProxy$ProxyEndpoint: CORES: 1.900000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:33.983 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.900000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:34.982 INFO ControllerExecutor: SP Updated: 0.8377840611582367
+17/10/23 11:50:34.982 INFO ControllerExecutor: Real: 0.852
+17/10/23 11:50:34.982 INFO ControllerExecutor: CoreToAllocate: 1.8
+17/10/23 11:50:34.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.800000 Core
+17/10/23 11:50:34.986 INFO ControllerProxy$ProxyEndpoint: CORES: 1.800000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:35.981 INFO ControllerExecutor: SP Updated: 0.8527444908217766
+17/10/23 11:50:35.981 INFO ControllerExecutor: Real: 0.86
+17/10/23 11:50:35.981 INFO ControllerExecutor: CoreToAllocate: 2.15
+17/10/23 11:50:35.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.150000 Core
+17/10/23 11:50:35.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.150000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:36.981 INFO ControllerExecutor: SP Updated: 0.8677049204853166
+17/10/23 11:50:36.982 INFO ControllerExecutor: Real: 0.872
+17/10/23 11:50:36.982 INFO ControllerExecutor: CoreToAllocate: 2.3000000000000003
+17/10/23 11:50:36.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.300000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:36.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.300000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:37.982 INFO ControllerExecutor: SP Updated: 0.8826653501488565
+17/10/23 11:50:37.983 INFO ControllerExecutor: Real: 0.892
+17/10/23 11:50:37.983 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:50:37.986 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+17/10/23 11:50:37.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:38.981 INFO ControllerExecutor: SP Updated: 0.8976257798123964
+17/10/23 11:50:38.981 INFO ControllerExecutor: Real: 0.9
+17/10/23 11:50:38.981 INFO ControllerExecutor: CoreToAllocate: 2.4000000000000004
+17/10/23 11:50:38.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.400000 Core
+17/10/23 11:50:38.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.400000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:39.981 INFO ControllerExecutor: SP Updated: 0.9125862094759364
+17/10/23 11:50:39.981 INFO ControllerExecutor: Real: 0.916
+17/10/23 11:50:39.981 INFO ControllerExecutor: CoreToAllocate: 2.35
+17/10/23 11:50:39.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.350000 Core
+17/10/23 11:50:39.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.350000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:40.981 INFO ControllerExecutor: SP Updated: 0.9275466391394763
+17/10/23 11:50:40.981 INFO ControllerExecutor: Real: 0.932
+17/10/23 11:50:40.981 INFO ControllerExecutor: CoreToAllocate: 2.3000000000000003
+17/10/23 11:50:40.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.300000 Core
+17/10/23 11:50:40.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.300000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:41.981 INFO ControllerExecutor: SP Updated: 0.9425070688030163
+17/10/23 11:50:41.982 INFO ControllerExecutor: Real: 0.94
+17/10/23 11:50:41.982 INFO ControllerExecutor: CoreToAllocate: 2.7
+17/10/23 11:50:41.985 INFO ControllerProxy$ProxyEndpoint: CORES: 2.700000, RUNNING: 2, DELTA: 1
+17/10/23 11:50:41.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.700000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:42.983 INFO ControllerExecutor: SP Updated: 0.9574674984665562
+17/10/23 11:50:42.984 INFO ControllerExecutor: Real: 0.96
+17/10/23 11:50:42.984 INFO ControllerExecutor: CoreToAllocate: 2.45
+17/10/23 11:50:42.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.450000 Core
+17/10/23 11:50:42.988 INFO ControllerProxy$ProxyEndpoint: CORES: 2.450000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:50:43.981 INFO ControllerExecutor: SP Updated: 0.9724279281300962
+17/10/23 11:50:43.982 INFO ControllerExecutor: Real: 0.98
+17/10/23 11:50:43.982 INFO ControllerExecutor: CoreToAllocate: 2.2
+17/10/23 11:50:43.984 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.200000 Core
+17/10/23 11:50:43.984 INFO ControllerProxy$ProxyEndpoint: CORES: 2.200000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:50:44.981 INFO ControllerExecutor: SP Updated: 0.9873883577936361
+17/10/23 11:50:44.982 INFO ControllerExecutor: Real: 0.996
+17/10/23 11:50:44.982 INFO ControllerExecutor: CoreToAllocate: 2.15
+17/10/23 11:50:44.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.150000 Core
+17/10/23 11:50:44.986 INFO ControllerProxy$ProxyEndpoint: CORES: 2.150000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:50:45.812 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:50:45.814 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.250000 Core
+17/10/23 11:50:45.814 INFO ControllerProxy$ProxyEndpoint: CORES: 1.250000, RUNNING: 0, DELTA: 1
+17/10/23 11:50:45.815 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 2
+17/10/23 11:50:45.815 INFO Worker: Created ControllerExecutor: 0 , 2 , 1159 , 250 , 1.250000
+app-20171023114926-0001.0
+17/10/23 11:50:46.816 INFO ControllerExecutor: SP Updated: 0.8628127696289906
+17/10/23 11:50:46.817 INFO ControllerExecutor: Real: 0.368
+17/10/23 11:50:46.817 INFO ControllerExecutor: CoreToAllocate: 2.5
+17/10/23 11:50:46.822 INFO ControllerProxy$ProxyEndpoint: CORES: 2.500000, RUNNING: 1, DELTA: 2
+17/10/23 11:50:46.822 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.500000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:50.894 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:50:50.897 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.250000 Core
+17/10/23 11:50:50.897 INFO ControllerProxy$ProxyEndpoint: CORES: 1.250000, RUNNING: 0, DELTA: 1
+17/10/23 11:50:50.897 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 3
+17/10/23 11:50:50.898 INFO Worker: Created ControllerExecutor: 0 , 3 , 4239 , 250 , 1.250000
+app-20171023114926-0001.0
+17/10/23 11:50:51.898 INFO ControllerExecutor: SP Updated: 0.2359046945034206
+17/10/23 11:50:51.898 INFO ControllerExecutor: Real: 0.1
+17/10/23 11:50:51.898 INFO ControllerExecutor: CoreToAllocate: 2.5
+17/10/23 11:50:51.901 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.500000 Core
+17/10/23 11:50:51.901 INFO ControllerProxy$ProxyEndpoint: CORES: 2.500000, RUNNING: 1, DELTA: 2
+app-20171023114926-0001.0
+17/10/23 11:50:52.900 INFO ControllerExecutor: SP Updated: 0.4718093890068412
+17/10/23 11:50:52.900 INFO ControllerExecutor: Real: 0.484
+17/10/23 11:50:52.900 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:50:52.902 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:50:52.902 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 3, DELTA: -3
+app-20171023114926-0001.0
+17/10/23 11:50:53.898 INFO ControllerExecutor: SP Updated: 0.7077140835102618
+17/10/23 11:50:53.898 INFO ControllerExecutor: Real: 0.496
+17/10/23 11:50:53.898 INFO ControllerExecutor: CoreToAllocate: 2.5
+17/10/23 11:50:53.901 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.500000 Core
+17/10/23 11:50:53.901 INFO ControllerProxy$ProxyEndpoint: CORES: 2.500000, RUNNING: 0, DELTA: 3
+app-20171023114926-0001.0
+17/10/23 11:50:56.107 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:50:56.110 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.500000 Core
+17/10/23 11:50:56.110 INFO ControllerProxy$ProxyEndpoint: CORES: 2.500000, RUNNING: 0, DELTA: 3
+17/10/23 11:50:56.110 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 4
+17/10/23 11:50:56.111 INFO Worker: Created ControllerExecutor: 0 , 4 , 433 , 8 , 2.500000
+app-20171023114926-0001.0
+17/10/23 11:50:56.770 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:50:56.773 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.750000 Core
+17/10/23 11:50:56.773 INFO ControllerProxy$ProxyEndpoint: CORES: 1.750000, RUNNING: 0, DELTA: 2
+17/10/23 11:50:56.773 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 5
+17/10/23 11:50:56.773 INFO Worker: Created ControllerExecutor: 0 , 5 , 36373 , 250 , 1.750000
+app-20171023114926-0001.0
+17/10/23 11:50:57.776 INFO ControllerExecutor: SP Updated: 0.027492920572952464
+17/10/23 11:50:57.776 INFO ControllerExecutor: Real: 0.0
+17/10/23 11:50:57.776 INFO ControllerExecutor: CoreToAllocate: 3.25
+17/10/23 11:50:57.778 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.250000 Core
+17/10/23 11:50:57.778 INFO ControllerProxy$ProxyEndpoint: CORES: 3.250000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:50:58.773 INFO ControllerExecutor: SP Updated: 0.05498584114590493
+17/10/23 11:50:58.774 INFO ControllerExecutor: Real: 0.052
+17/10/23 11:50:58.774 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:50:58.777 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+17/10/23 11:50:58.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+app-20171023114926-0001.0
+17/10/23 11:50:59.773 INFO ControllerExecutor: SP Updated: 0.08247876171885739
+17/10/23 11:50:59.773 INFO ControllerExecutor: Real: 0.104
+17/10/23 11:50:59.773 INFO ControllerExecutor: CoreToAllocate: 0.75
+17/10/23 11:50:59.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.750000 Core
+17/10/23 11:50:59.776 INFO ControllerProxy$ProxyEndpoint: CORES: 0.750000, RUNNING: 3, DELTA: -2
+app-20171023114926-0001.0
+17/10/23 11:51:00.774 INFO ControllerExecutor: SP Updated: 0.10997168229180986
+17/10/23 11:51:00.774 INFO ControllerExecutor: Real: 0.128
+17/10/23 11:51:00.774 INFO ControllerExecutor: CoreToAllocate: 0.8500000000000001
+17/10/23 11:51:00.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.850000 Core
+17/10/23 11:51:00.776 INFO ControllerProxy$ProxyEndpoint: CORES: 0.850000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:01.773 INFO ControllerExecutor: SP Updated: 0.1374646028647623
+17/10/23 11:51:01.774 INFO ControllerExecutor: Real: 0.152
+17/10/23 11:51:01.774 INFO ControllerExecutor: CoreToAllocate: 1.0
+17/10/23 11:51:01.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:51:01.776 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:02.775 INFO ControllerExecutor: SP Updated: 0.16495752343771478
+17/10/23 11:51:02.775 INFO ControllerExecutor: Real: 0.176
+17/10/23 11:51:02.775 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:51:02.778 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:51:02.779 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:03.774 INFO ControllerExecutor: SP Updated: 0.19245044401066724
+17/10/23 11:51:03.774 INFO ControllerExecutor: Real: 0.2
+17/10/23 11:51:03.774 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:51:03.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:51:03.776 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:04.773 INFO ControllerExecutor: SP Updated: 0.2199433645836197
+17/10/23 11:51:04.773 INFO ControllerExecutor: Real: 0.224
+17/10/23 11:51:04.773 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:51:04.775 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:51:04.775 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:51:05.774 INFO ControllerExecutor: SP Updated: 0.24743628515657218
+17/10/23 11:51:05.774 INFO ControllerExecutor: Real: 0.26
+17/10/23 11:51:05.774 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:51:05.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:51:05.776 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:06.773 INFO ControllerExecutor: SP Updated: 0.2749292057295246
+17/10/23 11:51:06.774 INFO ControllerExecutor: Real: 0.288
+17/10/23 11:51:06.774 INFO ControllerExecutor: CoreToAllocate: 1.0
+17/10/23 11:51:06.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:51:06.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:07.775 INFO ControllerExecutor: SP Updated: 0.30242212630247706
+17/10/23 11:51:07.776 INFO ControllerExecutor: Real: 0.304
+17/10/23 11:51:07.779 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:51:07.782 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:51:07.782 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:51:08.774 INFO ControllerExecutor: SP Updated: 0.3299150468754295
+17/10/23 11:51:08.774 INFO ControllerExecutor: Real: 0.332
+17/10/23 11:51:08.774 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:51:09.773 INFO ControllerExecutor: SP Updated: 0.35740796744838194
+17/10/23 11:51:09.774 INFO ControllerExecutor: Real: 0.364
+17/10/23 11:51:09.774 INFO ControllerExecutor: CoreToAllocate: 1.35
+17/10/23 11:51:09.775 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.350000 Core
+17/10/23 11:51:09.775 INFO ControllerProxy$ProxyEndpoint: CORES: 1.350000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:10.774 INFO ControllerExecutor: SP Updated: 0.3849008880213344
+17/10/23 11:51:10.774 INFO ControllerExecutor: Real: 0.392
+17/10/23 11:51:10.774 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:51:10.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:51:10.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:11.773 INFO ControllerExecutor: SP Updated: 0.4123938085942868
+17/10/23 11:51:11.773 INFO ControllerExecutor: Real: 0.416
+17/10/23 11:51:11.773 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:51:11.775 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 1, DELTA: 1
+17/10/23 11:51:11.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:12.775 INFO ControllerExecutor: SP Updated: 0.43988672916723925
+17/10/23 11:51:12.775 INFO ControllerExecutor: Real: 0.452
+17/10/23 11:51:12.775 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:51:12.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:51:12.778 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:13.773 INFO ControllerExecutor: SP Updated: 0.4673796497401917
+17/10/23 11:51:13.773 INFO ControllerExecutor: Real: 0.48
+17/10/23 11:51:13.773 INFO ControllerExecutor: CoreToAllocate: 1.0
+17/10/23 11:51:13.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:51:13.776 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:14.773 INFO ControllerExecutor: SP Updated: 0.49487257031314413
+17/10/23 11:51:14.773 INFO ControllerExecutor: Real: 0.504
+17/10/23 11:51:14.773 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:51:14.776 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 1, DELTA: 0
+17/10/23 11:51:14.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:15.773 INFO ControllerExecutor: SP Updated: 0.5223654908860966
+17/10/23 11:51:15.773 INFO ControllerExecutor: Real: 0.528
+17/10/23 11:51:15.773 INFO ControllerExecutor: CoreToAllocate: 1.35
+17/10/23 11:51:15.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.350000 Core
+17/10/23 11:51:15.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.350000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:16.773 INFO ControllerExecutor: SP Updated: 0.5498584114590491
+17/10/23 11:51:16.774 INFO ControllerExecutor: Real: 0.552
+17/10/23 11:51:16.774 INFO ControllerExecutor: CoreToAllocate: 1.55
+17/10/23 11:51:16.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.550000, RUNNING: 1, DELTA: 1
+17/10/23 11:51:16.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.550000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:17.775 INFO ControllerExecutor: SP Updated: 0.5773513320320016
+17/10/23 11:51:17.775 INFO ControllerExecutor: Real: 0.588
+17/10/23 11:51:17.775 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:51:17.778 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:51:17.778 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:18.773 INFO ControllerExecutor: SP Updated: 0.6048442526049541
+17/10/23 11:51:18.773 INFO ControllerExecutor: Real: 0.616
+17/10/23 11:51:18.773 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:51:18.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:51:18.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:19.773 INFO ControllerExecutor: SP Updated: 0.6323371731779066
+17/10/23 11:51:19.773 INFO ControllerExecutor: Real: 0.64
+17/10/23 11:51:19.773 INFO ControllerExecutor: CoreToAllocate: 1.2000000000000002
+17/10/23 11:51:19.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.200000, RUNNING: 1, DELTA: 0
+17/10/23 11:51:19.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.200000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:20.774 INFO ControllerExecutor: SP Updated: 0.6598300937508591
+17/10/23 11:51:20.774 INFO ControllerExecutor: Real: 0.664
+17/10/23 11:51:20.774 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:51:20.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:51:20.778 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:21.773 INFO ControllerExecutor: SP Updated: 0.6873230143238116
+17/10/23 11:51:21.773 INFO ControllerExecutor: Real: 0.688
+17/10/23 11:51:21.773 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:51:21.776 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+17/10/23 11:51:21.776 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:22.775 INFO ControllerExecutor: SP Updated: 0.7148159348967641
+17/10/23 11:51:22.775 INFO ControllerExecutor: Real: 0.72
+17/10/23 11:51:22.775 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:51:22.778 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:51:22.778 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:23.773 INFO ControllerExecutor: SP Updated: 0.7423088554697166
+17/10/23 11:51:23.773 INFO ControllerExecutor: Real: 0.748
+17/10/23 11:51:23.773 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:51:24.774 INFO ControllerExecutor: SP Updated: 0.7698017760426691
+17/10/23 11:51:24.774 INFO ControllerExecutor: Real: 0.776
+17/10/23 11:51:24.774 INFO ControllerExecutor: CoreToAllocate: 1.35
+17/10/23 11:51:24.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.350000 Core
+17/10/23 11:51:24.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.350000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:25.773 INFO ControllerExecutor: SP Updated: 0.7972946966156216
+17/10/23 11:51:25.773 INFO ControllerExecutor: Real: 0.784
+17/10/23 11:51:25.773 INFO ControllerExecutor: CoreToAllocate: 2.4000000000000004
+17/10/23 11:51:25.775 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.400000 Core
+17/10/23 11:51:25.775 INFO ControllerProxy$ProxyEndpoint: CORES: 2.400000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:51:26.773 INFO ControllerExecutor: SP Updated: 0.8247876171885741
+17/10/23 11:51:26.773 INFO ControllerExecutor: Real: 0.824
+17/10/23 11:51:26.773 INFO ControllerExecutor: CoreToAllocate: 1.8
+17/10/23 11:51:26.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.800000 Core
+17/10/23 11:51:26.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.800000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:27.775 INFO ControllerExecutor: SP Updated: 0.8522805377615266
+17/10/23 11:51:27.775 INFO ControllerExecutor: Real: 0.868
+17/10/23 11:51:27.775 INFO ControllerExecutor: CoreToAllocate: 0.9500000000000001
+17/10/23 11:51:27.778 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.950000 Core
+17/10/23 11:51:27.778 INFO ControllerProxy$ProxyEndpoint: CORES: 0.950000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:28.773 INFO ControllerExecutor: SP Updated: 0.8797734583344791
+17/10/23 11:51:28.773 INFO ControllerExecutor: Real: 0.896
+17/10/23 11:51:28.773 INFO ControllerExecutor: CoreToAllocate: 0.9
+17/10/23 11:51:28.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.900000 Core
+17/10/23 11:51:28.777 INFO ControllerProxy$ProxyEndpoint: CORES: 0.900000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:29.773 INFO ControllerExecutor: SP Updated: 0.9072663789074316
+17/10/23 11:51:29.773 INFO ControllerExecutor: Real: 0.92
+17/10/23 11:51:29.773 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:51:29.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 1, DELTA: 0
+17/10/23 11:51:29.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:30.773 INFO ControllerExecutor: SP Updated: 0.934759299480384
+17/10/23 11:51:30.773 INFO ControllerExecutor: Real: 0.944
+17/10/23 11:51:30.773 INFO ControllerExecutor: CoreToAllocate: 1.2000000000000002
+17/10/23 11:51:30.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.200000 Core
+17/10/23 11:51:30.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.200000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:31.773 INFO ControllerExecutor: SP Updated: 0.9622522200533365
+17/10/23 11:51:31.773 INFO ControllerExecutor: Real: 0.968
+17/10/23 11:51:31.773 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:51:31.777 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 1, DELTA: 0
+17/10/23 11:51:31.777 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:32.775 INFO ControllerExecutor: SP Updated: 0.989745140626289
+17/10/23 11:51:32.775 INFO ControllerExecutor: Real: 0.992
+17/10/23 11:51:32.775 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:51:32.779 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:51:32.779 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+17/10/23 11:51:32.783 INFO ControllerProxy$ProxyEndpoint: Killed TID 4030 EID 0
+app-20171023114926-0001.0
+17/10/23 11:51:33.204 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:51:33.207 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  8.000000 Core
+17/10/23 11:51:33.207 INFO ControllerProxy$ProxyEndpoint: CORES: 8.000000, RUNNING: 0, DELTA: 8
+17/10/23 11:51:33.208 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 6
+17/10/23 11:51:33.208 INFO Worker: Created ControllerExecutor: 0 , 6 , 82906 , 250 , 8.000000
+app-20171023114926-0001.0
+17/10/23 11:51:34.209 INFO ControllerExecutor: SP Updated: 0.012061853183123056
+17/10/23 11:51:34.209 INFO ControllerExecutor: Real: 0.032
+17/10/23 11:51:34.209 INFO ControllerExecutor: CoreToAllocate: 6.95
+17/10/23 11:51:34.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  6.950000 Core
+17/10/23 11:51:34.212 INFO ControllerProxy$ProxyEndpoint: CORES: 6.950000, RUNNING: 8, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:35.209 INFO ControllerExecutor: SP Updated: 0.02412370636624611
+17/10/23 11:51:35.209 INFO ControllerExecutor: Real: 0.064
+17/10/23 11:51:35.209 INFO ControllerExecutor: CoreToAllocate: 5.800000000000001
+17/10/23 11:51:35.212 INFO ControllerProxy$ProxyEndpoint: CORES: 5.800000, RUNNING: 7, DELTA: -1
+17/10/23 11:51:35.213 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  5.800000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:36.208 INFO ControllerExecutor: SP Updated: 0.03618555954936917
+17/10/23 11:51:36.208 INFO ControllerExecutor: Real: 0.092
+17/10/23 11:51:36.208 INFO ControllerExecutor: CoreToAllocate: 4.800000000000001
+17/10/23 11:51:36.212 INFO ControllerProxy$ProxyEndpoint: CORES: 4.800000, RUNNING: 6, DELTA: -1
+17/10/23 11:51:36.213 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  4.800000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:37.208 INFO ControllerExecutor: SP Updated: 0.04824741273249222
+17/10/23 11:51:37.208 INFO ControllerExecutor: Real: 0.136
+17/10/23 11:51:37.208 INFO ControllerExecutor: CoreToAllocate: 2.85
+17/10/23 11:51:37.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.850000 Core
+17/10/23 11:51:37.212 INFO ControllerProxy$ProxyEndpoint: CORES: 2.850000, RUNNING: 5, DELTA: -2
+app-20171023114926-0001.0
+17/10/23 11:51:38.210 INFO ControllerExecutor: SP Updated: 0.06030926591561528
+17/10/23 11:51:38.210 INFO ControllerExecutor: Real: 0.156
+17/10/23 11:51:38.210 INFO ControllerExecutor: CoreToAllocate: 2.1
+17/10/23 11:51:38.213 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.100000 Core
+17/10/23 11:51:38.213 INFO ControllerProxy$ProxyEndpoint: CORES: 2.100000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:39.208 INFO ControllerExecutor: SP Updated: 0.07237111909873833
+17/10/23 11:51:39.209 INFO ControllerExecutor: Real: 0.176
+17/10/23 11:51:39.209 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:51:39.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:51:39.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:40.208 INFO ControllerExecutor: SP Updated: 0.08443297228186139
+17/10/23 11:51:40.208 INFO ControllerExecutor: Real: 0.184
+17/10/23 11:51:40.208 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:51:40.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:51:40.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:41.208 INFO ControllerExecutor: SP Updated: 0.09649482546498445
+17/10/23 11:51:41.208 INFO ControllerExecutor: Real: 0.188
+17/10/23 11:51:41.208 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:51:41.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:51:41.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:42.208 INFO ControllerExecutor: SP Updated: 0.1085566786481075
+17/10/23 11:51:42.209 INFO ControllerExecutor: Real: 0.196
+17/10/23 11:51:42.209 INFO ControllerExecutor: CoreToAllocate: 1.0
+17/10/23 11:51:42.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:51:42.213 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:43.209 INFO ControllerExecutor: SP Updated: 0.12061853183123056
+17/10/23 11:51:43.210 INFO ControllerExecutor: Real: 0.2
+17/10/23 11:51:43.210 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:51:43.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:51:43.213 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:44.208 INFO ControllerExecutor: SP Updated: 0.1326803850143536
+17/10/23 11:51:44.209 INFO ControllerExecutor: Real: 0.208
+17/10/23 11:51:44.209 INFO ControllerExecutor: CoreToAllocate: 1.0
+17/10/23 11:51:44.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:51:44.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:45.208 INFO ControllerExecutor: SP Updated: 0.14474223819747667
+17/10/23 11:51:45.208 INFO ControllerExecutor: Real: 0.212
+17/10/23 11:51:45.208 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:51:45.220 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 1, DELTA: 0
+17/10/23 11:51:45.220 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:46.208 INFO ControllerExecutor: SP Updated: 0.15680409138059972
+17/10/23 11:51:46.208 INFO ControllerExecutor: Real: 0.22
+17/10/23 11:51:46.208 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:51:46.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:51:46.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:47.208 INFO ControllerExecutor: SP Updated: 0.16886594456372278
+17/10/23 11:51:47.208 INFO ControllerExecutor: Real: 0.228
+17/10/23 11:51:47.208 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:51:48.210 INFO ControllerExecutor: SP Updated: 0.18092779774684584
+17/10/23 11:51:48.210 INFO ControllerExecutor: Real: 0.228
+17/10/23 11:51:48.210 INFO ControllerExecutor: CoreToAllocate: 1.55
+17/10/23 11:51:48.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.550000, RUNNING: 1, DELTA: 1
+17/10/23 11:51:48.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.550000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:49.209 INFO ControllerExecutor: SP Updated: 0.1929896509299689
+17/10/23 11:51:49.209 INFO ControllerExecutor: Real: 0.24
+17/10/23 11:51:49.209 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:51:49.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:51:49.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:51:50.209 INFO ControllerExecutor: SP Updated: 0.20505150411309195
+17/10/23 11:51:50.209 INFO ControllerExecutor: Real: 0.248
+17/10/23 11:51:50.209 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:51:50.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 1, DELTA: 0
+17/10/23 11:51:50.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:51.209 INFO ControllerExecutor: SP Updated: 0.217113357296215
+17/10/23 11:51:51.209 INFO ControllerExecutor: Real: 0.256
+17/10/23 11:51:51.209 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:51:51.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:51:51.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:51:52.209 INFO ControllerExecutor: SP Updated: 0.22917521047933806
+17/10/23 11:51:52.209 INFO ControllerExecutor: Real: 0.264
+17/10/23 11:51:52.209 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:51:52.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:51:52.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:53.210 INFO ControllerExecutor: SP Updated: 0.24123706366246112
+17/10/23 11:51:53.210 INFO ControllerExecutor: Real: 0.272
+17/10/23 11:51:53.210 INFO ControllerExecutor: CoreToAllocate: 1.7000000000000002
+17/10/23 11:51:53.213 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.700000 Core
+17/10/23 11:51:53.213 INFO ControllerProxy$ProxyEndpoint: CORES: 1.700000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:54.208 INFO ControllerExecutor: SP Updated: 0.25329891684558414
+17/10/23 11:51:54.209 INFO ControllerExecutor: Real: 0.28
+17/10/23 11:51:54.209 INFO ControllerExecutor: CoreToAllocate: 1.8
+17/10/23 11:51:54.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.800000, RUNNING: 2, DELTA: 0
+17/10/23 11:51:54.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.800000 Core
+app-20171023114926-0001.0
+17/10/23 11:51:55.208 INFO ControllerExecutor: SP Updated: 0.26536077002870717
+17/10/23 11:51:55.209 INFO ControllerExecutor: Real: 0.296
+17/10/23 11:51:55.209 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:51:55.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:51:55.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:56.208 INFO ControllerExecutor: SP Updated: 0.2774226232118302
+17/10/23 11:51:56.208 INFO ControllerExecutor: Real: 0.304
+17/10/23 11:51:56.208 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:51:56.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:51:56.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:57.208 INFO ControllerExecutor: SP Updated: 0.2894844763949532
+17/10/23 11:51:57.208 INFO ControllerExecutor: Real: 0.312
+17/10/23 11:51:57.208 INFO ControllerExecutor: CoreToAllocate: 1.75
+17/10/23 11:51:57.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.750000 Core
+17/10/23 11:51:57.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.750000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:58.210 INFO ControllerExecutor: SP Updated: 0.30154632957807626
+17/10/23 11:51:58.210 INFO ControllerExecutor: Real: 0.32
+17/10/23 11:51:58.210 INFO ControllerExecutor: CoreToAllocate: 1.9000000000000001
+17/10/23 11:51:58.216 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.900000 Core
+17/10/23 11:51:58.216 INFO ControllerProxy$ProxyEndpoint: CORES: 1.900000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:51:59.208 INFO ControllerExecutor: SP Updated: 0.3136081827611993
+17/10/23 11:51:59.208 INFO ControllerExecutor: Real: 0.336
+17/10/23 11:51:59.208 INFO ControllerExecutor: CoreToAllocate: 1.6500000000000001
+17/10/23 11:51:59.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.650000 Core
+17/10/23 11:51:59.219 INFO ControllerProxy$ProxyEndpoint: CORES: 1.650000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:00.209 INFO ControllerExecutor: SP Updated: 0.3256700359443223
+17/10/23 11:52:00.209 INFO ControllerExecutor: Real: 0.344
+17/10/23 11:52:00.209 INFO ControllerExecutor: CoreToAllocate: 1.8
+17/10/23 11:52:00.219 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.800000 Core
+17/10/23 11:52:00.219 INFO ControllerProxy$ProxyEndpoint: CORES: 1.800000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:01.208 INFO ControllerExecutor: SP Updated: 0.33773188912744534
+17/10/23 11:52:01.208 INFO ControllerExecutor: Real: 0.356
+17/10/23 11:52:01.208 INFO ControllerExecutor: CoreToAllocate: 1.75
+17/10/23 11:52:01.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.750000 Core
+17/10/23 11:52:01.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.750000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:02.208 INFO ControllerExecutor: SP Updated: 0.34979374231056837
+17/10/23 11:52:02.208 INFO ControllerExecutor: Real: 0.368
+17/10/23 11:52:02.208 INFO ControllerExecutor: CoreToAllocate: 1.7000000000000002
+17/10/23 11:52:02.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.700000 Core
+17/10/23 11:52:02.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.700000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:03.210 INFO ControllerExecutor: SP Updated: 0.3618555954936914
+17/10/23 11:52:03.210 INFO ControllerExecutor: Real: 0.376
+17/10/23 11:52:03.210 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:03.213 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.850000 Core
+17/10/23 11:52:03.213 INFO ControllerProxy$ProxyEndpoint: CORES: 1.850000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:04.209 INFO ControllerExecutor: SP Updated: 0.3739174486768144
+17/10/23 11:52:04.209 INFO ControllerExecutor: Real: 0.392
+17/10/23 11:52:04.209 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:52:04.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:52:04.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:05.208 INFO ControllerExecutor: SP Updated: 0.38597930185993745
+17/10/23 11:52:05.208 INFO ControllerExecutor: Real: 0.4
+17/10/23 11:52:05.208 INFO ControllerExecutor: CoreToAllocate: 1.75
+17/10/23 11:52:05.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.750000 Core
+17/10/23 11:52:05.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.750000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:06.208 INFO ControllerExecutor: SP Updated: 0.3980411550430605
+17/10/23 11:52:06.208 INFO ControllerExecutor: Real: 0.412
+17/10/23 11:52:06.208 INFO ControllerExecutor: CoreToAllocate: 1.7000000000000002
+17/10/23 11:52:06.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.700000 Core
+17/10/23 11:52:06.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.700000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:07.208 INFO ControllerExecutor: SP Updated: 0.4101030082261835
+17/10/23 11:52:07.209 INFO ControllerExecutor: Real: 0.424
+17/10/23 11:52:07.209 INFO ControllerExecutor: CoreToAllocate: 1.6500000000000001
+17/10/23 11:52:07.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.650000 Core
+17/10/23 11:52:07.212 INFO ControllerProxy$ProxyEndpoint: CORES: 1.650000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:08.210 INFO ControllerExecutor: SP Updated: 0.42216486140930654
+17/10/23 11:52:08.210 INFO ControllerExecutor: Real: 0.432
+17/10/23 11:52:08.210 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:08.213 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.850000 Core
+17/10/23 11:52:08.213 INFO ControllerProxy$ProxyEndpoint: CORES: 1.850000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:09.208 INFO ControllerExecutor: SP Updated: 0.43422671459242956
+17/10/23 11:52:09.208 INFO ControllerExecutor: Real: 0.44
+17/10/23 11:52:09.209 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:09.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+17/10/23 11:52:09.211 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:10.209 INFO ControllerExecutor: SP Updated: 0.4462885677755526
+17/10/23 11:52:10.209 INFO ControllerExecutor: Real: 0.456
+17/10/23 11:52:10.209 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:10.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.850000 Core
+17/10/23 11:52:10.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.850000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:11.209 INFO ControllerExecutor: SP Updated: 0.4583504209586756
+17/10/23 11:52:11.209 INFO ControllerExecutor: Real: 0.468
+17/10/23 11:52:11.209 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:12.208 INFO ControllerExecutor: SP Updated: 0.47041227414179865
+17/10/23 11:52:12.208 INFO ControllerExecutor: Real: 0.48
+17/10/23 11:52:12.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:13.210 INFO ControllerExecutor: SP Updated: 0.4824741273249217
+17/10/23 11:52:13.210 INFO ControllerExecutor: Real: 0.492
+17/10/23 11:52:13.210 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:14.208 INFO ControllerExecutor: SP Updated: 0.4945359805080447
+17/10/23 11:52:14.208 INFO ControllerExecutor: Real: 0.504
+17/10/23 11:52:14.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:15.208 INFO ControllerExecutor: SP Updated: 0.5065978336911677
+17/10/23 11:52:15.209 INFO ControllerExecutor: Real: 0.516
+17/10/23 11:52:15.209 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:16.208 INFO ControllerExecutor: SP Updated: 0.5186596868742908
+17/10/23 11:52:16.208 INFO ControllerExecutor: Real: 0.528
+17/10/23 11:52:16.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:17.208 INFO ControllerExecutor: SP Updated: 0.5307215400574138
+17/10/23 11:52:17.208 INFO ControllerExecutor: Real: 0.54
+17/10/23 11:52:17.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:18.210 INFO ControllerExecutor: SP Updated: 0.5427833932405368
+17/10/23 11:52:18.210 INFO ControllerExecutor: Real: 0.552
+17/10/23 11:52:18.210 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:19.209 INFO ControllerExecutor: SP Updated: 0.5548452464236598
+17/10/23 11:52:19.209 INFO ControllerExecutor: Real: 0.564
+17/10/23 11:52:19.209 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:20.208 INFO ControllerExecutor: SP Updated: 0.5669070996067829
+17/10/23 11:52:20.208 INFO ControllerExecutor: Real: 0.576
+17/10/23 11:52:20.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:21.208 INFO ControllerExecutor: SP Updated: 0.5789689527899059
+17/10/23 11:52:21.208 INFO ControllerExecutor: Real: 0.588
+17/10/23 11:52:21.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:22.209 INFO ControllerExecutor: SP Updated: 0.5910308059730289
+17/10/23 11:52:22.209 INFO ControllerExecutor: Real: 0.6
+17/10/23 11:52:22.209 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:23.210 INFO ControllerExecutor: SP Updated: 0.603092659156152
+17/10/23 11:52:23.210 INFO ControllerExecutor: Real: 0.612
+17/10/23 11:52:23.210 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:24.208 INFO ControllerExecutor: SP Updated: 0.615154512339275
+17/10/23 11:52:24.208 INFO ControllerExecutor: Real: 0.624
+17/10/23 11:52:24.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:25.208 INFO ControllerExecutor: SP Updated: 0.627216365522398
+17/10/23 11:52:25.208 INFO ControllerExecutor: Real: 0.636
+17/10/23 11:52:25.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:26.208 INFO ControllerExecutor: SP Updated: 0.639278218705521
+17/10/23 11:52:26.208 INFO ControllerExecutor: Real: 0.644
+17/10/23 11:52:26.209 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:26.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+17/10/23 11:52:26.211 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:27.208 INFO ControllerExecutor: SP Updated: 0.6513400718886441
+17/10/23 11:52:27.208 INFO ControllerExecutor: Real: 0.66
+17/10/23 11:52:27.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:27.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.850000 Core
+17/10/23 11:52:27.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.850000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:28.210 INFO ControllerExecutor: SP Updated: 0.6634019250717671
+17/10/23 11:52:28.210 INFO ControllerExecutor: Real: 0.672
+17/10/23 11:52:28.210 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:29.208 INFO ControllerExecutor: SP Updated: 0.6754637782548901
+17/10/23 11:52:29.209 INFO ControllerExecutor: Real: 0.684
+17/10/23 11:52:29.209 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:30.208 INFO ControllerExecutor: SP Updated: 0.6875256314380132
+17/10/23 11:52:30.208 INFO ControllerExecutor: Real: 0.696
+17/10/23 11:52:30.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:31.208 INFO ControllerExecutor: SP Updated: 0.6995874846211362
+17/10/23 11:52:31.208 INFO ControllerExecutor: Real: 0.708
+17/10/23 11:52:31.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:32.208 INFO ControllerExecutor: SP Updated: 0.7116493378042592
+17/10/23 11:52:32.208 INFO ControllerExecutor: Real: 0.72
+17/10/23 11:52:32.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:33.210 INFO ControllerExecutor: SP Updated: 0.7237111909873822
+17/10/23 11:52:33.210 INFO ControllerExecutor: Real: 0.732
+17/10/23 11:52:33.210 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:34.208 INFO ControllerExecutor: SP Updated: 0.7357730441705053
+17/10/23 11:52:34.209 INFO ControllerExecutor: Real: 0.74
+17/10/23 11:52:34.209 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:34.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+17/10/23 11:52:34.212 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:35.208 INFO ControllerExecutor: SP Updated: 0.7478348973536283
+17/10/23 11:52:35.208 INFO ControllerExecutor: Real: 0.756
+17/10/23 11:52:35.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:35.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.850000 Core
+17/10/23 11:52:35.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.850000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:36.208 INFO ControllerExecutor: SP Updated: 0.7598967505367513
+17/10/23 11:52:36.208 INFO ControllerExecutor: Real: 0.764
+17/10/23 11:52:36.208 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:36.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+17/10/23 11:52:36.211 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:37.208 INFO ControllerExecutor: SP Updated: 0.7719586037198743
+17/10/23 11:52:37.208 INFO ControllerExecutor: Real: 0.78
+17/10/23 11:52:37.208 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:52:37.210 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.850000 Core
+17/10/23 11:52:37.211 INFO ControllerProxy$ProxyEndpoint: CORES: 1.850000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:38.209 INFO ControllerExecutor: SP Updated: 0.7840204569029974
+17/10/23 11:52:38.209 INFO ControllerExecutor: Real: 0.788
+17/10/23 11:52:38.209 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:38.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.050000 Core
+17/10/23 11:52:38.212 INFO ControllerProxy$ProxyEndpoint: CORES: 2.050000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:39.208 INFO ControllerExecutor: SP Updated: 0.7960823100861204
+17/10/23 11:52:39.208 INFO ControllerExecutor: Real: 0.8
+17/10/23 11:52:39.208 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:40.208 INFO ControllerExecutor: SP Updated: 0.8081441632692434
+17/10/23 11:52:40.208 INFO ControllerExecutor: Real: 0.812
+17/10/23 11:52:40.208 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:41.208 INFO ControllerExecutor: SP Updated: 0.8202060164523665
+17/10/23 11:52:41.209 INFO ControllerExecutor: Real: 0.824
+17/10/23 11:52:41.209 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:42.208 INFO ControllerExecutor: SP Updated: 0.8322678696354895
+17/10/23 11:52:42.208 INFO ControllerExecutor: Real: 0.836
+17/10/23 11:52:42.208 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:43.210 INFO ControllerExecutor: SP Updated: 0.8443297228186125
+17/10/23 11:52:43.210 INFO ControllerExecutor: Real: 0.848
+17/10/23 11:52:43.210 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:44.208 INFO ControllerExecutor: SP Updated: 0.8563915760017355
+17/10/23 11:52:44.208 INFO ControllerExecutor: Real: 0.86
+17/10/23 11:52:44.208 INFO ControllerExecutor: CoreToAllocate: 2.0500000000000003
+17/10/23 11:52:45.208 INFO ControllerExecutor: SP Updated: 0.8684534291848586
+17/10/23 11:52:45.208 INFO ControllerExecutor: Real: 0.868
+17/10/23 11:52:45.209 INFO ControllerExecutor: CoreToAllocate: 2.3000000000000003
+17/10/23 11:52:45.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.300000 Core
+17/10/23 11:52:45.212 INFO ControllerProxy$ProxyEndpoint: CORES: 2.300000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:46.208 INFO ControllerExecutor: SP Updated: 0.8805152823679816
+17/10/23 11:52:46.208 INFO ControllerExecutor: Real: 0.876
+17/10/23 11:52:46.208 INFO ControllerExecutor: CoreToAllocate: 2.5500000000000003
+17/10/23 11:52:46.210 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.550000 Core
+17/10/23 11:52:46.210 INFO ControllerProxy$ProxyEndpoint: CORES: 2.550000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:52:47.209 INFO ControllerExecutor: SP Updated: 0.8925771355511046
+17/10/23 11:52:47.209 INFO ControllerExecutor: Real: 0.888
+17/10/23 11:52:47.209 INFO ControllerExecutor: CoreToAllocate: 2.6
+17/10/23 11:52:47.211 INFO ControllerProxy$ProxyEndpoint: CORES: 2.600000, RUNNING: 3, DELTA: 0
+17/10/23 11:52:47.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.600000 Core
+app-20171023114926-0001.0
+17/10/23 11:52:48.210 INFO ControllerExecutor: SP Updated: 0.9046389887342277
+17/10/23 11:52:48.210 INFO ControllerExecutor: Real: 0.9
+17/10/23 11:52:48.210 INFO ControllerExecutor: CoreToAllocate: 2.6500000000000004
+17/10/23 11:52:48.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.650000 Core
+17/10/23 11:52:48.212 INFO ControllerProxy$ProxyEndpoint: CORES: 2.650000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:49.209 INFO ControllerExecutor: SP Updated: 0.9167008419173507
+17/10/23 11:52:49.209 INFO ControllerExecutor: Real: 0.916
+17/10/23 11:52:49.209 INFO ControllerExecutor: CoreToAllocate: 2.5
+17/10/23 11:52:49.210 INFO ControllerProxy$ProxyEndpoint: CORES: 2.500000, RUNNING: 3, DELTA: 0
+17/10/23 11:52:49.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.500000 Core
+app-20171023114926-0001.0
+17/10/23 11:52:50.208 INFO ControllerExecutor: SP Updated: 0.9287626951004737
+17/10/23 11:52:50.208 INFO ControllerExecutor: Real: 0.924
+17/10/23 11:52:50.208 INFO ControllerExecutor: CoreToAllocate: 2.75
+17/10/23 11:52:50.210 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.750000 Core
+17/10/23 11:52:50.210 INFO ControllerProxy$ProxyEndpoint: CORES: 2.750000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:52:51.208 INFO ControllerExecutor: SP Updated: 0.9408245482835967
+17/10/23 11:52:51.208 INFO ControllerExecutor: Real: 0.932
+17/10/23 11:52:51.208 INFO ControllerExecutor: CoreToAllocate: 3.0
+17/10/23 11:52:51.210 INFO ControllerProxy$ProxyEndpoint: CORES: 3.000000, RUNNING: 3, DELTA: 0
+17/10/23 11:52:51.210 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.000000 Core
+app-20171023114926-0001.0
+17/10/23 11:52:52.209 INFO ControllerExecutor: SP Updated: 0.9528864014667198
+17/10/23 11:52:52.209 INFO ControllerExecutor: Real: 0.932
+17/10/23 11:52:52.209 INFO ControllerExecutor: CoreToAllocate: 3.7
+17/10/23 11:52:52.211 INFO ControllerProxy$ProxyEndpoint: CORES: 3.700000, RUNNING: 3, DELTA: 1
+17/10/23 11:52:52.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.700000 Core
+app-20171023114926-0001.0
+17/10/23 11:52:53.210 INFO ControllerExecutor: SP Updated: 0.9649482546498428
+17/10/23 11:52:53.210 INFO ControllerExecutor: Real: 0.932
+17/10/23 11:52:53.210 INFO ControllerExecutor: CoreToAllocate: 4.45
+17/10/23 11:52:53.212 INFO ControllerProxy$ProxyEndpoint: CORES: 4.450000, RUNNING: 4, DELTA: 0
+17/10/23 11:52:53.213 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  4.450000 Core
+app-20171023114926-0001.0
+17/10/23 11:52:54.208 INFO ControllerExecutor: SP Updated: 0.9770101078329658
+17/10/23 11:52:54.209 INFO ControllerExecutor: Real: 0.944
+17/10/23 11:52:54.209 INFO ControllerExecutor: CoreToAllocate: 4.6000000000000005
+17/10/23 11:52:54.320 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  4.600000 Core
+17/10/23 11:52:54.330 INFO ControllerProxy$ProxyEndpoint: CORES: 4.600000, RUNNING: 4, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:52:55.209 INFO ControllerExecutor: SP Updated: 0.9890719610160889
+17/10/23 11:52:55.209 INFO ControllerExecutor: Real: 0.944
+17/10/23 11:52:55.209 INFO ControllerExecutor: CoreToAllocate: 5.4
+17/10/23 11:52:55.212 INFO ControllerProxy$ProxyEndpoint: CORES: 5.400000, RUNNING: 5, DELTA: 0
+17/10/23 11:52:55.212 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  5.400000 Core
+app-20171023114926-0001.0
+17/10/23 11:52:56.208 INFO ControllerExecutor: SP Updated: 1.0
+17/10/23 11:52:56.208 INFO ControllerExecutor: Real: 0.956
+17/10/23 11:52:56.208 INFO ControllerExecutor: CoreToAllocate: 16.0
+17/10/23 11:52:56.211 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  16.000000 Core
+17/10/23 11:52:56.211 INFO ControllerProxy$ProxyEndpoint: CORES: 16.000000, RUNNING: 5, DELTA: 11
+app-20171023114926-0001.0
+17/10/23 11:52:57.215 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:52:57.218 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.250000 Core
+17/10/23 11:52:57.218 INFO ControllerProxy$ProxyEndpoint: CORES: 2.250000, RUNNING: 0, DELTA: 2
+17/10/23 11:52:57.218 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 7
+17/10/23 11:52:57.218 INFO Worker: Created ControllerExecutor: 0 , 7 , 67200 , 250 , 2.250000
+app-20171023114926-0001.0
+17/10/23 11:52:58.220 INFO ControllerExecutor: SP Updated: 0.01488095238095238
+17/10/23 11:52:58.220 INFO ControllerExecutor: Real: 0.0
+17/10/23 11:52:58.221 INFO ControllerExecutor: CoreToAllocate: 3.1
+17/10/23 11:52:58.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.100000 Core
+17/10/23 11:52:58.223 INFO ControllerProxy$ProxyEndpoint: CORES: 3.100000, RUNNING: 2, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:52:59.219 INFO ControllerExecutor: SP Updated: 0.02976190476190476
+17/10/23 11:52:59.219 INFO ControllerExecutor: Real: 0.0
+17/10/23 11:52:59.219 INFO ControllerExecutor: CoreToAllocate: 4.0
+17/10/23 11:52:59.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  4.000000 Core
+17/10/23 11:52:59.222 INFO ControllerProxy$ProxyEndpoint: CORES: 4.000000, RUNNING: 3, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:00.220 INFO ControllerExecutor: SP Updated: 0.04464285714285714
+17/10/23 11:53:00.220 INFO ControllerExecutor: Real: 0.0
+17/10/23 11:53:00.220 INFO ControllerExecutor: CoreToAllocate: 4.5
+17/10/23 11:53:00.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  4.500000 Core
+17/10/23 11:53:00.224 INFO ControllerProxy$ProxyEndpoint: CORES: 4.500000, RUNNING: 4, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:01.219 INFO ControllerExecutor: SP Updated: 0.05952380952380952
+17/10/23 11:53:01.219 INFO ControllerExecutor: Real: 0.036
+17/10/23 11:53:01.219 INFO ControllerExecutor: CoreToAllocate: 3.5500000000000003
+17/10/23 11:53:01.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.550000 Core
+17/10/23 11:53:01.222 INFO ControllerProxy$ProxyEndpoint: CORES: 3.550000, RUNNING: 5, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:02.219 INFO ControllerExecutor: SP Updated: 0.0744047619047619
+17/10/23 11:53:02.219 INFO ControllerExecutor: Real: 0.056
+17/10/23 11:53:02.219 INFO ControllerExecutor: CoreToAllocate: 3.4000000000000004
+17/10/23 11:53:02.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  3.400000 Core
+17/10/23 11:53:02.221 INFO ControllerProxy$ProxyEndpoint: CORES: 3.400000, RUNNING: 4, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:03.221 INFO ControllerExecutor: SP Updated: 0.08928571428571429
+17/10/23 11:53:03.221 INFO ControllerExecutor: Real: 0.084
+17/10/23 11:53:03.221 INFO ControllerExecutor: CoreToAllocate: 2.8000000000000003
+17/10/23 11:53:03.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.800000 Core
+17/10/23 11:53:03.223 INFO ControllerProxy$ProxyEndpoint: CORES: 2.800000, RUNNING: 3, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:04.219 INFO ControllerExecutor: SP Updated: 0.10416666666666667
+17/10/23 11:53:04.219 INFO ControllerExecutor: Real: 0.116
+17/10/23 11:53:04.219 INFO ControllerExecutor: CoreToAllocate: 1.9000000000000001
+17/10/23 11:53:04.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.900000 Core
+17/10/23 11:53:04.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.900000, RUNNING: 3, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:05.219 INFO ControllerExecutor: SP Updated: 0.11904761904761905
+17/10/23 11:53:05.219 INFO ControllerExecutor: Real: 0.136
+17/10/23 11:53:05.219 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:53:05.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:53:05.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:06.219 INFO ControllerExecutor: SP Updated: 0.13392857142857142
+17/10/23 11:53:06.219 INFO ControllerExecutor: Real: 0.152
+17/10/23 11:53:06.219 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:06.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:06.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:07.219 INFO ControllerExecutor: SP Updated: 0.1488095238095238
+17/10/23 11:53:07.219 INFO ControllerExecutor: Real: 0.168
+17/10/23 11:53:07.219 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:53:07.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:53:07.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:08.221 INFO ControllerExecutor: SP Updated: 0.1636904761904762
+17/10/23 11:53:08.221 INFO ControllerExecutor: Real: 0.18
+17/10/23 11:53:08.221 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:08.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:08.224 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:09.219 INFO ControllerExecutor: SP Updated: 0.17857142857142858
+17/10/23 11:53:09.219 INFO ControllerExecutor: Real: 0.192
+17/10/23 11:53:09.219 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:53:09.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:53:09.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:10.219 INFO ControllerExecutor: SP Updated: 0.19345238095238096
+17/10/23 11:53:10.219 INFO ControllerExecutor: Real: 0.208
+17/10/23 11:53:10.219 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:10.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:10.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:11.219 INFO ControllerExecutor: SP Updated: 0.20833333333333334
+17/10/23 11:53:11.220 INFO ControllerExecutor: Real: 0.224
+17/10/23 11:53:11.220 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:53:11.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:53:11.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:12.219 INFO ControllerExecutor: SP Updated: 0.22321428571428573
+17/10/23 11:53:12.219 INFO ControllerExecutor: Real: 0.24
+17/10/23 11:53:12.219 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:53:12.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:53:12.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:13.221 INFO ControllerExecutor: SP Updated: 0.2380952380952381
+17/10/23 11:53:13.221 INFO ControllerExecutor: Real: 0.252
+17/10/23 11:53:13.221 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:53:13.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:53:13.224 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:14.219 INFO ControllerExecutor: SP Updated: 0.25297619047619047
+17/10/23 11:53:14.219 INFO ControllerExecutor: Real: 0.264
+17/10/23 11:53:14.219 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:14.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:14.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:15.219 INFO ControllerExecutor: SP Updated: 0.26785714285714285
+17/10/23 11:53:15.219 INFO ControllerExecutor: Real: 0.28
+17/10/23 11:53:15.219 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:53:15.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:53:15.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:16.219 INFO ControllerExecutor: SP Updated: 0.28273809523809523
+17/10/23 11:53:16.219 INFO ControllerExecutor: Real: 0.292
+17/10/23 11:53:16.219 INFO ControllerExecutor: CoreToAllocate: 1.55
+17/10/23 11:53:16.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.550000, RUNNING: 1, DELTA: 1
+17/10/23 11:53:16.228 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.550000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:17.219 INFO ControllerExecutor: SP Updated: 0.2976190476190476
+17/10/23 11:53:17.219 INFO ControllerExecutor: Real: 0.304
+17/10/23 11:53:17.219 INFO ControllerExecutor: CoreToAllocate: 1.7000000000000002
+17/10/23 11:53:17.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.700000 Core
+17/10/23 11:53:17.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.700000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:18.221 INFO ControllerExecutor: SP Updated: 0.3125
+17/10/23 11:53:18.221 INFO ControllerExecutor: Real: 0.32
+17/10/23 11:53:18.221 INFO ControllerExecutor: CoreToAllocate: 1.6500000000000001
+17/10/23 11:53:18.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.650000, RUNNING: 2, DELTA: 0
+17/10/23 11:53:18.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.650000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:19.219 INFO ControllerExecutor: SP Updated: 0.3273809523809524
+17/10/23 11:53:19.219 INFO ControllerExecutor: Real: 0.336
+17/10/23 11:53:19.219 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:53:19.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:53:19.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:20.219 INFO ControllerExecutor: SP Updated: 0.34226190476190477
+17/10/23 11:53:20.219 INFO ControllerExecutor: Real: 0.352
+17/10/23 11:53:20.219 INFO ControllerExecutor: CoreToAllocate: 1.55
+17/10/23 11:53:20.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.550000 Core
+17/10/23 11:53:20.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.550000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:21.220 INFO ControllerExecutor: SP Updated: 0.35714285714285715
+17/10/23 11:53:21.220 INFO ControllerExecutor: Real: 0.368
+17/10/23 11:53:21.220 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:21.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:21.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:22.219 INFO ControllerExecutor: SP Updated: 0.37202380952380953
+17/10/23 11:53:22.219 INFO ControllerExecutor: Real: 0.384
+17/10/23 11:53:22.219 INFO ControllerExecutor: CoreToAllocate: 1.35
+17/10/23 11:53:22.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.350000, RUNNING: 1, DELTA: 0
+17/10/23 11:53:22.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.350000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:23.221 INFO ControllerExecutor: SP Updated: 0.3869047619047619
+17/10/23 11:53:23.221 INFO ControllerExecutor: Real: 0.396
+17/10/23 11:53:23.221 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:23.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:23.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:24.219 INFO ControllerExecutor: SP Updated: 0.4017857142857143
+17/10/23 11:53:24.219 INFO ControllerExecutor: Real: 0.412
+17/10/23 11:53:24.219 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:24.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:24.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:25.219 INFO ControllerExecutor: SP Updated: 0.4166666666666667
+17/10/23 11:53:25.219 INFO ControllerExecutor: Real: 0.424
+17/10/23 11:53:25.219 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:53:25.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:53:25.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:26.219 INFO ControllerExecutor: SP Updated: 0.43154761904761907
+17/10/23 11:53:26.219 INFO ControllerExecutor: Real: 0.436
+17/10/23 11:53:26.219 INFO ControllerExecutor: CoreToAllocate: 1.75
+17/10/23 11:53:26.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.750000 Core
+17/10/23 11:53:26.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.750000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:27.219 INFO ControllerExecutor: SP Updated: 0.44642857142857145
+17/10/23 11:53:27.219 INFO ControllerExecutor: Real: 0.456
+17/10/23 11:53:27.219 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:27.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:27.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:28.220 INFO ControllerExecutor: SP Updated: 0.46130952380952384
+17/10/23 11:53:28.220 INFO ControllerExecutor: Real: 0.476
+17/10/23 11:53:28.220 INFO ControllerExecutor: CoreToAllocate: 1.2000000000000002
+17/10/23 11:53:28.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.200000 Core
+17/10/23 11:53:28.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.200000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:29.219 INFO ControllerExecutor: SP Updated: 0.4761904761904762
+17/10/23 11:53:29.219 INFO ControllerExecutor: Real: 0.488
+17/10/23 11:53:29.219 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:53:29.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 1, DELTA: 0
+17/10/23 11:53:29.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:30.219 INFO ControllerExecutor: SP Updated: 0.4910714285714286
+17/10/23 11:53:30.219 INFO ControllerExecutor: Real: 0.5
+17/10/23 11:53:30.219 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:30.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:30.228 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:31.219 INFO ControllerExecutor: SP Updated: 0.5059523809523809
+17/10/23 11:53:31.219 INFO ControllerExecutor: Real: 0.512
+17/10/23 11:53:31.219 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:53:31.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:53:31.228 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:32.219 INFO ControllerExecutor: SP Updated: 0.5208333333333333
+17/10/23 11:53:32.219 INFO ControllerExecutor: Real: 0.528
+17/10/23 11:53:32.219 INFO ControllerExecutor: CoreToAllocate: 1.55
+17/10/23 11:53:32.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.550000, RUNNING: 2, DELTA: 0
+17/10/23 11:53:32.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.550000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:33.221 INFO ControllerExecutor: SP Updated: 0.5357142857142856
+17/10/23 11:53:33.221 INFO ControllerExecutor: Real: 0.544
+17/10/23 11:53:33.221 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:33.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+17/10/23 11:53:33.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:34.219 INFO ControllerExecutor: SP Updated: 0.5505952380952379
+17/10/23 11:53:34.219 INFO ControllerExecutor: Real: 0.56
+17/10/23 11:53:34.219 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:34.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:34.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:35.219 INFO ControllerExecutor: SP Updated: 0.5654761904761902
+17/10/23 11:53:35.220 INFO ControllerExecutor: Real: 0.576
+17/10/23 11:53:35.220 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:53:35.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 1, DELTA: 0
+17/10/23 11:53:35.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:36.219 INFO ControllerExecutor: SP Updated: 0.5803571428571426
+17/10/23 11:53:36.219 INFO ControllerExecutor: Real: 0.584
+17/10/23 11:53:36.219 INFO ControllerExecutor: CoreToAllocate: 1.75
+17/10/23 11:53:36.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.750000 Core
+17/10/23 11:53:36.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.750000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:37.220 INFO ControllerExecutor: SP Updated: 0.5952380952380949
+17/10/23 11:53:37.220 INFO ControllerExecutor: Real: 0.604
+17/10/23 11:53:37.220 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:37.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:37.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:38.221 INFO ControllerExecutor: SP Updated: 0.6101190476190472
+17/10/23 11:53:38.221 INFO ControllerExecutor: Real: 0.62
+17/10/23 11:53:38.221 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:38.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:38.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:39.219 INFO ControllerExecutor: SP Updated: 0.6249999999999996
+17/10/23 11:53:39.219 INFO ControllerExecutor: Real: 0.636
+17/10/23 11:53:39.219 INFO ControllerExecutor: CoreToAllocate: 1.35
+17/10/23 11:53:39.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.350000 Core
+17/10/23 11:53:39.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.350000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:40.219 INFO ControllerExecutor: SP Updated: 0.6398809523809519
+17/10/23 11:53:40.220 INFO ControllerExecutor: Real: 0.644
+17/10/23 11:53:40.220 INFO ControllerExecutor: CoreToAllocate: 1.7000000000000002
+17/10/23 11:53:40.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.700000 Core
+17/10/23 11:53:40.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.700000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:41.219 INFO ControllerExecutor: SP Updated: 0.6547619047619042
+17/10/23 11:53:41.219 INFO ControllerExecutor: Real: 0.664
+17/10/23 11:53:41.219 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:41.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:41.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:42.219 INFO ControllerExecutor: SP Updated: 0.6696428571428565
+17/10/23 11:53:42.219 INFO ControllerExecutor: Real: 0.676
+17/10/23 11:53:42.219 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:53:42.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:53:42.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:43.220 INFO ControllerExecutor: SP Updated: 0.6845238095238089
+17/10/23 11:53:43.221 INFO ControllerExecutor: Real: 0.696
+17/10/23 11:53:43.221 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:53:43.224 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 2, DELTA: -1
+17/10/23 11:53:43.224 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:44.219 INFO ControllerExecutor: SP Updated: 0.6994047619047612
+17/10/23 11:53:44.219 INFO ControllerExecutor: Real: 0.708
+17/10/23 11:53:44.219 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:44.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:44.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:45.219 INFO ControllerExecutor: SP Updated: 0.7142857142857135
+17/10/23 11:53:45.219 INFO ControllerExecutor: Real: 0.72
+17/10/23 11:53:45.219 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:53:45.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:53:45.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:46.219 INFO ControllerExecutor: SP Updated: 0.7291666666666659
+17/10/23 11:53:46.219 INFO ControllerExecutor: Real: 0.736
+17/10/23 11:53:46.219 INFO ControllerExecutor: CoreToAllocate: 1.55
+17/10/23 11:53:46.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.550000, RUNNING: 2, DELTA: 0
+17/10/23 11:53:46.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.550000 Core
+app-20171023114926-0001.0
+17/10/23 11:53:47.219 INFO ControllerExecutor: SP Updated: 0.7440476190476182
+17/10/23 11:53:47.220 INFO ControllerExecutor: Real: 0.752
+17/10/23 11:53:47.220 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:47.224 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:47.224 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:48.221 INFO ControllerExecutor: SP Updated: 0.7589285714285705
+17/10/23 11:53:48.221 INFO ControllerExecutor: Real: 0.764
+17/10/23 11:53:48.221 INFO ControllerExecutor: CoreToAllocate: 1.6500000000000001
+17/10/23 11:53:48.224 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.650000 Core
+17/10/23 11:53:48.224 INFO ControllerProxy$ProxyEndpoint: CORES: 1.650000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:49.219 INFO ControllerExecutor: SP Updated: 0.7738095238095228
+17/10/23 11:53:49.220 INFO ControllerExecutor: Real: 0.784
+17/10/23 11:53:49.220 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:53:49.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:53:49.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:50.220 INFO ControllerExecutor: SP Updated: 0.7886904761904752
+17/10/23 11:53:50.220 INFO ControllerExecutor: Real: 0.8
+17/10/23 11:53:50.220 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:53:50.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:53:50.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:51.219 INFO ControllerExecutor: SP Updated: 0.8035714285714275
+17/10/23 11:53:51.219 INFO ControllerExecutor: Real: 0.812
+17/10/23 11:53:51.219 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:51.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:51.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:52.219 INFO ControllerExecutor: SP Updated: 0.8184523809523798
+17/10/23 11:53:52.219 INFO ControllerExecutor: Real: 0.82
+17/10/23 11:53:52.219 INFO ControllerExecutor: CoreToAllocate: 1.8
+17/10/23 11:53:52.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.800000 Core
+17/10/23 11:53:52.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.800000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:53.220 INFO ControllerExecutor: SP Updated: 0.8333333333333321
+17/10/23 11:53:53.220 INFO ControllerExecutor: Real: 0.84
+17/10/23 11:53:53.220 INFO ControllerExecutor: CoreToAllocate: 1.55
+17/10/23 11:53:53.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.550000 Core
+17/10/23 11:53:53.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.550000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:54.220 INFO ControllerExecutor: SP Updated: 0.8482142857142845
+17/10/23 11:53:54.220 INFO ControllerExecutor: Real: 0.856
+17/10/23 11:53:54.220 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:54.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:54.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:55.219 INFO ControllerExecutor: SP Updated: 0.8630952380952368
+17/10/23 11:53:55.219 INFO ControllerExecutor: Real: 0.872
+17/10/23 11:53:55.219 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:55.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:55.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:53:56.219 INFO ControllerExecutor: SP Updated: 0.8779761904761891
+17/10/23 11:53:56.219 INFO ControllerExecutor: Real: 0.888
+17/10/23 11:53:56.219 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:53:56.227 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:53:56.228 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:57.219 INFO ControllerExecutor: SP Updated: 0.8928571428571415
+17/10/23 11:53:57.219 INFO ControllerExecutor: Real: 0.896
+17/10/23 11:53:57.219 INFO ControllerExecutor: CoreToAllocate: 1.75
+17/10/23 11:53:57.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.750000 Core
+17/10/23 11:53:57.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.750000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:53:58.220 INFO ControllerExecutor: SP Updated: 0.9077380952380938
+17/10/23 11:53:58.221 INFO ControllerExecutor: Real: 0.916
+17/10/23 11:53:58.221 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:53:58.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:53:58.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:53:59.219 INFO ControllerExecutor: SP Updated: 0.9226190476190461
+17/10/23 11:53:59.219 INFO ControllerExecutor: Real: 0.932
+17/10/23 11:53:59.219 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:53:59.221 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:53:59.221 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:00.220 INFO ControllerExecutor: SP Updated: 0.9374999999999984
+17/10/23 11:54:00.220 INFO ControllerExecutor: Real: 0.944
+17/10/23 11:54:00.220 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:54:00.225 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:54:00.225 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:01.219 INFO ControllerExecutor: SP Updated: 0.9523809523809508
+17/10/23 11:54:01.220 INFO ControllerExecutor: Real: 0.964
+17/10/23 11:54:01.220 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:54:01.223 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:54:01.223 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:02.219 INFO ControllerExecutor: SP Updated: 0.9672619047619031
+17/10/23 11:54:02.220 INFO ControllerExecutor: Real: 0.976
+17/10/23 11:54:02.220 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:54:02.222 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:54:02.222 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:03.221 INFO ControllerExecutor: SP Updated: 0.9821428571428554
+17/10/23 11:54:03.221 INFO ControllerExecutor: Real: 0.988
+17/10/23 11:54:03.221 INFO ControllerExecutor: CoreToAllocate: 1.6
+17/10/23 11:54:03.224 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.600000 Core
+17/10/23 11:54:03.224 INFO ControllerProxy$ProxyEndpoint: CORES: 1.600000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:03.936 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:54:03.939 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:54:03.967 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 0, DELTA: 1
+17/10/23 11:54:03.968 INFO Worker: Created ControllerExecutor: 0 , 8 , 27831 , 250 , 1.000000
+17/10/23 11:54:03.967 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 8
+app-20171023114926-0001.0
+17/10/23 11:54:04.968 INFO ControllerExecutor: SP Updated: 0.03593115590528547
+17/10/23 11:54:04.968 INFO ControllerExecutor: Real: 0.008
+17/10/23 11:54:04.968 INFO ControllerExecutor: CoreToAllocate: 2.0
+17/10/23 11:54:04.972 INFO ControllerProxy$ProxyEndpoint: CORES: 2.000000, RUNNING: 1, DELTA: 1
+17/10/23 11:54:04.973 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.000000 Core
+app-20171023114926-0001.0
+17/10/23 11:54:05.968 INFO ControllerExecutor: SP Updated: 0.07186231181057094
+17/10/23 11:54:05.968 INFO ControllerExecutor: Real: 0.132
+17/10/23 11:54:05.968 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:05.970 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 2, DELTA: -2
+17/10/23 11:54:05.970 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+app-20171023114926-0001.0
+17/10/23 11:54:06.969 INFO ControllerExecutor: SP Updated: 0.1077934677158564
+17/10/23 11:54:06.969 INFO ControllerExecutor: Real: 0.14
+17/10/23 11:54:06.969 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:54:06.972 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:54:06.972 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:07.970 INFO ControllerExecutor: SP Updated: 0.14372462362114188
+17/10/23 11:54:07.970 INFO ControllerExecutor: Real: 0.216
+17/10/23 11:54:07.970 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:07.972 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:07.972 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:08.968 INFO ControllerExecutor: SP Updated: 0.17965577952642736
+17/10/23 11:54:08.969 INFO ControllerExecutor: Real: 0.22
+17/10/23 11:54:08.969 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:54:08.972 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:54:08.972 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:09.968 INFO ControllerExecutor: SP Updated: 0.21558693543171284
+17/10/23 11:54:09.968 INFO ControllerExecutor: Real: 0.304
+17/10/23 11:54:09.968 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:09.970 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:09.970 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:10.968 INFO ControllerExecutor: SP Updated: 0.2515180913369983
+17/10/23 11:54:10.969 INFO ControllerExecutor: Real: 0.308
+17/10/23 11:54:10.969 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:54:10.971 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:54:10.971 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:11.968 INFO ControllerExecutor: SP Updated: 0.28744924724228377
+17/10/23 11:54:11.968 INFO ControllerExecutor: Real: 0.392
+17/10/23 11:54:11.968 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:11.970 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:11.970 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:12.970 INFO ControllerExecutor: SP Updated: 0.3233804031475692
+17/10/23 11:54:12.970 INFO ControllerExecutor: Real: 0.396
+17/10/23 11:54:12.970 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:54:12.973 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:54:12.973 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:13.969 INFO ControllerExecutor: SP Updated: 0.35931155905285467
+17/10/23 11:54:13.969 INFO ControllerExecutor: Real: 0.476
+17/10/23 11:54:13.969 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:13.974 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:13.974 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:14.968 INFO ControllerExecutor: SP Updated: 0.3952427149581401
+17/10/23 11:54:14.968 INFO ControllerExecutor: Real: 0.48
+17/10/23 11:54:14.968 INFO ControllerExecutor: CoreToAllocate: 1.25
+17/10/23 11:54:14.972 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.250000 Core
+17/10/23 11:54:14.972 INFO ControllerProxy$ProxyEndpoint: CORES: 1.250000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:15.968 INFO ControllerExecutor: SP Updated: 0.43117387086342557
+17/10/23 11:54:15.968 INFO ControllerExecutor: Real: 0.56
+17/10/23 11:54:15.968 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:15.970 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:15.971 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:16.968 INFO ControllerExecutor: SP Updated: 0.467105026768711
+17/10/23 11:54:16.968 INFO ControllerExecutor: Real: 0.564
+17/10/23 11:54:16.968 INFO ControllerExecutor: CoreToAllocate: 1.2000000000000002
+17/10/23 11:54:16.972 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.200000 Core
+17/10/23 11:54:16.972 INFO ControllerProxy$ProxyEndpoint: CORES: 1.200000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:17.982 INFO ControllerExecutor: SP Updated: 0.5030361826739965
+17/10/23 11:54:17.982 INFO ControllerExecutor: Real: 0.644
+17/10/23 11:54:17.982 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:17.983 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:17.983 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:18.968 INFO ControllerExecutor: SP Updated: 0.538967338579282
+17/10/23 11:54:18.968 INFO ControllerExecutor: Real: 0.648
+17/10/23 11:54:18.968 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:54:18.971 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:54:18.971 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:19.968 INFO ControllerExecutor: SP Updated: 0.5748984944845675
+17/10/23 11:54:19.968 INFO ControllerExecutor: Real: 0.732
+17/10/23 11:54:19.968 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:19.970 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:19.970 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:20.968 INFO ControllerExecutor: SP Updated: 0.610829650389853
+17/10/23 11:54:20.968 INFO ControllerExecutor: Real: 0.736
+17/10/23 11:54:20.968 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:54:20.971 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:54:20.971 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:21.968 INFO ControllerExecutor: SP Updated: 0.6467608062951385
+17/10/23 11:54:21.968 INFO ControllerExecutor: Real: 0.816
+17/10/23 11:54:21.968 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:21.971 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:21.971 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:22.970 INFO ControllerExecutor: SP Updated: 0.682691962200424
+17/10/23 11:54:22.970 INFO ControllerExecutor: Real: 0.82
+17/10/23 11:54:22.970 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:54:22.974 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:54:22.974 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:23.968 INFO ControllerExecutor: SP Updated: 0.7186231181057096
+17/10/23 11:54:23.968 INFO ControllerExecutor: Real: 0.892
+17/10/23 11:54:23.968 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:23.970 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:23.970 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 0, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:24.968 INFO ControllerExecutor: SP Updated: 0.7545542740109951
+17/10/23 11:54:24.968 INFO ControllerExecutor: Real: 0.976
+17/10/23 11:54:24.968 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:28.465 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:54:28.468 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:54:28.468 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 0, DELTA: 1
+17/10/23 11:54:28.469 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 12
+17/10/23 11:54:28.469 INFO Worker: Created ControllerExecutor: 0 , 12 , 36978 , 250 , 1.000000
+app-20171023114926-0001.0
+17/10/23 11:54:29.470 INFO ControllerExecutor: SP Updated: 0.027043106712099085
+17/10/23 11:54:29.470 INFO ControllerExecutor: Real: 0.02
+17/10/23 11:54:29.470 INFO ControllerExecutor: CoreToAllocate: 1.4000000000000001
+17/10/23 11:54:29.473 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.400000 Core
+17/10/23 11:54:29.473 INFO ControllerProxy$ProxyEndpoint: CORES: 1.400000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:30.470 INFO ControllerExecutor: SP Updated: 0.05408621342419817
+17/10/23 11:54:30.470 INFO ControllerExecutor: Real: 0.02
+17/10/23 11:54:30.470 INFO ControllerExecutor: CoreToAllocate: 2.0
+17/10/23 11:54:30.472 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.000000 Core
+17/10/23 11:54:30.472 INFO ControllerProxy$ProxyEndpoint: CORES: 2.000000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:31.470 INFO ControllerExecutor: SP Updated: 0.08112932013629726
+17/10/23 11:54:31.470 INFO ControllerExecutor: Real: 0.056
+17/10/23 11:54:31.470 INFO ControllerExecutor: CoreToAllocate: 1.7000000000000002
+17/10/23 11:54:31.472 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.700000 Core
+17/10/23 11:54:31.472 INFO ControllerProxy$ProxyEndpoint: CORES: 1.700000, RUNNING: 2, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:32.470 INFO ControllerExecutor: SP Updated: 0.10817242684839634
+17/10/23 11:54:32.470 INFO ControllerExecutor: Real: 0.144
+17/10/23 11:54:32.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:32.472 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:32.472 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 2, DELTA: -2
+app-20171023114926-0001.0
+17/10/23 11:54:33.472 INFO ControllerExecutor: SP Updated: 0.13521553356049543
+17/10/23 11:54:33.472 INFO ControllerExecutor: Real: 0.152
+17/10/23 11:54:33.472 INFO ControllerExecutor: CoreToAllocate: 0.9
+17/10/23 11:54:33.476 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.900000 Core
+17/10/23 11:54:33.476 INFO ControllerProxy$ProxyEndpoint: CORES: 0.900000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:34.470 INFO ControllerExecutor: SP Updated: 0.1622586402725945
+17/10/23 11:54:34.470 INFO ControllerExecutor: Real: 0.192
+17/10/23 11:54:34.470 INFO ControllerExecutor: CoreToAllocate: 0.15000000000000002
+17/10/23 11:54:34.472 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.150000 Core
+17/10/23 11:54:34.472 INFO ControllerProxy$ProxyEndpoint: CORES: 0.150000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:35.471 INFO ControllerExecutor: SP Updated: 0.1893017469846936
+17/10/23 11:54:35.471 INFO ControllerExecutor: Real: 0.204
+17/10/23 11:54:35.471 INFO ControllerExecutor: CoreToAllocate: 0.8500000000000001
+17/10/23 11:54:35.473 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.850000 Core
+17/10/23 11:54:35.473 INFO ControllerProxy$ProxyEndpoint: CORES: 0.850000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:36.470 INFO ControllerExecutor: SP Updated: 0.21634485369679268
+17/10/23 11:54:36.470 INFO ControllerExecutor: Real: 0.244
+17/10/23 11:54:36.470 INFO ControllerExecutor: CoreToAllocate: 0.1
+17/10/23 11:54:36.475 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.100000 Core
+17/10/23 11:54:36.475 INFO ControllerProxy$ProxyEndpoint: CORES: 0.100000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:37.471 INFO ControllerExecutor: SP Updated: 0.24338796040889177
+17/10/23 11:54:37.471 INFO ControllerExecutor: Real: 0.252
+17/10/23 11:54:37.471 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:54:37.474 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:54:37.474 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:38.472 INFO ControllerExecutor: SP Updated: 0.27043106712099085
+17/10/23 11:54:38.472 INFO ControllerExecutor: Real: 0.304
+17/10/23 11:54:38.472 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:38.474 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:38.474 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:39.470 INFO ControllerExecutor: SP Updated: 0.29747417383308994
+17/10/23 11:54:39.470 INFO ControllerExecutor: Real: 0.308
+17/10/23 11:54:39.470 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:54:39.473 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:54:39.473 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:40.470 INFO ControllerExecutor: SP Updated: 0.324517280545189
+17/10/23 11:54:40.470 INFO ControllerExecutor: Real: 0.336
+17/10/23 11:54:40.470 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:54:40.478 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:54:40.478 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:41.470 INFO ControllerExecutor: SP Updated: 0.3515603872572881
+17/10/23 11:54:41.470 INFO ControllerExecutor: Real: 0.384
+17/10/23 11:54:41.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:41.473 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:41.473 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:42.470 INFO ControllerExecutor: SP Updated: 0.3786034939693872
+17/10/23 11:54:42.470 INFO ControllerExecutor: Real: 0.388
+17/10/23 11:54:42.471 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:54:42.474 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:54:42.478 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:43.472 INFO ControllerExecutor: SP Updated: 0.4056466006814863
+17/10/23 11:54:43.472 INFO ControllerExecutor: Real: 0.44
+17/10/23 11:54:43.472 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:43.475 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:43.475 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:44.470 INFO ControllerExecutor: SP Updated: 0.43268970739358537
+17/10/23 11:54:44.470 INFO ControllerExecutor: Real: 0.444
+17/10/23 11:54:44.470 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:54:44.473 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:54:44.473 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:45.470 INFO ControllerExecutor: SP Updated: 0.45973281410568445
+17/10/23 11:54:45.470 INFO ControllerExecutor: Real: 0.496
+17/10/23 11:54:45.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:45.472 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:45.472 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:54:46.470 INFO ControllerExecutor: SP Updated: 0.48677592081778354
+17/10/23 11:54:46.470 INFO ControllerExecutor: Real: 0.5
+17/10/23 11:54:46.470 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:54:46.472 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:54:46.473 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:54:47.470 INFO ControllerExecutor: SP Updated: 0.5138190275298826
+17/10/23 11:54:47.470 INFO ControllerExecutor: Real: 0.548
+17/10/23 11:54:47.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:47.472 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:54:47.472 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 0, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:54:48.472 INFO ControllerExecutor: SP Updated: 0.5408621342419817
+17/10/23 11:54:48.472 INFO ControllerExecutor: Real: 0.608
+17/10/23 11:54:48.472 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:49.470 INFO ControllerExecutor: SP Updated: 0.5679052409540808
+17/10/23 11:54:49.470 INFO ControllerExecutor: Real: 0.66
+17/10/23 11:54:49.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:50.470 INFO ControllerExecutor: SP Updated: 0.5949483476661799
+17/10/23 11:54:50.471 INFO ControllerExecutor: Real: 0.688
+17/10/23 11:54:50.471 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:51.470 INFO ControllerExecutor: SP Updated: 0.621991454378279
+17/10/23 11:54:51.470 INFO ControllerExecutor: Real: 0.74
+17/10/23 11:54:51.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:52.470 INFO ControllerExecutor: SP Updated: 0.649034561090378
+17/10/23 11:54:52.470 INFO ControllerExecutor: Real: 0.796
+17/10/23 11:54:52.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:53.472 INFO ControllerExecutor: SP Updated: 0.6760776678024771
+17/10/23 11:54:53.472 INFO ControllerExecutor: Real: 0.848
+17/10/23 11:54:53.472 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:54.470 INFO ControllerExecutor: SP Updated: 0.7031207745145762
+17/10/23 11:54:54.470 INFO ControllerExecutor: Real: 0.896
+17/10/23 11:54:54.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:55.470 INFO ControllerExecutor: SP Updated: 0.7301638812266753
+17/10/23 11:54:55.470 INFO ControllerExecutor: Real: 0.944
+17/10/23 11:54:55.470 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:54:56.470 INFO ControllerExecutor: SP Updated: 0.7572069879387744
+17/10/23 11:54:56.471 INFO ControllerExecutor: Real: 0.984
+17/10/23 11:54:56.471 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:04.981 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:55:04.985 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:55:04.985 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 0, DELTA: 1
+17/10/23 11:55:04.986 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 13
+17/10/23 11:55:04.986 INFO Worker: Created ControllerExecutor: 0 , 13 , 36153 , 250 , 1.000000
+app-20171023114926-0001.0
+17/10/23 11:55:05.987 INFO ControllerExecutor: SP Updated: 0.027660221834979116
+17/10/23 11:55:05.987 INFO ControllerExecutor: Real: 0.008
+17/10/23 11:55:05.987 INFO ControllerExecutor: CoreToAllocate: 2.0
+17/10/23 11:55:05.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  2.000000 Core
+17/10/23 11:55:05.989 INFO ControllerProxy$ProxyEndpoint: CORES: 2.000000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:06.986 INFO ControllerExecutor: SP Updated: 0.05532044366995823
+17/10/23 11:55:06.986 INFO ControllerExecutor: Real: 0.092
+17/10/23 11:55:06.986 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:06.997 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:55:06.997 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 2, DELTA: -2
+app-20171023114926-0001.0
+17/10/23 11:55:07.988 INFO ControllerExecutor: SP Updated: 0.08298066550493735
+17/10/23 11:55:07.988 INFO ControllerExecutor: Real: 0.1
+17/10/23 11:55:07.988 INFO ControllerExecutor: CoreToAllocate: 0.9500000000000001
+17/10/23 11:55:07.990 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.950000 Core
+17/10/23 11:55:07.990 INFO ControllerProxy$ProxyEndpoint: CORES: 0.950000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:08.987 INFO ControllerExecutor: SP Updated: 0.11064088733991646
+17/10/23 11:55:08.987 INFO ControllerExecutor: Real: 0.124
+17/10/23 11:55:08.987 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:55:08.990 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:55:08.991 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:09.986 INFO ControllerExecutor: SP Updated: 0.13830110917489558
+17/10/23 11:55:09.986 INFO ControllerExecutor: Real: 0.14
+17/10/23 11:55:09.986 INFO ControllerExecutor: CoreToAllocate: 1.7000000000000002
+17/10/23 11:55:09.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.700000 Core
+17/10/23 11:55:09.989 INFO ControllerProxy$ProxyEndpoint: CORES: 1.700000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:10.986 INFO ControllerExecutor: SP Updated: 0.1659613310098747
+17/10/23 11:55:10.986 INFO ControllerExecutor: Real: 0.172
+17/10/23 11:55:10.986 INFO ControllerExecutor: CoreToAllocate: 1.5
+17/10/23 11:55:10.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.500000 Core
+17/10/23 11:55:10.988 INFO ControllerProxy$ProxyEndpoint: CORES: 1.500000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:11.986 INFO ControllerExecutor: SP Updated: 0.19362155284485383
+17/10/23 11:55:11.986 INFO ControllerExecutor: Real: 0.212
+17/10/23 11:55:11.986 INFO ControllerExecutor: CoreToAllocate: 0.8500000000000001
+17/10/23 11:55:11.992 INFO ControllerProxy$ProxyEndpoint: CORES: 0.850000, RUNNING: 3, DELTA: -2
+17/10/23 11:55:11.992 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.850000 Core
+app-20171023114926-0001.0
+17/10/23 11:55:12.988 INFO ControllerExecutor: SP Updated: 0.22128177467983295
+17/10/23 11:55:12.988 INFO ControllerExecutor: Real: 0.228
+17/10/23 11:55:12.988 INFO ControllerExecutor: CoreToAllocate: 1.4500000000000002
+17/10/23 11:55:12.991 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.450000 Core
+17/10/23 11:55:12.992 INFO ControllerProxy$ProxyEndpoint: CORES: 1.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:13.986 INFO ControllerExecutor: SP Updated: 0.24894199651481208
+17/10/23 11:55:13.986 INFO ControllerExecutor: Real: 0.248
+17/10/23 11:55:13.986 INFO ControllerExecutor: CoreToAllocate: 1.85
+17/10/23 11:55:13.988 INFO ControllerProxy$ProxyEndpoint: CORES: 1.850000, RUNNING: 1, DELTA: 1
+17/10/23 11:55:13.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.850000 Core
+app-20171023114926-0001.0
+17/10/23 11:55:14.986 INFO ControllerExecutor: SP Updated: 0.2766022183497912
+17/10/23 11:55:14.986 INFO ControllerExecutor: Real: 0.296
+17/10/23 11:55:14.986 INFO ControllerExecutor: CoreToAllocate: 0.8
+17/10/23 11:55:14.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.800000 Core
+17/10/23 11:55:14.989 INFO ControllerProxy$ProxyEndpoint: CORES: 0.800000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:15.986 INFO ControllerExecutor: SP Updated: 0.30426244018477033
+17/10/23 11:55:15.986 INFO ControllerExecutor: Real: 0.328
+17/10/23 11:55:15.986 INFO ControllerExecutor: CoreToAllocate: 0.5
+17/10/23 11:55:15.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.500000 Core
+17/10/23 11:55:15.989 INFO ControllerProxy$ProxyEndpoint: CORES: 0.500000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:16.986 INFO ControllerExecutor: SP Updated: 0.33192266201974946
+17/10/23 11:55:16.986 INFO ControllerExecutor: Real: 0.344
+17/10/23 11:55:16.986 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:55:16.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:55:16.989 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:17.988 INFO ControllerExecutor: SP Updated: 0.3595828838547286
+17/10/23 11:55:17.988 INFO ControllerExecutor: Real: 0.388
+17/10/23 11:55:17.988 INFO ControllerExecutor: CoreToAllocate: 0.15000000000000002
+17/10/23 11:55:17.990 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.150000 Core
+17/10/23 11:55:17.990 INFO ControllerProxy$ProxyEndpoint: CORES: 0.150000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:18.987 INFO ControllerExecutor: SP Updated: 0.3872431056897077
+17/10/23 11:55:18.987 INFO ControllerExecutor: Real: 0.408
+17/10/23 11:55:18.987 INFO ControllerExecutor: CoreToAllocate: 0.45
+17/10/23 11:55:18.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.450000 Core
+17/10/23 11:55:18.989 INFO ControllerProxy$ProxyEndpoint: CORES: 0.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:19.986 INFO ControllerExecutor: SP Updated: 0.41490332752468684
+17/10/23 11:55:19.986 INFO ControllerExecutor: Real: 0.432
+17/10/23 11:55:19.986 INFO ControllerExecutor: CoreToAllocate: 0.6000000000000001
+17/10/23 11:55:19.988 INFO ControllerProxy$ProxyEndpoint: CORES: 0.600000, RUNNING: 1, DELTA: 0
+17/10/23 11:55:19.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.600000 Core
+app-20171023114926-0001.0
+17/10/23 11:55:20.986 INFO ControllerExecutor: SP Updated: 0.44256354935966596
+17/10/23 11:55:20.986 INFO ControllerExecutor: Real: 0.468
+17/10/23 11:55:20.986 INFO ControllerExecutor: CoreToAllocate: 0.1
+17/10/23 11:55:20.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.100000 Core
+17/10/23 11:55:20.989 INFO ControllerProxy$ProxyEndpoint: CORES: 0.100000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:21.986 INFO ControllerExecutor: SP Updated: 0.4702237711946451
+17/10/23 11:55:21.986 INFO ControllerExecutor: Real: 0.476
+17/10/23 11:55:21.986 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:55:21.988 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 1, DELTA: 0
+17/10/23 11:55:21.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+app-20171023114926-0001.0
+17/10/23 11:55:22.987 INFO ControllerExecutor: SP Updated: 0.4978839930296242
+17/10/23 11:55:22.988 INFO ControllerExecutor: Real: 0.536
+17/10/23 11:55:22.988 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:22.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:55:22.989 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:23.987 INFO ControllerExecutor: SP Updated: 0.5255442148646033
+17/10/23 11:55:23.987 INFO ControllerExecutor: Real: 0.54
+17/10/23 11:55:23.987 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:55:23.989 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 0, DELTA: 1
+17/10/23 11:55:23.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+app-20171023114926-0001.0
+17/10/23 11:55:24.986 INFO ControllerExecutor: SP Updated: 0.5532044366995824
+17/10/23 11:55:24.986 INFO ControllerExecutor: Real: 0.604
+17/10/23 11:55:24.986 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:24.987 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:55:24.988 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:25.986 INFO ControllerExecutor: SP Updated: 0.5808646585345615
+17/10/23 11:55:25.986 INFO ControllerExecutor: Real: 0.608
+17/10/23 11:55:25.986 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:55:25.993 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:55:25.993 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:26.987 INFO ControllerExecutor: SP Updated: 0.6085248803695406
+17/10/23 11:55:26.987 INFO ControllerExecutor: Real: 0.672
+17/10/23 11:55:26.987 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:26.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:55:26.990 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:27.987 INFO ControllerExecutor: SP Updated: 0.6361851022045196
+17/10/23 11:55:27.988 INFO ControllerExecutor: Real: 0.676
+17/10/23 11:55:27.988 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:55:27.990 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:55:27.990 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:28.986 INFO ControllerExecutor: SP Updated: 0.6638453240394987
+17/10/23 11:55:28.986 INFO ControllerExecutor: Real: 0.72
+17/10/23 11:55:28.986 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:28.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:55:28.989 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:29.986 INFO ControllerExecutor: SP Updated: 0.6915055458744778
+17/10/23 11:55:29.986 INFO ControllerExecutor: Real: 0.724
+17/10/23 11:55:29.986 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:55:29.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:55:29.989 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:30.986 INFO ControllerExecutor: SP Updated: 0.7191657677094568
+17/10/23 11:55:30.986 INFO ControllerExecutor: Real: 0.74
+17/10/23 11:55:30.986 INFO ControllerExecutor: CoreToAllocate: 1.55
+17/10/23 11:55:30.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.550000 Core
+17/10/23 11:55:30.989 INFO ControllerProxy$ProxyEndpoint: CORES: 1.550000, RUNNING: 1, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:31.986 INFO ControllerExecutor: SP Updated: 0.7468259895444359
+17/10/23 11:55:31.986 INFO ControllerExecutor: Real: 0.772
+17/10/23 11:55:31.986 INFO ControllerExecutor: CoreToAllocate: 1.25
+17/10/23 11:55:31.989 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.250000 Core
+17/10/23 11:55:31.989 INFO ControllerProxy$ProxyEndpoint: CORES: 1.250000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:32.988 INFO ControllerExecutor: SP Updated: 0.774486211379415
+17/10/23 11:55:32.988 INFO ControllerExecutor: Real: 0.796
+17/10/23 11:55:32.988 INFO ControllerExecutor: CoreToAllocate: 1.35
+17/10/23 11:55:32.990 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.350000 Core
+17/10/23 11:55:32.990 INFO ControllerProxy$ProxyEndpoint: CORES: 1.350000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:33.987 INFO ControllerExecutor: SP Updated: 0.802146433214394
+17/10/23 11:55:33.987 INFO ControllerExecutor: Real: 0.828
+17/10/23 11:55:33.987 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:55:33.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:55:33.988 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:34.987 INFO ControllerExecutor: SP Updated: 0.8298066550493731
+17/10/23 11:55:34.987 INFO ControllerExecutor: Real: 0.864
+17/10/23 11:55:34.987 INFO ControllerExecutor: CoreToAllocate: 0.5
+17/10/23 11:55:34.990 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.500000 Core
+17/10/23 11:55:34.990 INFO ControllerProxy$ProxyEndpoint: CORES: 0.500000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:35.986 INFO ControllerExecutor: SP Updated: 0.8574668768843522
+17/10/23 11:55:35.986 INFO ControllerExecutor: Real: 0.9
+17/10/23 11:55:35.986 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:35.995 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:55:35.995 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:36.986 INFO ControllerExecutor: SP Updated: 0.8851270987193313
+17/10/23 11:55:36.986 INFO ControllerExecutor: Real: 0.904
+17/10/23 11:55:36.986 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:55:36.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:55:36.989 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:37.987 INFO ControllerExecutor: SP Updated: 0.9127873205543103
+17/10/23 11:55:37.987 INFO ControllerExecutor: Real: 0.972
+17/10/23 11:55:37.987 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:37.991 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:55:37.991 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:38.986 INFO ControllerExecutor: SP Updated: 0.9404475423892894
+17/10/23 11:55:38.986 INFO ControllerExecutor: Real: 0.976
+17/10/23 11:55:38.986 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:55:38.988 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+17/10/23 11:55:38.988 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:40.761 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:55:40.766 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:55:40.767 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 0, DELTA: 1
+17/10/23 11:55:40.767 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 18
+17/10/23 11:55:40.767 INFO Worker: Created ControllerExecutor: 0 , 18 , 39695 , 251 , 1.000000
+app-20171023114926-0001.0
+17/10/23 11:55:41.767 INFO ControllerExecutor: SP Updated: 0.025192089683839274
+17/10/23 11:55:41.767 INFO ControllerExecutor: Real: 0.0199203187250996
+17/10/23 11:55:41.767 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:55:41.771 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:55:41.772 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:42.767 INFO ControllerExecutor: SP Updated: 0.05038417936767855
+17/10/23 11:55:42.767 INFO ControllerExecutor: Real: 0.06374501992031872
+17/10/23 11:55:42.767 INFO ControllerExecutor: CoreToAllocate: 0.35000000000000003
+17/10/23 11:55:42.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.350000 Core
+17/10/23 11:55:42.771 INFO ControllerProxy$ProxyEndpoint: CORES: 0.350000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:43.769 INFO ControllerExecutor: SP Updated: 0.07557626905151782
+17/10/23 11:55:43.769 INFO ControllerExecutor: Real: 0.0796812749003984
+17/10/23 11:55:43.769 INFO ControllerExecutor: CoreToAllocate: 0.8
+17/10/23 11:55:43.772 INFO ControllerProxy$ProxyEndpoint: CORES: 0.800000, RUNNING: 1, DELTA: 0
+17/10/23 11:55:43.772 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.800000 Core
+app-20171023114926-0001.0
+17/10/23 11:55:44.767 INFO ControllerExecutor: SP Updated: 0.1007683587353571
+17/10/23 11:55:44.767 INFO ControllerExecutor: Real: 0.11155378486055777
+17/10/23 11:55:44.767 INFO ControllerExecutor: CoreToAllocate: 0.45
+17/10/23 11:55:44.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.450000 Core
+17/10/23 11:55:44.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:45.767 INFO ControllerExecutor: SP Updated: 0.12596044841919637
+17/10/23 11:55:45.767 INFO ControllerExecutor: Real: 0.13545816733067728
+17/10/23 11:55:45.767 INFO ControllerExecutor: CoreToAllocate: 0.5
+17/10/23 11:55:45.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.500000 Core
+17/10/23 11:55:45.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.500000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:46.768 INFO ControllerExecutor: SP Updated: 0.15115253810303564
+17/10/23 11:55:46.768 INFO ControllerExecutor: Real: 0.1553784860557769
+17/10/23 11:55:46.768 INFO ControllerExecutor: CoreToAllocate: 0.75
+17/10/23 11:55:46.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.750000 Core
+17/10/23 11:55:46.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.750000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:47.768 INFO ControllerExecutor: SP Updated: 0.1763446277868749
+17/10/23 11:55:47.768 INFO ControllerExecutor: Real: 0.18725099601593626
+17/10/23 11:55:47.768 INFO ControllerExecutor: CoreToAllocate: 0.4
+17/10/23 11:55:47.771 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.400000 Core
+17/10/23 11:55:47.771 INFO ControllerProxy$ProxyEndpoint: CORES: 0.400000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:48.769 INFO ControllerExecutor: SP Updated: 0.20153671747071417
+17/10/23 11:55:48.769 INFO ControllerExecutor: Real: 0.1952191235059761
+17/10/23 11:55:48.769 INFO ControllerExecutor: CoreToAllocate: 1.3
+17/10/23 11:55:48.771 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.300000 Core
+17/10/23 11:55:48.771 INFO ControllerProxy$ProxyEndpoint: CORES: 1.300000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:49.767 INFO ControllerExecutor: SP Updated: 0.22672880715455343
+17/10/23 11:55:49.767 INFO ControllerExecutor: Real: 0.2350597609561753
+17/10/23 11:55:49.767 INFO ControllerExecutor: CoreToAllocate: 0.55
+17/10/23 11:55:49.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.550000 Core
+17/10/23 11:55:49.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.550000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:50.767 INFO ControllerExecutor: SP Updated: 0.2519208968383927
+17/10/23 11:55:50.767 INFO ControllerExecutor: Real: 0.26294820717131473
+17/10/23 11:55:50.767 INFO ControllerExecutor: CoreToAllocate: 0.4
+17/10/23 11:55:50.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.400000 Core
+17/10/23 11:55:50.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.400000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:51.767 INFO ControllerExecutor: SP Updated: 0.277112986522232
+17/10/23 11:55:51.767 INFO ControllerExecutor: Real: 0.2788844621513944
+17/10/23 11:55:51.767 INFO ControllerExecutor: CoreToAllocate: 0.9
+17/10/23 11:55:51.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.900000 Core
+17/10/23 11:55:51.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.900000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:52.767 INFO ControllerExecutor: SP Updated: 0.3023050762060713
+17/10/23 11:55:52.767 INFO ControllerExecutor: Real: 0.3187250996015936
+17/10/23 11:55:52.767 INFO ControllerExecutor: CoreToAllocate: 0.1
+17/10/23 11:55:52.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.100000 Core
+17/10/23 11:55:52.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.100000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:53.769 INFO ControllerExecutor: SP Updated: 0.32749716588991057
+17/10/23 11:55:53.769 INFO ControllerExecutor: Real: 0.32669322709163345
+17/10/23 11:55:53.769 INFO ControllerExecutor: CoreToAllocate: 1.0
+17/10/23 11:55:53.771 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:55:53.771 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:54.767 INFO ControllerExecutor: SP Updated: 0.35268925557374986
+17/10/23 11:55:54.767 INFO ControllerExecutor: Real: 0.36254980079681276
+17/10/23 11:55:54.767 INFO ControllerExecutor: CoreToAllocate: 0.45
+17/10/23 11:55:54.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.450000 Core
+17/10/23 11:55:54.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:55.767 INFO ControllerExecutor: SP Updated: 0.37788134525758915
+17/10/23 11:55:55.767 INFO ControllerExecutor: Real: 0.38645418326693226
+17/10/23 11:55:55.767 INFO ControllerExecutor: CoreToAllocate: 0.5
+17/10/23 11:55:55.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.500000 Core
+17/10/23 11:55:55.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.500000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:56.767 INFO ControllerExecutor: SP Updated: 0.40307343494142844
+17/10/23 11:55:56.768 INFO ControllerExecutor: Real: 0.40239043824701193
+17/10/23 11:55:56.768 INFO ControllerExecutor: CoreToAllocate: 1.0
+17/10/23 11:55:56.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.000000 Core
+17/10/23 11:55:56.770 INFO ControllerProxy$ProxyEndpoint: CORES: 1.000000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:55:57.767 INFO ControllerExecutor: SP Updated: 0.42826552462526774
+17/10/23 11:55:57.767 INFO ControllerExecutor: Real: 0.44621513944223107
+17/10/23 11:55:57.767 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:55:57.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:55:57.771 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:55:58.769 INFO ControllerExecutor: SP Updated: 0.453457614309107
+17/10/23 11:55:58.769 INFO ControllerExecutor: Real: 0.450199203187251
+17/10/23 11:55:58.769 INFO ControllerExecutor: CoreToAllocate: 1.1
+17/10/23 11:55:58.771 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.100000 Core
+17/10/23 11:55:58.771 INFO ControllerProxy$ProxyEndpoint: CORES: 1.100000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:55:59.768 INFO ControllerExecutor: SP Updated: 0.4786497039929463
+17/10/23 11:55:59.768 INFO ControllerExecutor: Real: 0.4940239043824701
+17/10/23 11:55:59.768 INFO ControllerExecutor: CoreToAllocate: 0.15000000000000002
+17/10/23 11:55:59.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.150000 Core
+17/10/23 11:55:59.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.150000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:00.767 INFO ControllerExecutor: SP Updated: 0.5038417936767856
+17/10/23 11:56:00.767 INFO ControllerExecutor: Real: 0.50199203187251
+17/10/23 11:56:00.767 INFO ControllerExecutor: CoreToAllocate: 1.05
+17/10/23 11:56:00.770 INFO ControllerProxy$ProxyEndpoint: CORES: 1.050000, RUNNING: 1, DELTA: 0
+17/10/23 11:56:00.771 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.050000 Core
+app-20171023114926-0001.0
+17/10/23 11:56:01.767 INFO ControllerExecutor: SP Updated: 0.5290338833606248
+17/10/23 11:56:01.768 INFO ControllerExecutor: Real: 0.545816733067729
+17/10/23 11:56:01.768 INFO ControllerExecutor: CoreToAllocate: 0.05
+17/10/23 11:56:01.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.050000 Core
+17/10/23 11:56:01.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.050000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:02.767 INFO ControllerExecutor: SP Updated: 0.5542259730444641
+17/10/23 11:56:02.768 INFO ControllerExecutor: Real: 0.549800796812749
+17/10/23 11:56:02.768 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:56:02.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:56:02.770 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:03.769 INFO ControllerExecutor: SP Updated: 0.5794180627283033
+17/10/23 11:56:03.769 INFO ControllerExecutor: Real: 0.5737051792828686
+17/10/23 11:56:03.769 INFO ControllerExecutor: CoreToAllocate: 1.25
+17/10/23 11:56:03.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.250000 Core
+17/10/23 11:56:03.771 INFO ControllerProxy$ProxyEndpoint: CORES: 1.250000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:04.767 INFO ControllerExecutor: SP Updated: 0.6046101524121426
+17/10/23 11:56:04.767 INFO ControllerExecutor: Real: 0.6215139442231076
+17/10/23 11:56:04.767 INFO ControllerExecutor: CoreToAllocate: 0.05
+17/10/23 11:56:04.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.050000 Core
+17/10/23 11:56:04.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.050000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:05.767 INFO ControllerExecutor: SP Updated: 0.6298022420959818
+17/10/23 11:56:05.767 INFO ControllerExecutor: Real: 0.6254980079681275
+17/10/23 11:56:05.767 INFO ControllerExecutor: CoreToAllocate: 1.1500000000000001
+17/10/23 11:56:05.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.150000 Core
+17/10/23 11:56:05.769 INFO ControllerProxy$ProxyEndpoint: CORES: 1.150000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:06.768 INFO ControllerExecutor: SP Updated: 0.654994331779821
+17/10/23 11:56:06.768 INFO ControllerExecutor: Real: 0.6653386454183267
+17/10/23 11:56:06.768 INFO ControllerExecutor: CoreToAllocate: 0.4
+17/10/23 11:56:06.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.400000 Core
+17/10/23 11:56:06.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.400000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:07.768 INFO ControllerExecutor: SP Updated: 0.6801864214636603
+17/10/23 11:56:07.768 INFO ControllerExecutor: Real: 0.6852589641434262
+17/10/23 11:56:07.768 INFO ControllerExecutor: CoreToAllocate: 0.65
+17/10/23 11:56:07.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.650000 Core
+17/10/23 11:56:07.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.650000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:08.769 INFO ControllerExecutor: SP Updated: 0.7053785111474995
+17/10/23 11:56:08.769 INFO ControllerExecutor: Real: 0.7171314741035857
+17/10/23 11:56:08.769 INFO ControllerExecutor: CoreToAllocate: 0.30000000000000004
+17/10/23 11:56:08.772 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.300000 Core
+17/10/23 11:56:08.773 INFO ControllerProxy$ProxyEndpoint: CORES: 0.300000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:09.767 INFO ControllerExecutor: SP Updated: 0.7305706008313387
+17/10/23 11:56:09.767 INFO ControllerExecutor: Real: 0.7330677290836654
+17/10/23 11:56:09.767 INFO ControllerExecutor: CoreToAllocate: 0.8
+17/10/23 11:56:09.768 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.800000 Core
+17/10/23 11:56:09.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.800000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:10.767 INFO ControllerExecutor: SP Updated: 0.755762690515178
+17/10/23 11:56:10.767 INFO ControllerExecutor: Real: 0.7649402390438247
+17/10/23 11:56:10.767 INFO ControllerExecutor: CoreToAllocate: 0.45
+17/10/23 11:56:10.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.450000 Core
+17/10/23 11:56:10.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:11.768 INFO ControllerExecutor: SP Updated: 0.7809547801990172
+17/10/23 11:56:11.768 INFO ControllerExecutor: Real: 0.7888446215139442
+17/10/23 11:56:11.768 INFO ControllerExecutor: CoreToAllocate: 0.5
+17/10/23 11:56:11.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.500000 Core
+17/10/23 11:56:11.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.500000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:12.767 INFO ControllerExecutor: SP Updated: 0.8061468698828564
+17/10/23 11:56:12.767 INFO ControllerExecutor: Real: 0.8127490039840638
+17/10/23 11:56:12.767 INFO ControllerExecutor: CoreToAllocate: 0.55
+17/10/23 11:56:12.772 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.550000 Core
+17/10/23 11:56:12.773 INFO ControllerProxy$ProxyEndpoint: CORES: 0.550000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:13.769 INFO ControllerExecutor: SP Updated: 0.8313389595666957
+17/10/23 11:56:13.769 INFO ControllerExecutor: Real: 0.8366533864541833
+17/10/23 11:56:13.769 INFO ControllerExecutor: CoreToAllocate: 0.6000000000000001
+17/10/23 11:56:13.772 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.600000 Core
+17/10/23 11:56:13.772 INFO ControllerProxy$ProxyEndpoint: CORES: 0.600000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:14.767 INFO ControllerExecutor: SP Updated: 0.8565310492505349
+17/10/23 11:56:14.767 INFO ControllerExecutor: Real: 0.8605577689243028
+17/10/23 11:56:14.767 INFO ControllerExecutor: CoreToAllocate: 0.65
+17/10/23 11:56:14.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.650000 Core
+17/10/23 11:56:14.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.650000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:15.767 INFO ControllerExecutor: SP Updated: 0.8817231389343742
+17/10/23 11:56:15.767 INFO ControllerExecutor: Real: 0.8884462151394422
+17/10/23 11:56:15.767 INFO ControllerExecutor: CoreToAllocate: 0.5
+17/10/23 11:56:15.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.500000 Core
+17/10/23 11:56:15.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.500000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:56:16.768 INFO ControllerExecutor: SP Updated: 0.9069152286182134
+17/10/23 11:56:16.768 INFO ControllerExecutor: Real: 0.900398406374502
+17/10/23 11:56:16.768 INFO ControllerExecutor: CoreToAllocate: 1.2000000000000002
+17/10/23 11:56:16.771 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  1.200000 Core
+17/10/23 11:56:16.771 INFO ControllerProxy$ProxyEndpoint: CORES: 1.200000, RUNNING: 2, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:56:17.767 INFO ControllerExecutor: SP Updated: 0.9321073183020526
+17/10/23 11:56:17.767 INFO ControllerExecutor: Real: 0.9402390438247012
+17/10/23 11:56:17.767 INFO ControllerExecutor: CoreToAllocate: 0.45
+17/10/23 11:56:17.770 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.450000 Core
+17/10/23 11:56:17.770 INFO ControllerProxy$ProxyEndpoint: CORES: 0.450000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:18.769 INFO ControllerExecutor: SP Updated: 0.9572994079858919
+17/10/23 11:56:18.769 INFO ControllerExecutor: Real: 0.9601593625498008
+17/10/23 11:56:18.769 INFO ControllerExecutor: CoreToAllocate: 0.75
+17/10/23 11:56:18.771 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.750000 Core
+17/10/23 11:56:18.771 INFO ControllerProxy$ProxyEndpoint: CORES: 0.750000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:19.767 INFO ControllerExecutor: SP Updated: 0.9824914976697311
+17/10/23 11:56:19.767 INFO ControllerExecutor: Real: 0.9960159362549801
+17/10/23 11:56:19.767 INFO ControllerExecutor: CoreToAllocate: 0.2
+17/10/23 11:56:19.769 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.200000 Core
+17/10/23 11:56:19.769 INFO ControllerProxy$ProxyEndpoint: CORES: 0.200000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:19.994 INFO Worker: Asked to scale executor app-20171023114926-0001/0
+17/10/23 11:56:19.996 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.250000 Core
+17/10/23 11:56:19.996 INFO ControllerProxy$ProxyEndpoint: CORES: 0.250000, RUNNING: 0, DELTA: 1
+17/10/23 11:56:19.996 INFO ControllerProxy$ProxyEndpoint: Received Binding EID 0 SID 23
+17/10/23 11:56:19.997 INFO Worker: Created ControllerExecutor: 0 , 23 , 15365 , 251 , 0.250000
+app-20171023114926-0001.0
+17/10/23 11:56:21.001 INFO ControllerExecutor: SP Updated: 0.06508298080052066
+17/10/23 11:56:21.002 INFO ControllerExecutor: Real: 0.00398406374501992
+17/10/23 11:56:21.002 INFO ControllerExecutor: CoreToAllocate: 0.5
+17/10/23 11:56:21.004 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.500000 Core
+17/10/23 11:56:21.004 INFO ControllerProxy$ProxyEndpoint: CORES: 0.500000, RUNNING: 1, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:21.997 INFO ControllerExecutor: SP Updated: 0.13016596160104132
+17/10/23 11:56:21.997 INFO ControllerExecutor: Real: 0.1952191235059761
+17/10/23 11:56:21.997 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:56:21.999 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:56:21.999 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 1, DELTA: -1
+app-20171023114926-0001.0
+17/10/23 11:56:23.286 INFO ControllerExecutor: SP Updated: 0.195248942401562
+17/10/23 11:56:23.286 INFO ControllerExecutor: Real: 0.199203187250996
+17/10/23 11:56:23.286 INFO ControllerExecutor: CoreToAllocate: 0.5
+17/10/23 11:56:23.289 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.500000 Core
+17/10/23 11:56:23.289 INFO ControllerProxy$ProxyEndpoint: CORES: 0.500000, RUNNING: 0, DELTA: 1
+app-20171023114926-0001.0
+17/10/23 11:56:23.997 INFO ControllerExecutor: SP Updated: 0.26033192320208265
+17/10/23 11:56:23.997 INFO ControllerExecutor: Real: 0.3386454183266932
+17/10/23 11:56:23.997 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:56:23.999 INFO Worker: Scaled executorId 0  of appId app-20171023114926-0001 to  0.000000 Core
+17/10/23 11:56:23.999 INFO ControllerProxy$ProxyEndpoint: CORES: 0.000000, RUNNING: 0, DELTA: 0
+app-20171023114926-0001.0
+17/10/23 11:56:24.997 INFO ControllerExecutor: SP Updated: 0.3254149040026033
+17/10/23 11:56:24.997 INFO ControllerExecutor: Real: 0.5816733067729084
+17/10/23 11:56:24.997 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:56:25.998 INFO ControllerExecutor: SP Updated: 0.390497884803124
+17/10/23 11:56:25.998 INFO ControllerExecutor: Real: 0.749003984063745
+17/10/23 11:56:25.998 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:56:26.997 INFO ControllerExecutor: SP Updated: 0.45558086560364464
+17/10/23 11:56:26.997 INFO ControllerExecutor: Real: 0.952191235059761
+17/10/23 11:56:26.997 INFO ControllerExecutor: CoreToAllocate: 0.0
+17/10/23 11:56:32.638 INFO ControllerProxy$ProxyEndpoint: Asked to terminate Executor
+17/10/23 11:56:32.642 INFO Worker: Asked to kill executor app-20171023114926-0001/0
+17/10/23 11:56:32.643 INFO ExecutorRunner: Runner thread for executor app-20171023114926-0001/0 interrupted
+17/10/23 11:56:32.643 INFO ExecutorRunner: Killing process!
+app-20171023114926-0001.0
+17/10/23 11:56:34.387 INFO Worker: Executor app-20171023114926-0001/0 finished with state KILLED exitStatus 141
+17/10/23 11:56:34.387 INFO Worker: Cleaning up local directories for application app-20171023114926-0001
+17/10/23 11:56:34.389 INFO ExternalShuffleBlockResolver: Application app-20171023114926-0001 removed, cleanupLocalDirs = true
+17/10/23 11:56:34.389 INFO ExternalShuffleBlockResolver: Cleaning up executor AppExecId{appId=app-20171023114926-0001, execId=0}'s 1 local dirs

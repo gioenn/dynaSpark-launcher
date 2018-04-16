@@ -1,27 +1,23 @@
+function charts
 SHOW_START_LINES = 0;
 SHOW_END_LINES = 1;
 SHOW_DEADLINE_LINES = 1;
 
-%Set true (1) only one of the options below for labels placement:
+%Set to 1 only one of the options below for labels placement:
 LEGACY_LABEL_PLACEMENT = 0; % Label position as suggested by python tool - Zoomable, Editable
 TEXTFIT_LABEL_PLACEMENT = 0; % Automatic placement of adjacent labels - Zoomable, Editable
 NOLEGEND_LABEL_PLACEMENT = 0; % Legend-like labels but placement close to lines w/o legend - Zoomable, Editable
 ANNOTATION_LABEL_PLACEMENT = 0; % Annotation-like labels with arrows pointing to lines - Editable, not Zoomable
-TEXTFIT_ANNOTATION_LABEL_PLACEMENT = 1; % Automatic placement of adjacent labels with annotation-like labels
-                                        % with arrows pointing to lines. Zoomable, Editable only through figure 
-                                        % properties text editor (no "drag&drop" manual editing), 
-                                        % and aided interactive click-try-&-chose label placement loop, 
-                                        % keyboard 's' to skip current label, 'n' to skip current figure, 
-                                        % 'return' to confirm last mouse click 'try' placement
-ZOOMABLE_TEXT_LABELS = 1;
+TEXTFIT_ANNOTATION_LABEL_PLACEMENT = 1; % Automatic annotation-like label placement with arrow pointing to lines                             
 
 Grey=[0.5   0.5   0.5];
 CornflowerBlue=[0.3906    0.5820    0.9258];
 LightSteelBlue=[0.6875    0.7656    0.8672];
 chart=jsondecode(fileread('charts.json'));
-for cn = 1:length(chart.Charts)    
+
+for cn = 1:length(chart.Charts)   
     fig=figure;
-    [hax, h1, h2] = plotyy([0],[0],[0],[0], 'plot');
+    [hax, h1, h2] = plotyy(0, 0, 0 , 0, 'plot');
     set(hax(1),'Box','off')
     set(gca,'color','none');
     delete(h1);
@@ -63,13 +59,13 @@ for cn = 1:length(chart.Charts)
     VLines_fields={};
     vls=fieldnames(chart.Charts(cn).VLines);
     for i=1:numel(vls)
-        if SHOW_START_LINES & chart.Charts(cn).VLines.(vls{i}).Type=="Start"
+        if SHOW_START_LINES && chart.Charts(cn).VLines.(vls{i}).Type=="Start"
             VLines_fields=cat(2, VLines_fields, vls{i});
         end
-        if SHOW_END_LINES & chart.Charts(cn).VLines.(vls{i}).Type=="End"
+        if SHOW_END_LINES && chart.Charts(cn).VLines.(vls{i}).Type=="End"
             VLines_fields=cat(2, VLines_fields, vls{i});
         end
-        if SHOW_DEADLINE_LINES & chart.Charts(cn).VLines.(vls{i}).Type=="Deadline"
+        if SHOW_DEADLINE_LINES && chart.Charts(cn).VLines.(vls{i}).Type=="Deadline"
             VLines_fields=cat(2, VLines_fields, vls{i});
         end
     end
@@ -108,10 +104,10 @@ for cn = 1:length(chart.Charts)
             text(LabelX, LabelY, Label,'FontSize', 12 ,'Rotation', 0, 'HorizontalAlignment', 'center');
         end
         
-        %Nolegend labels placement
+        %Nolegend label placement
         legend_lines(dl)=vl; 
 
-        %Annotation labels placement
+        %Annotation label placement
         if ANNOTATION_LABEL_PLACEMENT
             if (StartX/x1u < 0)
                     sx=0;
@@ -133,7 +129,7 @@ for cn = 1:length(chart.Charts)
             [xf,yf] = ds2nfu(hax(1),x,y);
             annotation('textarrow',xf ,yf ,'String', Label);
         end
-    end 
+    end
     
     %%plot cpu line
     axes(hax(2));
@@ -150,15 +146,12 @@ for cn = 1:length(chart.Charts)
     axes(hax(1));
     hold on;
     textfit_h={};
-    if TEXTFIT_LABEL_PLACEMENT | TEXTFIT_ANNOTATION_LABEL_PLACEMENT
-        %Ln=fieldnames(chart.Charts(cn).Labels);
+    if TEXTFIT_LABEL_PLACEMENT || TEXTFIT_ANNOTATION_LABEL_PLACEMENT
         Ln=VLines_fields;
         Lx=[];
         Ly=[];
         for i=1:numel(Ln)
             Lx(i)=chart.Charts(cn).Labels.(Ln{i}).X;
-            %Ly(i)=chart.Charts(cn).Labels.(Ln{i}).Y;
-            %Ly(i)=104;
             VLineType=chart.Charts(cn).VLines.(Ln{i}).Type;
             if VLineType=="End"
                 Ly(i)=80;
@@ -172,9 +165,126 @@ for cn = 1:length(chart.Charts)
         end
         textfit_h=textfit(Lx, Ly, Ln,'FontSize', 10 ,'Rotation', 0, 'HorizontalAlignment', 'center');
         textfit_h_mat=reshape([textfit_h.Position], 3, []);
+    title(gca,'');    
+    end
+    
+    %Nolegend labels placement
+    nolegend_h={};
+    if NOLEGEND_LABEL_PLACEMENT
+        nolegend_h=nolegend(legend_lines, VLines_fields);
+    end
+    
+    %%plot cpu line
+    axes(hax(1));
+    set(gca,'color','w');
+    axes(hax(2));
+    hold on;
+    set(gca,'color','none');
+    line_cpu=plot(hax(2),chart.Charts(cn).TimestampsCpu, chart.Charts(cn).Cpu, '.-', 'color', 'blue', 'LineWidth', 2, 'MarkerEdgeColor', 'blue', 'MarkerFaceColor', 'blue','MarkerSize', 12);
+    xd=get(line_cpu,'xdata');
+    yd=get(line_cpu,'ydata');
+    a=area(xd, yd);
+    set(a, 'FaceAlpha',0.2,'FaceColor', LightSteelBlue);
+    
+    if TEXTFIT_ANNOTATION_LABEL_PLACEMENT
+        %%re-plot cpu line
+        %axes(hax(1));
+        %set(gca,'color','w');
+        %axes(hax(2));
+        %hold on;
+        %set(gca,'color','none');
+        %line_cpu=plot(hax(2),chart.Charts(cn).TimestampsCpu, chart.Charts(cn).Cpu, '.-', 'color', 'blue', 'LineWidth', 2, 'MarkerEdgeColor', 'blue', 'MarkerFaceColor', 'blue','MarkerSize', 12);
+        %xd=get(line_cpu,'xdata');
+        %yd=get(line_cpu,'ydata');
+        %a=area(xd, yd);
+        %set(a, 'FaceAlpha',0.2,'FaceColor', LightSteelBlue);
+        delete(textfit_h); 
+        h = zoom;
+        %h.Motion = 'horizontal';
+        h.ActionPreCallback = @myprecallback;
+        h.ActionPostCallback = @mypostcallback;
+        h.Enable = 'on';
+
+        origLim = [hax(1).XLim hax(1).YLim];
+        origZoomLevel = 1.0;
+        s.o = origLim;
+        s.d = textfit_h_mat;
+        s.lx = Lx;
+        s.ly = Ly;
+        s.ln = Ln;
+        s.cn = cn;
+        fig.UserData = s;
+        zoom(1);
+        h.Enable = 'off';
+    end
+end
+
+function myprecallback(obj,evd)
+    %disp('A zoom is about to occur.');
+    origLim = obj.UserData.o;
+    cn = obj.UserData.cn;
+    tag = char(strcat('chart', int2str(cn)));
+    delete(findall(gcf,'Tag', tag));
+end
+
+function mypostcallback(obj,evd)
+    newLim = [evd.Axes.XLim evd.Axes.YLim];
+    origLim = obj.UserData.o;
+    axes = evd.Axes(1);
+    Lx = obj.UserData.lx;
+    Ly = obj.UserData.ly;
+    Ln = obj.UserData.ln;
+    newRangeX = newLim(2) - newLim(1);
+    newRangeY = newLim(6) - newLim(5);
+    ZoomLevels = [((origLim(2) - origLim(1)) / (newLim(2) - newLim(1))) ((origLim(4) - origLim(3)) / (newLim(6) - newLim(5)))];
+    ZX = ZoomLevels(1);
+    ZY = ZoomLevels(2);
+    textfit_h=textfit(Lx, Ly, Ln,'FontSize', 10 ,'Rotation', 0, 'HorizontalAlignment', 'center');
+    textfit_h_mat=reshape([textfit_h.Position], 3, []);
+    delete(textfit_h);
+    ahv=[];
+    akv=[];
+    for j=1:length(Lx)
+        offset_sign = 1;
+        if (Lx(j) < 5.0/ZX)
+            offset_sign = -1;
+        end
+        if (abs(textfit_h_mat(1,j) - Lx(j)) < 1.0/ZX)
+            offset = 5/ZX * offset_sign;
+        else
+            offset=0;
+        end
+        x=[textfit_h_mat(1,j) - offset Lx(j)];
+        %y=[textfit_h_mat(2,j) textfit_h_mat(2,j) - 10];
+        y=[Ly(j)/100*newRangeY + newLim(5) Ly(j)/100*newRangeY + newLim(5) - 10/ZY];
         
-        if TEXTFIT_ANNOTATION_LABEL_PLACEMENT
-            delete(textfit_h);
+        if ( x(1) > newLim(1) && x(1) < newLim(2) )%& y(2) > newLim(5) & y(2) < newLim(6) )
+            [xg, yg] = ds2nfu(evd.Axes(1), x, y);
+            ahv(j)=annotation('textarrow',xg ,yg ,'String',Ln(j));
+            bg_color = 'w';
+            lb = char(Ln(j));
+            switch lb(1:1)
+                case 'S'
+                    bg_color = 'b';
+                case 'E'
+                    bg_color = 'g';
+                case 'D'
+                    bg_color = 'r';
+                otherwise
+                    bg_color = 'y';
+            end
+            set(ahv(j),'TextBackgroundColor',bg_color);
+            set(ahv(j),'HeadStyle','vback2');
+            set(ahv(j),'HeadSize',6);
+            tag = char(strcat('chart', int2str(cn)));
+            set(ahv(j),'Tag', tag);
+            uistack(ahv(j),'top');
+        end
+    end
+end
+
+function label_pick_chose_placement()
+    delete(textfit_h);
             ahv=[];
             akv=[];
             ch='';
@@ -194,23 +304,9 @@ for cn = 1:length(chart.Charts)
                 [xg, yg] = ds2nfu(hax(1), x, y);
                 ahv(j)=annotation('textarrow',xg ,yg ,'String',Ln(j));
                 set(ahv(j),'TextBackgroundColor','w');
-                set(ahv(j),'HeadStyle','ellipse');%'plain'|'fourstar'|'ellipse'|'rectangle'|
-                                                  %'vback1'|'diamond'|'vback2' (default)|
-                                                  %'rose'|'vback3'|'hypocycloid'|'cback1'|
-                                                  %'astroid'|'cback2'|'deltoid'|'cback3'|'none'
+                set(ahv(j),'HeadStyle','ellipse');
                 set(ahv(j),'HeadSize',3);
                 uistack(ahv(j),'top');
-                %% Following code moved after label placing loop: re-enable to place labels from scratch
-                %k=0;
-                %while k==0
-                %    cur_label=Ln(j);
-                %    set(gcf, 'WindowButtonMotionFcn', @mouseMove);
-                %    k=waitforbuttonpress;
-                %end
-                %C=get(gca, 'CurrentPoint');
-                %x(1)=C(1,1);
-                %y(1)=C(1,2);
-                %ahv(j).Parent = hax(1);  % associate the textarrow annotation to the current axes;
                 set(ahv(j), 'Parent', hax(1));
                 set(ahv(j),'X',x);
                 set(ahv(j),'Y',y);
@@ -222,11 +318,9 @@ for cn = 1:length(chart.Charts)
                 cur_label=get(ahv(j),'String');
                 [xg, yg] = ds2nfu(hax(1), x, y);
                 delete(ahv(j));
-                ah=annotation('textarrow',xg ,yg ,'String', cur_label);
-                set(ah,'TextBackgroundColor','m');
-                %set(ah,'HeadStyle','ellipse');
-                %set(ah,'HeadSize', 3);
-                uistack(ah,'top');
+                ahv(j)=annotation('textarrow',xg ,yg ,'String', cur_label);
+                set(ahv(j),'TextBackgroundColor','m');
+                uistack(ahv(j),'top');
                 ox=x;
                 oy=y;
                 if ch=='s' | ch=='S'
@@ -262,70 +356,18 @@ for cn = 1:length(chart.Charts)
                 C=get(gca, 'CurrentPoint');
                 %x(1)=C(1,1);
                 %y(1)=C(1,2);
-                delete(ah);
+                delete(ahv(j));
                 delete(akv);
                 [xg, yg] = ds2nfu(hax(1), x, y);
-                ah=annotation('textarrow',xg ,yg ,'String', cur_label);
-                set(ah,'TextBackgroundColor','y');
-                set(ah,'Parent', hax(1));  % associate the textarrow annotation to the current axes;
-                %[x, y] = nfu2ds(hax(1), xg, yg);
-                set(ah,'X',x); % the location in data units
-                set(ah,'Y',y); % the location in data units
-                %axes('position', [200, 10, 205, 12]);
-                %axes('position', [x(1), y(1), x(2), y(2)]);                
-                %imshow(im);
-                %set(ah,'HeadStyle','ellipse');
-                set(ah,'HeadStyle','none');
-                set(ah,'HeadSize', 3);
-                %% quiver does not fit very well the purpose as arrow head size is proportional to length of arrow
-                %q=quiver(x(1), y(1), x(2)-x(1), y(2)-y(1), 0); %draw arrow to line
-                %q.Color=[0 0 0];
-                AH_MAX=((x(1)-x(2))^2 + (y(1)-y(2))^2)^(1/2);
-                ahl=2.0;
-                ahw=2.0;
-                if (ahl > AH_MAX)
-                    ahl=AH_MAX;
-                    ahw=ahw/ahl*AH_MAX;
-                end
-                %% DaVinci is much better - license to use arrows is free
-                davinci( 'arrow', 'X', x, 'Y', y, 'Head.Length', ahl, 'Head.Width', ahw);    % Draw an arrow.
-                %axis(axis);
-                %ar=arrow([x(1), y(1)],[x(2),y(2)]);    % Draw an arrow.
-                uistack(ah,'top');
-                %uistack(ar,'top');
-                if ZOOMABLE_TEXT_LABELS
-                    im = image(str2im(ah.String, [1 0 0 5], 'back', 'y'));
-                    im.XData=[x(1)-10 x(1)];
-                    im.YData=[y(1)+3.0 y(1)];
-                    delete(ah)
-                end
-            end                   
-            %delete(textfit_h);
-        else
-            %q=quiver(textfit_h_mat(1,:), textfit_h_mat(2,:), Lx - textfit_h_mat(1,:), 90- textfit_h_mat(2,:), 0); %draw arrow to line
-            %q.Color=[0 0 0];
-        end
-    title(gca,'');    
-    end
-    
-    %Nolegend labels placement
-    nolegend_h={};
-    if NOLEGEND_LABEL_PLACEMENT
-        nolegend_h=nolegend(legend_lines, VLines_fields);
-        %uistack(nolegend_h,'top');
-    end
-    
-    %%re-plot cpu line
-    axes(hax(1));
-    set(gca,'color','w');
-    delete(a);
-    axes(hax(2));
-    hold on;
-    set(gca,'color','none');
-    line_cpu=plot(hax(2),chart.Charts(cn).TimestampsCpu, chart.Charts(cn).Cpu, '.-', 'color', 'blue', 'LineWidth', 2, 'MarkerEdgeColor', 'blue', 'MarkerFaceColor', 'blue','MarkerSize', 12);
-    xd=get(line_cpu,'xdata');
-    yd=get(line_cpu,'ydata');
-    a=area(xd, yd);
-    set(a, 'FaceAlpha',0.2,'FaceColor', LightSteelBlue);
-    %uistack(a, 'top');
+                ahv(j)=annotation('textarrow',xg ,yg ,'String', cur_label);
+                set(ahv(j),'TextBackgroundColor','y');
+                set(ahv(j),'Parent', hax(1));  % associate the textarrow annotation to the current axes;
+                set(ahv(j),'X',x); % the location in data units
+                set(ahv(j),'Y',y); % the location in data units
+                set(ahv(j),'HeadStyle','none');
+                set(ahv(j),'HeadSize', 3);
+                tag = char(strcat('chart', int2str(cn)));
+                set(ahv(j),'Tag', tag);
+            end   
+end
 end
