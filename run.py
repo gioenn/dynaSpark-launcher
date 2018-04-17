@@ -319,9 +319,9 @@ def setup_master(node, slaves_ip, hdfs_master):
     :param node:
     :return:
     """
-    #ssh_client = sshclient_from_node(node, ssh_key_file=c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm_removed
-    master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
-    ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
+    ssh_client = sshclient_from_node(node, ssh_key_file=c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm_removed
+    #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
+    #ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
     stdout, stderr, status = ssh_client.run("hostname  && pwd") #vboxvm
     print(stdout) #vboxvm
     with open_cfg(mode='w') as cfg:
@@ -334,18 +334,18 @@ def setup_master(node, slaves_ip, hdfs_master):
         # input_record = cfg['pagerank']['num_v'] if 'pagerank' in cfg and 'num_v' in cfg['pagerank'] else c.INPUT_RECORD
         # print("input_record: {}".format(input_record))
         print("Setup Master: BENCH_CONF=" + str(c.BENCH_CONF[benchmark]))
-        master_private_ip = master_public_ip #vboxvm
-        print("Setup Master: PublicIp=" + master_public_ip + " PrivateIp=" + master_private_ip) #vboxvm
-        #print("Setup Master: PublicIp=" + node.public_ips[0] + " PrivateIp=" + node.private_ips[0]) #vboxvm_removed
-        #master_private_ip = get_ip(node)  #vboxvm_removed
-        #master_public_ip = node.public_ips[0]  #vboxvm_removed
+        #master_private_ip = master_public_ip #vboxvm
+        #print("Setup Master: PublicIp=" + master_public_ip + " PrivateIp=" + master_private_ip) #vboxvm
+        print("Setup Master: PublicIp=" + node.public_ips[0] + " PrivateIp=" + node.private_ips[0]) #vboxvm_removed
+        master_private_ip = get_ip(node)  #vboxvm_removed
+        master_public_ip = node.public_ips[0]  #vboxvm_removed
 
         # save private master_ip to cfg file
         print('saving master ip')
         cfg[current_cluster]['master_private_ip'] = master_private_ip
         cfg[current_cluster]['master_public_ip'] = master_public_ip
 
-   # common_setup(ssh_client) #vboxvm_removed
+    common_setup(ssh_client) #vboxvm_removed
 
 
 

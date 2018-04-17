@@ -1,8 +1,9 @@
 import copy
 
 import launch
-from config import CONFIG_DICT
-from credentials import AZ_APPLICATION_ID, AZ_SECRET, AZ_SUBSCRIPTION_ID, AZ_TENANT_ID
+#from config import CONFIG_DICT
+from configure import config_instance as c
+#from credentials import AZ_APPLICATION_ID, AZ_SECRET, AZ_SUBSCRIPTION_ID, AZ_TENANT_ID
 
 from libcloud.compute.providers import get_driver
 from drivers.ccglibcloud.ec2spot import set_spot_drivers
@@ -13,16 +14,16 @@ import libcloud.common.base
 libcloud.common.base.RETRY_FAILED_HTTP_REQUESTS = True
 set_azurearm_driver()
 cls = get_driver("CustomAzureArm")
-driver = cls(tenant_id=AZ_TENANT_ID,
-             subscription_id=AZ_SUBSCRIPTION_ID,
-             key=AZ_APPLICATION_ID, secret=AZ_SECRET, region=CONFIG_DICT["Azure"]["Location"])
+driver = cls(tenant_id=c.AZ_TENANT_ID,
+             subscription_id=c.AZ_SUBSCRIPTION_ID,
+             key=c.AZ_APPLICATION_ID, secret=c.AZ_SECRET, region=c.CONFIG_DICT["Azure"]["Location"])
 
 start = False;
 all = True;
 # tag = "CSPARKWORK"
 tag = "CSPARKHDFS"
 
-nodes = driver.list_nodes(ex_resource_group=CONFIG_DICT["Azure"]["ResourceGroup"])
+nodes = driver.list_nodes(ex_resource_group=c.CONFIG_DICT["Azure"]["ResourceGroup"])
 if not all:
     nodes = [n for n in nodes if n.extra["tags"]["ClusterId"] == tag]
 

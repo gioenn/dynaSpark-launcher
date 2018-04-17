@@ -53,6 +53,7 @@ class BenchInstance(object):
             if not 'delete_hdfs' in cfg['main']:
                 cfg['main']['delete_hdfs'] = 'true' 
             cfg['main']['num_run'] = str(num_run)
+            '''
             sess_file = Path("session.txt")
             session_no = 0
             if sess_file.exists():
@@ -63,6 +64,7 @@ class BenchInstance(object):
             with open("session.txt", 'w') as f:
                     f.write(str(session_no))
                     f.close()
+            '''
         for i in range(num_run):
             if self.cluster_id == c.CLUSTER_MAP['spark']:
                 print(bold('Experiment ({}/{})'.format(i + 1, num_run)))
