@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 libcloud.common.base.RETRY_FAILED_HTTP_REQUESTS = True
 
-def run_xspark(current_cluster, num_instance=c.NUM_INSTANCE, num_run=c.NUM_RUN, cluster_id=c.CLUSTER_ID, terminate=c.TERMINATE,
+def run_xspark_disabled(current_cluster, num_instance=c.NUM_INSTANCE, num_run=c.NUM_RUN, cluster_id=c.CLUSTER_ID, terminate=c.TERMINATE,
                run=c.RUN, reboot=c.REBOOT, assume_yes=False):
     """ Main function;
     * Launch spot request of NUMINSTANCE
@@ -50,7 +50,7 @@ def run_xspark(current_cluster, num_instance=c.NUM_INSTANCE, num_run=c.NUM_RUN, 
     if terminate:
         println("bench_instance.terminate()")
 
-def run_xspark_disabled(current_cluster, num_instance=c.NUM_INSTANCE, num_run=c.NUM_RUN, cluster_id=c.CLUSTER_ID, terminate=c.TERMINATE,
+def run_xspark(current_cluster, num_instance=c.NUM_INSTANCE, num_run=c.NUM_RUN, cluster_id=c.CLUSTER_ID, terminate=c.TERMINATE,
                run=c.RUN, reboot=c.REBOOT, assume_yes=False):
     """ Main function;
     * Launch spot request of NUMINSTANCE
