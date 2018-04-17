@@ -16,12 +16,12 @@ from datetime import timedelta
 #from config import PRIVATE_KEY_PATH, PROVIDER, PROCESS_ON_SERVER
 from configure import config_instance as c
 from util.utils import timing, string_to_datetime
-from util.ssh_client import sshclient_from_node, sshclient_from_ip #vboxvm
+#from util.ssh_client import sshclient_from_node, sshclient_from_ip #vboxvm
 
 import run
 import shutil
 
-import socket #vboxvm
+#import socket #vboxvm
 
 #ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 #NORM_ROOT_DIR = ROOT_DIR.split(":")[-1].replace("\\", "/")
@@ -35,9 +35,9 @@ def download_master(node, output_folder, log_folder, config):
     :return: output_folder and the app_id: the application id
     """
 
-    #ssh_client = sshclient_from_node(node, ssh_key_file=c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm_removed
-    master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
-    ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
+    ssh_client = sshclient_from_node(node, ssh_key_file=c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm_removed
+    #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
+    #ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
 
     app_id = ""
     #most_recent_events_logfile = ""
@@ -66,10 +66,10 @@ def download_master(node, output_folder, log_folder, config):
         input_file = config["Spark"]["SparkHome"] + "spark-events/" + file
         output_bz = file + ".bz"
         print("Bzipping event log...")
-        #ssh_client.run("pbzip2 -9 -p" + str( #vboxvm_removed
-        #    config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz) #vboxvm_removed
-        stdout, stderr, status = ssh_client.run("pbzip2 -9 -p1 -c " + input_file + " > " + "/home/ubuntu/" + output_bz) #vboxvm
-        print('ssh_client.run("pbzip2 -9 -p1 -c ' + input_file + ' > ' + '/home/ubuntu/' +  output_bz + '"): ' + stdout + stderr) #vboxvm
+        ssh_client.run("pbzip2 -9 -p" + str( #vboxvm_removed
+            config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz) #vboxvm_removed
+        #stdout, stderr, status = ssh_client.run("pbzip2 -9 -p1 -c " + input_file + " > " + "/home/ubuntu/" + output_bz) #vboxvm
+        #print('ssh_client.run("pbzip2 -9 -p1 -c ' + input_file + ' > ' + '/home/ubuntu/' +  output_bz + '"): ' + stdout + stderr) #vboxvm
         #ssh_client.get(remotepath=output_bz, localpath=most_recent_events_logfile_folder + "/" + output_bz)
         if c.PROCESS_ON_SERVER:
             if file == most_recent_events_logfile:
@@ -206,22 +206,22 @@ def download(log_folder, nodes, master_ip, output_folder, config):
     """
     # MASTER
 
-    #master_node = [i for i in nodes if run.get_ip(i) == master_ip][0] #vboxvm_removed
-    #print("Downloading log from Master: PublicIp="+master_node.public_ips[0] +" PrivateIp=" + master_node.private_ips[0]) #vboxvm_removed
-    master_node = nodes[0] #vboxvm
-    master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
-    print("Downloading log from Master: PublicIp="+ master_public_ip  +" PrivateIp=" +  master_public_ip ) #vboxvm
+    master_node = [i for i in nodes if run.get_ip(i) == master_ip][0] #vboxvm_removed
+    print("Downloading log from Master: PublicIp="+master_node.public_ips[0] +" PrivateIp=" + master_node.private_ips[0]) #vboxvm_removed
+    #master_node = nodes[0] #vboxvm
+    #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
+    #print("Downloading log from Master: PublicIp="+ master_public_ip  +" PrivateIp=" +  master_public_ip ) #vboxvm
     output_folder, app_id = download_master(master_node, output_folder, log_folder, config)
 
     # SLAVE
-    ''' #vboxvm_removed
+    #vboxvm_removed
     with ThreadPoolExecutor(multiprocessing.cpu_count()) as executor:
         for i in nodes:
             ip = run.get_ip(i)
             if ip != master_ip:
                 worker = executor.submit(download_slave, i, output_folder, app_id, config)
                 output_folder = worker.result()
-    '''
+    
     return output_folder
 
 def load_app_data(app_log_path):

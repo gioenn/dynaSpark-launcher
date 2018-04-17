@@ -636,10 +636,10 @@ def setup_master(node, slaves_ip, hdfs_master):
                                                         "sudo pip3 install --upgrade setuptools")
                 """Install python3 on cSpark master"""
                 print("Installing Python3 on cspark master:\n" + stdout)
-            stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")                                     #vboxvm
-            stdout, stderr, status = ssh_client.run("git clone -b final-nocloud --single-branch " +                             #vboxvm
-                                                    "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")    #vboxvm
-            #stdout, stderr, status = ssh_client.run("git clone -b process-on-server --single-branch " +                        #vboxvm
+            stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")
+            stdout, stderr, status = ssh_client.run("git clone -b final-cloud --single-branch " +
+                                                    "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
+            #stdout, stderr, status = ssh_client.run("git clone -b process-on-server --single-branch " +
             #                                        "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
             #                                        "https://github.com/gioenn/xSpark-bench.git /home/ubuntu/xSpark-bench")
             """Clone xSpark-benchmark on cspark master"""
@@ -864,9 +864,9 @@ def upload_profile_to_master(nodes, profile_fname, localfilepath):
     :param nodes, profile_fname, localfilepath:
     :return:
     """
-    #ssh_client = sshclient_from_node(nodes[0], ssh_key_file=c.PRIVATE_KEY_PATH, user_name='ubuntu')  #vboxvm_removed
-    master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
-    ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
+    ssh_client = sshclient_from_node(nodes[0], ssh_key_file=c.PRIVATE_KEY_PATH, user_name='ubuntu')  #vboxvm_removed
+    #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
+    #ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
     print("Uploading benchmark profile: " + profile_fname + "\n")
     if not profile_fname in ssh_client.listdir(c.C_SPARK_HOME + "conf/"):
         ssh_client.put(localpath=localfilepath, remotepath=c.C_SPARK_HOME + "conf/" + profile_fname)
@@ -925,10 +925,13 @@ def run_benchmark(nodes):
             c.SPARK_HOME = c.SPARK_SEQ_HOME if cfg.getboolean('profile', 'spark_seq') else c.SPARK_2_HOME
         c.update_config_parms(c)   
         
-    master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
-    ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
+    #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
+    #ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
 
     master_ip, master_node = setup_master(nodes[0], slaves_ip, hdfs_master_private_ip)
+    
+    print("MASTER: " + master_ip)   #vboxvm remove
+    ssh_client = sshclient_from_node(master_node, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm remove
     
     if  profile and profile_fname != "" :
         # delete selected benchmark profile file
@@ -937,7 +940,7 @@ def run_benchmark(nodes):
             
     if c.SPARK_HOME == c.SPARK_2_HOME:
         print("Check Effectively Executor Running")
-    '''    #vboxvm_removed
+    #vboxvm_removed
     count = 1
     with ThreadPoolExecutor(8) as executor:
         for i in nodes[1:end_index]:
@@ -972,8 +975,8 @@ def run_benchmark(nodes):
 
     time.sleep(15)
 
-    print("MASTER: " + master_ip)
-    ssh_client = sshclient_from_node(master_node, c.PRIVATE_KEY_PATH, user_name='ubuntu')
+    #print("MASTER: " + master_ip)   #vboxvm add
+    #ssh_client = sshclient_from_node(master_node, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm add
 
     #  CHECK IF KEY IN MASTER
 
@@ -984,7 +987,7 @@ def run_benchmark(nodes):
     # if not c.PRIVATE_KEY_NAME in files:
     #     ssh_client.put(localpath=c.PRIVATE_KEY_PATH, remotepath="/home/ubuntu/" + c.PRIVATE_KEY_NAME)
     #     ssh_client.run("chmod 400 " + "$HOME/" + c.PRIVATE_KEY_NAME)
-    '''#vboxvm_removed
+    #vboxvm_removed
     # LANCIARE BENCHMARK
     if current_cluster == 'spark':
         #with open_cfg() as cfg:
@@ -1076,6 +1079,9 @@ def run_benchmark(nodes):
 
             #check_slave_connected_master(ssh_client) #vboxvm_removed
             print("Running Benchmark " + bench)
+        
+        #vboxvm
+        '''
         sess_file = Path("session.txt")
         session_no = 0
         if sess_file.exists():
@@ -1083,23 +1089,23 @@ def run_benchmark(nodes):
                 fc = f.read()
                 session_no = int(fc)
                 f.close()
-                         
-        #ssh_client.run(  #vboxvm_removed
-         #   'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh') #vboxvm_removed
+        '''                
+        ssh_client.run(                                                                                                                                                  #vboxvm_removed
+           'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh') #vboxvm_removed
         logfolder = "/home/ubuntu/spark-bench/num"
         output_folder = "home/ubuntu/spark-bench/num/"
         # ensure there is no directory named 'old' in log folder
         stdout, stderr, status = ssh_client.run("cd "+ logfolder + " && sudo rm -r old") 
-        stdout, stderr, status = ssh_client.run("cd "+ c.CONFIG_DICT["Spark"]["SparkHome"] + "spark-events/ && sudo cp -a " +
-                                                 c.CONFIG_DICT["Spark"]["SparkHome"] + "event-logs/. ./ && sudo rename 's/$/_"+ str(session_no) + '_' + iter_num +"/' *") #vboxvm
+        #stdout, stderr, status = ssh_client.run("cd "+ c.CONFIG_DICT["Spark"]["SparkHome"] + "spark-events/ && sudo cp -a " +
+        #                                         c.CONFIG_DICT["Spark"]["SparkHome"] + "event-logs/. ./ && sudo rename 's/$/_"+ str(session_no) + '_' + iter_num +"/' *") #vboxvm
         stdout, stderr, status = ssh_client.run("sudo chown ubuntu:ubuntu " + c.CONFIG_DICT["Spark"]["SparkHome"] + "conf")#check if needed
         #stdout, stderr, status = ssh_client.run("sudo chown ubuntu:ubuntu /usr/local/spark/conf")#check if needed
         #print("sudo chown ubuntu:ubuntu /usr/local/spark/conf:" +stdout+stderr)
         
         # RODO: DOWNLOAD LOGS
         if c.PROCESS_ON_SERVER:
-            master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
-            ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
+            #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
+            #ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
             for file in os.listdir("./"):
                 if file.endswith(".pickle"):
                     os.remove(file)
@@ -1127,7 +1133,7 @@ def run_benchmark(nodes):
                           
             stdout, stderr, status = ssh_client.run("cd xSpark-bench && sudo python3 process_on_server.py")
             print("Processing on server:\n" + stdout + stderr)
-            #master_node = [i for i in nodes if get_ip(i) == master_ip][0]
+            master_node = [i for i in nodes if get_ip(i) == master_ip][0] #vboxvm remove
             print("Downloading results from server...")
             for dir in ssh_client.listdir("xSpark-bench/home/ubuntu/spark-bench/num/"):
                 print("folder: " + str(dir))

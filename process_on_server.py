@@ -112,8 +112,8 @@ c.update_config_parms(c)
 #print("passed to log.download: c.CONFIG_DICT: ")
 #pp.pprint(c.CONFIG_DICT)
 # DOWNLOAD LOGS
-output_folder = log.download(logfolder, [i for i in nodes[:end_index]], master_ip, #vboxvm
-                             output_folder, c.CONFIG_DICT)                           #vboxvm
+output_folder = log.download(logfolder, [i for i in nodes[:end_index]], master_ip,
+                             output_folder, c.CONFIG_DICT)
 
 with open_cfg() as cfg:
     profile = True if 'profile' in cfg else False
@@ -133,8 +133,8 @@ with open_cfg(mode='w') as cfg:
     write_cfg(cfg, output_folder)
 
 #simulate plot
-for f in os.listdir('./dataplot/'):                                   # simulate plot
-    shutil.copy('./dataplot/' + f, output_folder + "/" + f)    # simulate plot
+#for f in os.listdir('./dataplot/'):                                   # simulate plot
+#    shutil.copy('./dataplot/' + f, output_folder + "/" + f)    # simulate plot
 
     
 # PLOT LOGS
