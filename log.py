@@ -16,7 +16,7 @@ from datetime import timedelta
 #from config import PRIVATE_KEY_PATH, PROVIDER, PROCESS_ON_SERVER
 from configure import config_instance as c
 from util.utils import timing, string_to_datetime
-#from util.ssh_client import sshclient_from_node, sshclient_from_ip #vboxvm
+from util.ssh_client import sshclient_from_node, sshclient_from_ip #vboxvm
 
 import run
 import shutil
