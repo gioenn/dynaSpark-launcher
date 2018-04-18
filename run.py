@@ -975,8 +975,8 @@ def run_benchmark(nodes):
 
     time.sleep(15)
 
-    #print("MASTER: " + master_ip)   #vboxvm add
-    #ssh_client = sshclient_from_node(master_node, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm add
+    print("MASTER: " + master_ip)   #vboxvm add
+    ssh_client = sshclient_from_node(master_node, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm add
 
     #  CHECK IF KEY IN MASTER
 
@@ -1077,7 +1077,7 @@ def run_benchmark(nodes):
                 ssh_client.run(
                     'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/gen_data.sh')
 
-            #check_slave_connected_master(ssh_client) #vboxvm_removed
+            check_slave_connected_master(ssh_client) #vboxvm_removed
             print("Running Benchmark " + bench)
         
         #vboxvm
