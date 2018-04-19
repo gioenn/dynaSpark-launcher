@@ -73,7 +73,7 @@ class Config(object):
     INSTALL_PYTHON3 = True                  #"""Install Python3 on cspark master"""
     CLUSTER_ID = ""                         #"""Id of the cluster with the launched instances"""
     TAG = [{}]                              #"""Cluster Tag name"""
-    HDFS_MASTER = ""                        #"""use private ip for azure!"""              
+    HDFS_MASTER = "10.0.0.4"                #"""use private ip for azure!"""              
     SPARK_SEQ_HOME = ""                     # "sequential" Spark home directory                     
     SPARK_2_HOME = ""                       # regular Spark home directory
     C_SPARK_HOME = ""                       # "controlled" spark home directory

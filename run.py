@@ -415,8 +415,10 @@ def setup_master(node, slaves_ip, hdfs_master):
             c.ENABLE_EXTERNAL_SHUFFLE, c.SPARK_HOME))
 
     if current_cluster == 'spark':
+        
         '''
-        if benchmark == 'sort_by_key':
+        #if benchmark == 'sort_by_key':
+        if benchmark == 'scala-sort-by-key':
             c.BENCH_CONF['scala-sort-by-key']['ScaleFactor'] = literal_eval(cfg['sort_by_key']['scale_factor'])[1]
             print('setting ScaleFactor as {}'.format(c.BENCH_CONF['scala-sort-by-key']['ScaleFactor']))
             c.BENCH_CONF['scala-sort-by-key']['num-partitions'] = cfg['sort_by_key']['num_partitions']
@@ -622,7 +624,7 @@ def setup_master(node, slaves_ip, hdfs_master):
             'export SPARK_HOME="{d}" && {d}sbin/start-history-server.sh'.format(d=c.SPARK_HOME))
         
     # SETUP CSPARKWORK MASTER FOR PROCESSING LOGS ON SERVER
-    # To be changed: generalize private and public key paths refernces (currently the Azure ones)
+    # To be changed: generalize private and public key paths references (currently the Azure ones)
     with open_cfg() as cfg:
         tool_on_master = cfg.getboolean('main', 'tool_on_master')
     if current_cluster == 'spark' and c.PROCESS_ON_SERVER: #vboxvm
@@ -894,7 +896,7 @@ def run_benchmark(nodes):
         current_cluster = cfg['main']['current_cluster']
         benchmark = cfg['main']['benchmark'] if 'main' in cfg and 'benchmark' in cfg['main'] else \
                     cfg['experiment']['benchmarkname'] if 'experiment' in cfg and 'benchmarkname' in cfg['experiment'] else ''
-        hdfs_master_private_ip = cfg['hdfs']['master_private_ip'] if 'hdfs' in cfg and 'master_private_ip' in cfg['hdfs'] else ''
+        hdfs_master_private_ip = cfg['hdfs']['master_private_ip'] if 'hdfs' in cfg and 'master_private_ip' in cfg['hdfs'] else c.HDFS_MASTER
         hdfs_master_public_ip = cfg['hdfs']['master_public_ip'] if 'hdfs' in cfg and 'master_public_ip' in cfg['hdfs'] else '40.84.226.144'
         delete_hdfs = cfg.getboolean('main', 'delete_hdfs')
         max_executors = int(cfg['main']['max_executors']) if 'main' in cfg and 'max_executors' in cfg['main'] else len(nodes) - 1
