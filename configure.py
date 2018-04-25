@@ -78,10 +78,10 @@ class Config(object):
     SPARK_2_HOME = ""                       # regular Spark home directory
     C_SPARK_HOME = ""                       # "controlled" spark home directory
     SPARK_HOME = ""                         # Location of Spark in the ami"""
-    LOG_LEVEL = ""                          # Spark log verbosity level
-    UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
+    LOG_LEVEL = "INFO"                      # Spark log verbosity level
+    UPDATE_SPARK = True                     #"""Git pull and build Spark of all the cluster"""
     UPDATE_SPARK_MASTER = True              #"""Git pull and build Spark only of the master node"""
-    UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
+    UPDATE_SPARK_DOCKER = True              #"""Pull the docker image in each node of the cluster"""
     ENABLE_EXTERNAL_SHUFFLE = "true"
     LOCALITY_WAIT = 0
     LOCALITY_WAIT_NODE = 0
@@ -89,7 +89,7 @@ class Config(object):
     LOCALITY_WAIT_RACK = 0
     CPU_TASK = 1
     RAM_DRIVER = "100g"
-    RAM_EXEC = ""
+    RAM_EXEC = '"100g"'
     OFF_HEAP = False
     OFF_HEAP_BYTES = 30720000000
     CORE_VM = 10                            # max 16
@@ -977,6 +977,7 @@ class Config(object):
     
     @staticmethod
     def update_config_parms(self):
+        self.cfg_dict["ClusterId"] = self.CLUSTER_ID
         self.cfg_dict["EbsOptimized"] = self.EBS_OPTIMIZED = True if "r3" not in self.INSTANCE_TYPE else False
         self.cfg_dict["Tag"] = self.TAG = [{"Key": "ClusterId", 
                 "Value": self.CLUSTER_ID}]

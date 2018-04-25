@@ -325,7 +325,7 @@ def setup_master(node, slaves_ip, hdfs_master):
     stdout, stderr, status = ssh_client.run("hostname  && pwd") #vboxvm
     print(stdout) #vboxvm
     with open_cfg(mode='w') as cfg:
-        current_cluster = cfg['main']['current_cluster']
+        current_cluster = cfg['main']['current_cluster'] 
         benchmark = c.CONFIG_DICT['Benchmark']['Name']
         #benchmark = cfg['main']['benchmark'] if 'main' in cfg and 'benchmark' in cfg['main'] else \
         #            cfg['experiment']['benchmarkname'] if 'experiment' in cfg and 'benchmarkname' in cfg['experiment'] else ''
@@ -337,7 +337,8 @@ def setup_master(node, slaves_ip, hdfs_master):
         #master_private_ip = master_public_ip #vboxvm
         #print("Setup Master: PublicIp=" + master_public_ip + " PrivateIp=" + master_private_ip) #vboxvm
         print("Setup Master: PublicIp=" + node.public_ips[0] + " PrivateIp=" + node.private_ips[0]) #vboxvm_removed
-        master_private_ip = get_ip(node)  #vboxvm_removed
+        #master_private_ip = get_ip(node)  #vboxvm_removed
+        master_private_ip = node.private_ips[0]  #vboxvm_removed
         master_public_ip = node.public_ips[0]  #vboxvm_removed
 
         # save private master_ip to cfg file
@@ -893,7 +894,7 @@ def run_benchmark(nodes):
     profile_option = False
     
     with open_cfg(mode='w') as cfg:
-        current_cluster = cfg['main']['current_cluster']
+        current_cluster = c.CLUSTER_ID = cfg['main']['current_cluster']
         benchmark = cfg['main']['benchmark'] if 'main' in cfg and 'benchmark' in cfg['main'] else \
                     cfg['experiment']['benchmarkname'] if 'experiment' in cfg and 'benchmarkname' in cfg['experiment'] else ''
         hdfs_master_private_ip = cfg['hdfs']['master_private_ip'] if 'hdfs' in cfg and 'master_private_ip' in cfg['hdfs'] else ''
@@ -929,7 +930,11 @@ def run_benchmark(nodes):
         
     #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
     #ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
-
+    # following are debug lines to be removed
+    with open("cfg_dict.json", "w") as f:
+                json.dump(c.cfg_dict, f, indent=4, sort_keys=True)
+    #exit(1)
+    #end debug lines
     master_ip, master_node = setup_master(nodes[0], slaves_ip, hdfs_master_private_ip)
     
     print("MASTER: " + master_ip)   #vboxvm remove
