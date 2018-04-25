@@ -79,9 +79,9 @@ class Config(object):
     C_SPARK_HOME = ""                       # "controlled" spark home directory
     SPARK_HOME = ""                         # Location of Spark in the ami"""
     LOG_LEVEL = "INFO"                      # Spark log verbosity level
-    UPDATE_SPARK = True                     #"""Git pull and build Spark of all the cluster"""
-    UPDATE_SPARK_MASTER = True              #"""Git pull and build Spark only of the master node"""
-    UPDATE_SPARK_DOCKER = True              #"""Pull the docker image in each node of the cluster"""
+    UPDATE_SPARK = False                     #"""Git pull and build Spark of all the cluster"""
+    UPDATE_SPARK_MASTER = False              #"""Git pull and build Spark only of the master node"""
+    UPDATE_SPARK_DOCKER = False              #"""Pull the docker image in each node of the cluster"""
     ENABLE_EXTERNAL_SHUFFLE = "true"
     LOCALITY_WAIT = 0
     LOCALITY_WAIT_NODE = 0

@@ -243,8 +243,8 @@ def setup_slave(node, master_ip, count):
 
     slave_ip = get_ip(node)
 
-    # cfg[current_cluster]['slave'+count+'_ip'] = slave_ip
-    # write_cfg(cfg)
+    #cfg[current_cluster]['slave'+count+'_ip'] = slave_ip
+    #write_cfg(cfg)
 
     common_setup(ssh_client)
 
@@ -337,8 +337,7 @@ def setup_master(node, slaves_ip, hdfs_master):
         #master_private_ip = master_public_ip #vboxvm
         #print("Setup Master: PublicIp=" + master_public_ip + " PrivateIp=" + master_private_ip) #vboxvm
         print("Setup Master: PublicIp=" + node.public_ips[0] + " PrivateIp=" + node.private_ips[0]) #vboxvm_removed
-        #master_private_ip = get_ip(node)  #vboxvm_removed
-        master_private_ip = node.private_ips[0]  #vboxvm_removed
+        master_private_ip = get_ip(node)  #vboxvm_removed
         master_public_ip = node.public_ips[0]  #vboxvm_removed
 
         # save private master_ip to cfg file
@@ -729,6 +728,7 @@ def setup_master(node, slaves_ip, hdfs_master):
         ssh_client.run("sudo rm /home/ubuntu/xSpark-bench/cfg_clusters.ini")
         ssh_client.put(localpath="cfg_clusters.ini", remotepath="/home/ubuntu/xSpark-bench/cfg_clusters.ini")
         """upLoad cfg_clusters.ini"""
+    
     return master_private_ip, node
 
 
@@ -899,7 +899,7 @@ def run_benchmark(nodes):
                     cfg['experiment']['benchmarkname'] if 'experiment' in cfg and 'benchmarkname' in cfg['experiment'] else ''
         hdfs_master_private_ip = cfg['hdfs']['master_private_ip'] if 'hdfs' in cfg and 'master_private_ip' in cfg['hdfs'] else ''
         hdfs_master_public_ip = cfg['hdfs']['master_public_ip'] if 'hdfs' in cfg and 'master_public_ip' in cfg['hdfs'] else '40.84.226.144'
-        delete_hdfs = cfg.getboolean('main', 'delete_hdfs')
+        delete_hdfs = c.DELETE_HDFS = cfg.getboolean('main', 'delete_hdfs')
         max_executors = int(cfg['main']['max_executors']) if 'main' in cfg and 'max_executors' in cfg['main'] else len(nodes) - 1
         # print('HDFS_MASTER from clusters.ini: ' + hdfs_master)
         end_index = min(len(nodes), max_executors + 1)
@@ -926,6 +926,7 @@ def run_benchmark(nodes):
         #c.SPARK_HOME = c.C_SPARK_HOME
         if profile:
             c.SPARK_HOME = c.SPARK_SEQ_HOME if cfg.getboolean('profile', 'spark_seq') else c.SPARK_2_HOME
+        
         c.update_config_parms(c)   
         
     #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
