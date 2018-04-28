@@ -1,0 +1,12 @@
+{	
+    "Alpha": 0.95,
+    "Beta": 0.33,
+    "OverScale": 2,
+    "K": 50,
+    "Ti": 12000,
+    "TSample": 1000,
+    "Heuristic": "CONTROL_UNLIMITED",
+    "CoreQuantum": 0.05,
+    "CoreMin": 0.0,
+	"CpuPeriod": 100000
+}

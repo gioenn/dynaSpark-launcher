@@ -65,6 +65,8 @@ def run_xspark(current_cluster, num_instance=c.NUM_INSTANCE, num_run=c.NUM_RUN, 
         if 'main' not in cfg:
             cfg['main'] = {}
         cfg.set('main', 'current_cluster', current_cluster)
+        if 'tool_on_master' not in cfg['main']:
+            cfg.set('main', 'tool_on_master', 'false')
 
     bench_instance = BenchInstanceFactory.get_bench_instance(c.PROVIDER, cluster_id)
     setup_ok = True
@@ -99,11 +101,12 @@ def setup_cluster(cluster, num_instances, assume_yes):
     # TODO: IMPROVE THIS
     run_on_setup = {
         'spark': 0,
-        'hdfs' : 0,
+        'hdfs' : 1,
         'generic': 0
     }
     cluster_id = c.CLUSTER_MAP[cluster]
     print(bold('Setup {} with {} instances...'.format(cluster_id, num_instances)))
+    c.NUM_INSTANCE = num_instances
     run_xspark(current_cluster=cluster, num_instance=num_instances, cluster_id=cluster_id,
                run=run_on_setup[cluster], terminate=0, reboot=0, assume_yes=assume_yes)
 
@@ -180,7 +183,8 @@ def profile(args):
                 exit(1) 
         with utils.open_cfg(mode='w') as cfg:
             for s in cfg.sections():
-                cfg.remove_section(s)
+                if s != 'hdfs':
+                    cfg.remove_section(s)
             cfg['main'] = {}
             cfg['main']['tool_on_master'] = 'false'
             cfg['main']['experiment_file'] = exp_filepath
@@ -258,7 +262,8 @@ def submit(args):
                 exit(1) 
         with utils.open_cfg(mode='w') as cfg:
             for s in cfg.sections():
-                cfg.remove_section(s)
+                if s != 'hdfs':
+                    cfg.remove_section(s)
             cfg['main'] = {}
             cfg['main']['tool_on_master'] = 'false'
             cfg['main']['experiment_file'] = exp_filepath
@@ -313,7 +318,8 @@ def launch_exp(args):
     for v in var_par:
         with utils.open_cfg(mode='w') as cfg:
             for s in cfg.sections():
-                cfg.remove_section(s)
+                if s != 'hdfs':
+                    cfg.remove_section(s)
             cfg['main'] = {}
             cfg['main']['profile'] = 'true' if args.profile else 'false'
             cfg['main']['time_analysis'] = 'true' if args.time_analysis else 'false'

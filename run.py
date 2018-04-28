@@ -894,11 +894,12 @@ def run_benchmark(nodes):
     profile_option = False
     
     with open_cfg(mode='w') as cfg:
-        current_cluster = c.CLUSTER_ID = cfg['main']['current_cluster']
+        current_cluster = cfg['main']['current_cluster']
+        c.CLUSTER_ID = c.CLUSTER_MAP[current_cluster]
         benchmark = cfg['main']['benchmark'] if 'main' in cfg and 'benchmark' in cfg['main'] else \
                     cfg['experiment']['benchmarkname'] if 'experiment' in cfg and 'benchmarkname' in cfg['experiment'] else ''
         hdfs_master_private_ip = cfg['hdfs']['master_private_ip'] if 'hdfs' in cfg and 'master_private_ip' in cfg['hdfs'] else ''
-        hdfs_master_public_ip = cfg['hdfs']['master_public_ip'] if 'hdfs' in cfg and 'master_public_ip' in cfg['hdfs'] else '40.84.226.144'
+        hdfs_master_public_ip = cfg['hdfs']['master_public_ip'] if 'hdfs' in cfg and 'master_public_ip' in cfg['hdfs'] else ''
         delete_hdfs = c.DELETE_HDFS = cfg.getboolean('main', 'delete_hdfs')
         max_executors = int(cfg['main']['max_executors']) if 'main' in cfg and 'max_executors' in cfg['main'] else len(nodes) - 1
         # print('HDFS_MASTER from clusters.ini: ' + hdfs_master)
@@ -1191,10 +1192,10 @@ def run_benchmark(nodes):
                 write_cfg(cfg, output_folder)
     
             # PLOT LOGS
-            plot.plot(output_folder + "/")
+            # plot.plot(output_folder + "/")
     
             # COMPUTE METRICS
-            metrics.compute_metrics(output_folder + "/")
+            # metrics.compute_metrics(output_folder + "/")
 
         print("\nCHECK VALUE OF SCALE FACTOR AND PREV SCALE FACTOR FOR HDFS CASE")
         

@@ -71,17 +71,20 @@ class Config(object):
     NUM_RUN = 1                             #"""Number of run to repeat the benchmark"""                          
     PROCESS_ON_SERVER = False               #"""Download benchmark logs and generate profiles and plots on server """
     INSTALL_PYTHON3 = True                  #"""Install Python3 on cspark master"""
-    CLUSTER_ID = ""                         #"""Id of the cluster with the launched instances"""
-    TAG = [{}]                              #"""Cluster Tag name"""
+    CLUSTER_ID = "CSPARKWORK"                         #"""Id of the cluster with the launched instances"""
+    TAG = [{
+            "Key": "ClusterId",
+            "Value": CLUSTER_ID
+        }]                                  #"""Cluster Tag name"""
     HDFS_MASTER = "10.0.0.4"                #"""use private ip for azure!"""              
-    SPARK_SEQ_HOME = ""                     # "sequential" Spark home directory                     
-    SPARK_2_HOME = ""                       # regular Spark home directory
-    C_SPARK_HOME = ""                       # "controlled" spark home directory
-    SPARK_HOME = ""                         # Location of Spark in the ami"""
+    SPARK_SEQ_HOME = "/opt/spark-seq/"      # "sequential" Spark home directory                     
+    SPARK_2_HOME = "/opt/spark/"            # regular Spark home directory
+    C_SPARK_HOME = "/usr/local/spark/"      # "controlled" spark home directory
+    SPARK_HOME = C_SPARK_HOME               # Location of Spark in the ami"""
     LOG_LEVEL = "INFO"                      # Spark log verbosity level
-    UPDATE_SPARK = False                     #"""Git pull and build Spark of all the cluster"""
-    UPDATE_SPARK_MASTER = False              #"""Git pull and build Spark only of the master node"""
-    UPDATE_SPARK_DOCKER = False              #"""Pull the docker image in each node of the cluster"""
+    UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
+    UPDATE_SPARK_MASTER = False             #"""Git pull and build Spark only of the master node"""
+    UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
     ENABLE_EXTERNAL_SHUFFLE = "true"
     LOCALITY_WAIT = 0
     LOCALITY_WAIT_NODE = 0
