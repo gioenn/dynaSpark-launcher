@@ -874,7 +874,7 @@ def upload_profile_to_master(nodes, profile_fname, localfilepath):
     print("Uploading benchmark profile: " + profile_fname + "\n")
     if not profile_fname in ssh_client.listdir(c.C_SPARK_HOME + "conf/"):
         ssh_client.put(localpath=localfilepath, remotepath=c.C_SPARK_HOME + "conf/" + profile_fname)
-        ssh_client.run("sudo chmod 400 " + c.C_SPARK_HOME + "conf/" + profile_fname)
+        ssh_client.run("sudo chmod 664 " + c.C_SPARK_HOME + "conf/" + profile_fname)
         print("Benchmark profile successfully uploaded\n") 
         """upload profile to spark conf directory"""
     else:
@@ -1173,7 +1173,7 @@ def run_benchmark(nodes):
                         make_sure_path_exists("spark_log_profiling/" + dir)
                         for file in ssh_client.listdir("xSpark-bench/spark_log_profiling/" + dir + "/"):
                             fpath = "spark_log_profiling/" + dir + "/"
-                            if file not in os.listdir(fpath):
+                            if file not in os.listdir(fpath) or dir == "avg_json":
                                 ssh_client.get(remotepath="xSpark-bench/" + fpath + file, localpath=fpath + file)
                                 print("Remote file: ~/xSpark-bench/" + fpath + file + " downloaded")
                             else:

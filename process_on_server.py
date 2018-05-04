@@ -161,7 +161,7 @@ with open_cfg() as cfg:
         try:
             if not profile_fname in os.listdir(c.C_SPARK_HOME + "conf/"):
                 shutil.copy(filepath, c.C_SPARK_HOME + "conf/" + profile_fname)
-                os.chmod(c.C_SPARK_HOME + "conf/" + profile_fname, 0o400)
+                os.chmod(c.C_SPARK_HOME + "conf/" + profile_fname, 0o664)
                 print("Benchmark profile successfully loaded\n") 
                 """Copy profile to spark conf directory"""
             else:
