@@ -76,7 +76,7 @@ class Config(object):
             "Key": "ClusterId",
             "Value": CLUSTER_ID
         }]                                  #"""Cluster Tag name"""
-    HDFS_MASTER = "10.0.0.4"                #"""use private ip for azure!"""              
+    HDFS_MASTER = ""                        #"""use private ip for azure!"""              
     SPARK_SEQ_HOME = "/opt/spark-seq/"      # "sequential" Spark home directory                     
     SPARK_2_HOME = "/opt/spark/"            # regular Spark home directory
     C_SPARK_HOME = "/usr/local/spark/"      # "controlled" spark home directory
@@ -981,6 +981,8 @@ class Config(object):
     @staticmethod
     def update_config_parms(self):
         self.cfg_dict["ClusterId"] = self.CLUSTER_ID
+        self.cfg_dict["NumInstance"] = self.NUM_INSTANCE
+        self.cfg_dict["HdfsMaster"] = self.HDFS_MASTER
         self.cfg_dict["EbsOptimized"] = self.EBS_OPTIMIZED = True if "r3" not in self.INSTANCE_TYPE else False
         self.cfg_dict["Tag"] = self.TAG = [{"Key": "ClusterId", 
                 "Value": self.CLUSTER_ID}]

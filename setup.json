@@ -4,7 +4,7 @@
 		"Core": 10,
 		"Memory": "100g"
 		},
-    "ProcessOnServer": false,
+    "ProcessOnServer": true,
 	"InstallPython3": true,
 	"Aws": {
         "SecurityGroup": "spark-cluster",

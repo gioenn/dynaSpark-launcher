@@ -3,7 +3,7 @@
 	"BenchmarkName": "PageRank",
     "BenchmarkConf": {
 	        "NumOfPartitions": 1000,
-	        "NumV": 3000000,
+	        "NumV": 5000000,
 	        "Mu": 3.0,
 	        "Sigma": 0.0,
 	        "MaxIterations": 1,

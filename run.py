@@ -65,6 +65,7 @@ def common_setup(ssh_client):
 
         # todo only if first run
         if c.NUM_INSTANCE > 0:
+            print("In common_setup, NUM_INSTANCE=" + str(c.NUM_INSTANCE))
             # add ssh key that matches the public one used during creation
             if not "id_rsa" in ssh_client.listdir("/home/ubuntu/.ssh/"):
                 ssh_client.put(localpath=c.PRIVATE_KEY_PATH, remotepath="/home/ubuntu/.ssh/id_rsa")
@@ -899,6 +900,7 @@ def run_benchmark(nodes):
         benchmark = cfg['main']['benchmark'] if 'main' in cfg and 'benchmark' in cfg['main'] else \
                     cfg['experiment']['benchmarkname'] if 'experiment' in cfg and 'benchmarkname' in cfg['experiment'] else ''
         hdfs_master_private_ip = cfg['hdfs']['master_private_ip'] if 'hdfs' in cfg and 'master_private_ip' in cfg['hdfs'] else ''
+        c.HDFS_MASTER = hdfs_master_private_ip
         hdfs_master_public_ip = cfg['hdfs']['master_public_ip'] if 'hdfs' in cfg and 'master_public_ip' in cfg['hdfs'] else ''
         delete_hdfs = c.DELETE_HDFS = cfg.getboolean('main', 'delete_hdfs')
         max_executors = int(cfg['main']['max_executors']) if 'main' in cfg and 'max_executors' in cfg['main'] else len(nodes) - 1
@@ -1191,11 +1193,11 @@ def run_benchmark(nodes):
                 write_cfg(cfg)
                 write_cfg(cfg, output_folder)
     
-            # PLOT LOGS
-            # plot.plot(output_folder + "/")
-    
-            # COMPUTE METRICS
-            # metrics.compute_metrics(output_folder + "/")
+            if not profile:
+                # PLOT LOGS
+                plot.plot(output_folder + "/")
+                # COMPUTE METRICS
+                metrics.compute_metrics(output_folder + "/")
 
         print("\nCHECK VALUE OF SCALE FACTOR AND PREV SCALE FACTOR FOR HDFS CASE")
         

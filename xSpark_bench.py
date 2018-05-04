@@ -207,7 +207,7 @@ def profile(args):
                    cluster_id=cluster_id, run=1, terminate=0, reboot=0)
         if not c.PROCESS_ON_SERVER:
             average_runs.main(profile_name=utils.get_cfg()[benchmark]['profile_name'])
-            deploy_profile(cluster_id, benchmark)
+            deploy_profile(benchmark, cluster_id)
     # raise NotImplementedError()
 
 def profile_disabled(args):
@@ -242,7 +242,7 @@ def profile_disabled(args):
         #profiling.main()
         average_runs.main(profile_name=utils.get_cfg()[benchmark]['profile_name'])
         #run_log_profiling(args.local)
-        deploy_profile(cluster_id, benchmark)
+        deploy_profile(benchmark, cluster_id)
     # raise NotImplementedError()
 
 def submit(args):
