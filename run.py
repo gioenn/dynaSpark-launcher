@@ -874,7 +874,7 @@ def upload_profile_to_master(nodes, profile_fname, localfilepath):
     print("Uploading benchmark profile: " + profile_fname + "\n")
     if not profile_fname in ssh_client.listdir(c.C_SPARK_HOME + "conf/"):
         ssh_client.put(localpath=localfilepath, remotepath=c.C_SPARK_HOME + "conf/" + profile_fname)
-        ssh_client.run("sudo chmod 664 " + c.C_SPARK_HOME + "conf/" + profile_fname)
+        ssh_client.run("chmod 664 " + c.C_SPARK_HOME + "conf/" + profile_fname)
         print("Benchmark profile successfully uploaded\n") 
         """upload profile to spark conf directory"""
     else:
@@ -1101,10 +1101,13 @@ def run_benchmark(nodes):
                 session_no = int(fc)
                 f.close()
         '''                
-        ssh_client.run(                                                                                                                                                  #vboxvm_removed
-           'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh') #vboxvm_removed
         logfolder = "/home/ubuntu/spark-bench/num"
         output_folder = "home/ubuntu/spark-bench/num/"
+        stdout, stderr, status = ssh_client.run("sudo rm -r " + logfolder + "*")
+        ssh_client.run(                                                                                                                                                  #vboxvm_removed
+           'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh') #vboxvm_removed
+        # logfolder = "/home/ubuntu/spark-bench/num"
+        # output_folder = "home/ubuntu/spark-bench/num/"
         # ensure there is no directory named 'old' in log folder
         stdout, stderr, status = ssh_client.run("cd "+ logfolder + " && sudo rm -r old") 
         #stdout, stderr, status = ssh_client.run("cd "+ c.CONFIG_DICT["Spark"]["SparkHome"] + "spark-events/ && sudo cp -a " +
