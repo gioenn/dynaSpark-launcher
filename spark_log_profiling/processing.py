@@ -70,6 +70,8 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                                                                                            json_out_dir))
     for log in glob.glob(os.path.join(input_dir, 'app-*')):
         app_name = ""
+        app_start_time = 0
+        app_end_time = 0
         # Build stage dictionary
         stage_dict = OrderedDict()
         if ".bz" in log:
@@ -86,6 +88,9 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                 try:
                     if data["Event"] == "SparkListenerApplicationStart":
                         app_name = data["App Name"]
+                        app_start_time = data["Timestamp"]
+                    elif data["Event"] == "SparkListenerApplicationEnd":    
+                        app_end_time = data["Timestamp"]
                     elif data["Event"] == "SparkListenerStageSubmitted":
                         # print(data)
                         stage = data["Stage Info"]
@@ -94,6 +99,7 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                             stage_dict[stage_id] = {}
                             if stage_id == 0:
                                 stage_dict[0]["totalduration"] = 0
+                                stage_dict[0]["elapsedduration"] = 0
                             stage_dict[stage_id]["name"] = stage['Stage Name']
                             stage_dict[stage_id]["genstage"] = False
                             stage_dict[stage_id]["parentsIds"] = stage["Parent IDs"]
@@ -304,7 +310,9 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                     stage_dict[key]["weight"] = np.mean(
                         [old_weight, totalduration / stage_dict[key]["duration"]])
                     totalduration -= stage_dict[key]["duration"]
-
+            
+            stage_dict[0]["elapsedduration"] = app_end_time - app_start_time
+            
             # create output dir
             log_name = os.path.basename(log)
 
