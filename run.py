@@ -945,11 +945,12 @@ def run_benchmark(nodes):
     print("MASTER: " + master_ip)   #vboxvm remove
     ssh_client = sshclient_from_node(master_node, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm remove
     
-    if  profile and profile_fname != "" :
+    if profile and profile_fname != "":
         # delete selected benchmark profile file
-        print("Deleting " + benchmark + " benchmark reference profile: " + profile_fname + "\n")
+        print("Deleting " + benchmark + " benchmark reference profile: " + profile_fname + ".json\n")
         stdout, stderr, status = ssh_client.run("sudo rm " + c.C_SPARK_HOME + "conf/" + profile_fname + ".json")
-            
+        print(stdout + stderr) 
+          
     if c.SPARK_HOME == c.SPARK_2_HOME:
         print("Check Effectively Executor Running")
     #vboxvm_removed
