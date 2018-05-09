@@ -921,12 +921,15 @@ def run_benchmark(nodes):
             exp_filepath = cfg['main']['experiment_file']
             c.config_experiment(exp_filepath, cfg)  
         profile = True if 'profile' in cfg else False
+        print("profile mode set to " + str(profile))
         profile_option = cfg.getboolean('main', 'profile') if 'main' in cfg and 'profile' in cfg['main'] else False
         #profile = cfg['main']['profile'] if 'main' in cfg and 'profile' in cfg['main'] else False
         profile_fname = cfg[benchmark]['profile_name'] if profile and \
                                                           benchmark in cfg and \
                                                           'profile_name' in cfg[benchmark] \
                                                        else ""
+        print("profile filename set to: " + profile_fname)
+        
         #c.SPARK_HOME = c.C_SPARK_HOME
         if profile:
             c.SPARK_HOME = c.SPARK_SEQ_HOME if cfg.getboolean('profile', 'spark_seq') else c.SPARK_2_HOME
