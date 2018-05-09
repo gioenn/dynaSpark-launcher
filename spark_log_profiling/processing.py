@@ -8,6 +8,7 @@ from collections import OrderedDict
 import sys
 
 import numpy as np
+from datetime import datetime
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DIR = os.path.join(ROOT_DIR, 'input_logs')
@@ -58,6 +59,15 @@ def gather_records_rw(stages):
         stages[k]['t_record_ta_executor'] = float(stages[k]['duration']) / float(v) if v > 0 else 0
         stages[k]['io_factor'] = float(writes[k]) / float(v) if v > 0 else 0
 
+def date_time_to_timestamp_ms(date, time):
+    '''Converts two strings containing date in format YY/MM/DD and time in format HH:MM:SS to Unix timestamp in milliseconds'''
+    # date.replace('/', '')
+    dt_obj = datetime.strptime(date + ' ' + time,
+                           '%y/%m/%d %H:%M:%S')
+    millisec = dt_obj.timestamp() * 1000
+    # print('Date time ' + date + ' ' + time + 'converted to ' + str(millisec) + ' ms.')
+    return millisec
+    
 
 def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
     processed_dir = os.path.join(ROOT_DIR, 'processed_logs')
@@ -72,6 +82,15 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
         app_name = ""
         app_start_time = 0
         app_end_time = 0
+        app_act_start_time = 0
+        app_act_end_time = 0
+        dat_folder = 'home/ubuntu/spark-bench/num/'+ log.split('.')[0].split(os.sep)[-1]
+        dat_files = os.listdir(dat_folder)
+        dat_file = [x for x in dat_files if x.split('.')[-1] == 'dat' and x.split('_')[-2] == 'run'][0]
+        dat_filepath = dat_folder + '/' + dat_file
+        stages = []
+        last_stage = 0
+        
         # Build stage dictionary
         stage_dict = OrderedDict()
         if ".bz" in log:
@@ -95,11 +114,15 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                         # print(data)
                         stage = data["Stage Info"]
                         stage_id = stage["Stage ID"]
+                        stages.append(stage_id)
+                        if stage_id > last_stage:
+                            last_stage = stage_id
                         if stage_id not in stage_dict.keys():
                             stage_dict[stage_id] = {}
                             if stage_id == 0:
                                 stage_dict[0]["totalduration"] = 0
-                                stage_dict[0]["elapsedduration"] = 0
+                                stage_dict[0]["actualtotalduration"] = 0
+                            stage_dict[stage_id]["actualduration"] = 0
                             stage_dict[stage_id]["name"] = stage['Stage Name']
                             stage_dict[stage_id]["genstage"] = False
                             stage_dict[stage_id]["parentsIds"] = stage["Parent IDs"]
@@ -168,6 +191,7 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                             # print(stage)
                             if stage["Stage ID"] not in stage_dict.keys():
                                 stage_dict[stage_id] = {}
+                                stage_dict[stage_id]["actualduration"] = 0
                                 stage_dict[stage_id]["name"] = stage['Stage Name']
                                 stage_dict[stage_id]["genstage"] = False
                                 stage_dict[stage_id]["parentsIds"] = stage["Parent IDs"]
@@ -311,7 +335,35 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                         [old_weight, totalduration / stage_dict[key]["duration"]])
                     totalduration -= stage_dict[key]["duration"]
             
-            stage_dict[0]["elapsedduration"] = app_end_time - app_start_time
+            stages = list(stage_dict.keys())
+            stages_not_skipped = [s for s in stages if s not in skipped]
+            fdat = open(dat_filepath)
+            stage_act_start_times = [0] * len(stages)
+            stage_act_end_times = [0] * len(stages)
+                
+            with fdat as dat:
+                for line in dat:
+                    tokens = line.split(' ')
+                    if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage') and tokens[6] == '0':
+                        date = tokens[0]
+                        time = tokens [1]
+                        app_act_start_time = date_time_to_timestamp_ms(date, time)
+                    if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[5] == str(last_stage) and tokens[9] == 'finished':
+                        date = tokens[0]
+                        time = tokens [1]
+                        app_act_end_time = date_time_to_timestamp_ms(date, time)
+                    if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage'):
+                        date = tokens[0]
+                        time = tokens [1]
+                        stage_act_start_times[int(tokens[6])] = date_time_to_timestamp_ms(date, time)
+                    if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[9] == 'finished':
+                        date = tokens[0]
+                        time = tokens [1]
+                        stage_act_end_times[int(tokens[5])] = date_time_to_timestamp_ms(date, time)
+            for i in stages:
+                stage_dict[i]["actualduration"] = stage_act_end_times[i] - stage_act_start_times[i]
+
+            stage_dict[0]["actualtotalduration"] = app_act_end_time - app_act_start_time
             
             # create output dir
             log_name = os.path.basename(log)
