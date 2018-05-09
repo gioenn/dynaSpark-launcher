@@ -344,22 +344,23 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
             with fdat as dat:
                 for line in dat:
                     tokens = line.split(' ')
-                    if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage') and tokens[6] == '0':
-                        date = tokens[0]
-                        time = tokens [1]
-                        app_act_start_time = date_time_to_timestamp_ms(date, time)
-                    if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[5] == str(last_stage) and tokens[9] == 'finished':
-                        date = tokens[0]
-                        time = tokens [1]
-                        app_act_end_time = date_time_to_timestamp_ms(date, time)
-                    if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage'):
-                        date = tokens[0]
-                        time = tokens [1]
-                        stage_act_start_times[int(tokens[6])] = date_time_to_timestamp_ms(date, time)
-                    if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[9] == 'finished':
-                        date = tokens[0]
-                        time = tokens [1]
-                        stage_act_end_times[int(tokens[5])] = date_time_to_timestamp_ms(date, time)
+                    if len(tokens) > 6:
+                        if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage') and tokens[6] == '0':
+                            date = tokens[0]
+                            time = tokens [1]
+                            app_act_start_time = date_time_to_timestamp_ms(date, time)
+                        if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[5] == str(last_stage) and tokens[9] == 'finished':
+                            date = tokens[0]
+                            time = tokens [1]
+                            app_act_end_time = date_time_to_timestamp_ms(date, time)
+                        if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage'):
+                            date = tokens[0]
+                            time = tokens [1]
+                            stage_act_start_times[int(tokens[6])] = date_time_to_timestamp_ms(date, time)
+                        if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[9] == 'finished':
+                            date = tokens[0]
+                            time = tokens [1]
+                            stage_act_end_times[int(tokens[5])] = date_time_to_timestamp_ms(date, time)
             for i in stages:
                 stage_dict[i]["actualduration"] = stage_act_end_times[i] - stage_act_start_times[i]
 

@@ -875,6 +875,7 @@ def upload_profile_to_master(nodes, profile_fname, localfilepath):
     if not profile_fname in ssh_client.listdir(c.C_SPARK_HOME + "conf/"):
         ssh_client.put(localpath=localfilepath, remotepath=c.C_SPARK_HOME + "conf/" + profile_fname)
         ssh_client.run("chmod 664 " + c.C_SPARK_HOME + "conf/" + profile_fname)
+        ssh_client.run("sudo chown ubuntu:ubuntu " + c.C_SPARK_HOME + "conf/" + profile_fname)
         print("Benchmark profile successfully uploaded\n") 
         """upload profile to spark conf directory"""
     else:
