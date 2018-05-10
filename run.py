@@ -955,7 +955,6 @@ def run_benchmark(nodes):
         
         if 'main' in cfg and 'experiment_file' in cfg['main']:
             exp_filepath = cfg['main']['experiment_file']
-            print("config_experiment to be executed, exp_filepath= " + exp_filepath)
             c.config_experiment(exp_filepath, cfg)  
         
         benchmark = cfg['main']['benchmark'] if 'main' in cfg and 'benchmark' in cfg['main'] else \
@@ -976,7 +975,6 @@ def run_benchmark(nodes):
         #c.CONFIG_DICT["Control"]["MaxExecutor"] = c.MAX_EXECUTOR
         #c.cfg_dict["ConfigDict"] = c.CONFIG_DICT
         if 'main' in cfg and 'benchmark' in cfg['main']:
-            print("config_benchmark to be executed, benchmark= " + benchmark)
             c.config_benchmark(benchmark, cfg)
         profile = True if 'profile' in cfg else False
         print("profile mode set to " + str(profile))
@@ -988,7 +986,6 @@ def run_benchmark(nodes):
                                                           'profile_name' in cfg[benchmark] \
                                                        else ""
         print("profile filename set to: " + profile_fname)
-        input("Press a key to continue...")
         #c.SPARK_HOME = c.C_SPARK_HOME
         if profile:
             c.SPARK_HOME = c.SPARK_SEQ_HOME if cfg.getboolean('profile', 'spark_seq') else c.SPARK_2_HOME
