@@ -83,6 +83,7 @@ class Config(object):
     SPARK_HOME = C_SPARK_HOME               # Location of Spark in the ami"""
     LOG_LEVEL = "INFO"                      # Spark log verbosity level
     UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
+    GIT_BRANCH = "xSpark-1.0"
     UPDATE_SPARK_MASTER = False             #"""Git pull and build Spark only of the master node"""
     UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
     ENABLE_EXTERNAL_SHUFFLE = "true"
@@ -529,7 +530,8 @@ class Config(object):
                     "InputRecord": INPUT_RECORD, 
                     "RootDir": ROOT_DIR, 
                     "ClustersCfgFilename": CLUSTERS_CFG_FILENAME, 
-                    "ClustersCfgPath": CLUSTERS_CFG_PATH
+                    "ClustersCfgPath": CLUSTERS_CFG_PATH,
+                    "GitBranch": GIT_BRANCH
                     }
     
     def __init__(self):

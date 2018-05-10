@@ -252,8 +252,16 @@ def setup_slave(node, master_ip, count):
     if c.UPDATE_SPARK:
         print("   Updating Spark...")
         ssh_client.run(
+            """cd /usr/local/spark && git pull && git checkout """ + c.GIT_BRANCH)
+        # CLEAN UP EXECUTORS APP LOGS
+        ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+        ssh_client.run(
             """cd /usr/local/spark && git pull && build/mvn clean && build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
 
+        '''
+        ssh_client.run(
+            """cd /usr/local/spark && git pull && build/mvn clean && build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
+        '''
     # CLEAN UP EXECUTORS APP LOGS
     # ssh_client.run("rm -r " + c.SPARK_HOME + "work/*")
     ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
@@ -402,8 +410,14 @@ def setup_master(node, slaves_ip, hdfs_master):
     if c.UPDATE_SPARK_MASTER:
         print("   Updating Spark...")
         ssh_client.run(
+            """cd /usr/local/spark && git pull && git checkout """ + c.GIT_BRANCH)
+        ssh_client.run(
             """cd /usr/local/spark && git pull && build/mvn clean &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
 
+        '''
+        ssh_client.run(
+            """cd /usr/local/spark && git pull && build/mvn clean &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
+        '''
     print("   Remove Logs")
     # ssh_client.run("rm " + c.SPARK_HOME + "spark-events/*")
     ssh_client.run("sudo rm " + c.SPARK_HOME + "spark-events/*")
