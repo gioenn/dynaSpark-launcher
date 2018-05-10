@@ -251,8 +251,9 @@ def setup_slave(node, master_ip, count):
 
     if c.UPDATE_SPARK:
         print("   Updating Spark...")
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """cd /usr/local/spark && git pull && git checkout """ + c.GIT_BRANCH)
+        print(stdout + stderr)
         # CLEAN UP EXECUTORS APP LOGS
         ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
         ssh_client.run(
@@ -275,38 +276,46 @@ def setup_slave(node, master_ip, count):
 
     if current_cluster == 'spark':
     # Modificato questo
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             "sed -i '31s/.*/spark.shuffle.service.enabled {0}/' {1}conf/spark-defaults.conf".format(
                 c.ENABLE_EXTERNAL_SHUFFLE, c.SPARK_HOME))
-
+        print("setup_slave, spark-defaults.conf 31: " + stdout + stderr)
         # ssh_client.run('echo "spark.local.dir /mnt/hdfs" >> '+ c.SPARK_HOME + 'conf/spark-defaults.conf')
 
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             "sed -i '32s/.*/spark.memory.offHeap.enabled {0}/' {1}conf/spark-defaults.conf".format(
                 c.OFF_HEAP, c.SPARK_HOME))
-        ssh_client.run(
+        print("setup_slave, spark-defaults.conf 32: " + stdout + stderr)
+        stdout, stderr, status = ssh_client.run(
             "sed -i '33s/.*/spark.memory.offHeap.size {0}/' {1}conf/spark-defaults.conf".format(
                 c.OFF_HEAP_BYTES, c.SPARK_HOME))
-
-        ssh_client.run("sed -i '42s/.*/spark.control.k {0}/' {1}conf/spark-defaults.conf".format(
+        print("setup_slave, spark-defaults.conf 33: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '42s/.*/spark.control.k {0}/' {1}conf/spark-defaults.conf".format(
             c.K , c.SPARK_HOME))
-
+        print("setup_slave, spark-defaults.conf 42: " + stdout + stderr)
+        
         # SAMPLING RATE LINE 43
-        ssh_client.run("sed -i '43s/.*/spark.control.tsample {0}/' {1}conf/spark-defaults.conf".format(
+        stdout, stderr, status = ssh_client.run("sed -i '43s/.*/spark.control.tsample {0}/' {1}conf/spark-defaults.conf".format(
             c.T_SAMPLE, c.SPARK_HOME))
-
-        ssh_client.run("sed -i '44s/.*/spark.control.ti {0}/' {1}conf/spark-defaults.conf".format(
+        print("setup_slave, spark-defaults.conf 43: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '44s/.*/spark.control.ti {0}/' {1}conf/spark-defaults.conf".format(
             c.TI, c.SPARK_HOME))
-
-        ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
+        print("setup_slave, spark-defaults.conf 44: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
             c.CORE_QUANTUM) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run("sed -i '50s{.*{spark.control.coremin " + str(
+        print("setup_slave, spark-defaults.conf 45: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '50s{.*{spark.control.coremin " + str(
             c.CORE_MIN) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run("sed -i '41s{.*{spark.control.cpuperiod " + str(
+        print("setup_slave, spark-defaults.conf 50: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '41s{.*{spark.control.cpuperiod " + str(
             c.CPU_PERIOD) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
+        print("setup_slave, spark-defaults.conf 50: " + stdout + stderr)
+        
     if current_cluster == 'spark':
         print("   Starting Spark Slave")
         ssh_client.run(
@@ -409,8 +418,9 @@ def setup_master(node, slaves_ip, hdfs_master):
 
     if c.UPDATE_SPARK_MASTER:
         print("   Updating Spark...")
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """cd /usr/local/spark && git pull && git checkout """ + c.GIT_BRANCH)
+        print(stdout + stderr)
         ssh_client.run(
             """cd /usr/local/spark && git pull && build/mvn clean &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
 
@@ -425,10 +435,11 @@ def setup_master(node, slaves_ip, hdfs_master):
     # TODO Check number of lines in spark-defaults.conf
 
     # SHUFFLE SERVICE EXTERNAL
-    ssh_client.run(
+    stdout, stderr, status = ssh_client.run(
         "sed -i '31s/.*/spark.shuffle.service.enabled {0}/' {1}conf/spark-defaults.conf".format(
             c.ENABLE_EXTERNAL_SHUFFLE, c.SPARK_HOME))
-
+    print("setup_master, spark-defaults.conf 31: " + stdout + stderr)
+        
     if current_cluster == 'spark':
         
         '''
@@ -443,119 +454,147 @@ def setup_master(node, slaves_ip, hdfs_master):
             c.NUM_TASK = c.SCALE_FACTOR
         '''
         # OFF HEAP
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             "sed -i '32s{.*{spark.memory.offHeap.enabled " + str(
                 c.OFF_HEAP) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 32: " + stdout + stderr)
+        stdout, stderr, status = ssh_client.run(
             "sed -i '33s{.*{spark.memory.offHeap.size " + str(
                 c.OFF_HEAP_BYTES) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
+        print("setup_master, spark-defaults.conf 33: " + stdout + stderr)
+        
         print("   Changing Benchmark settings")
         # DEADLINE LINE 35
-        ssh_client.run("sed -i '35s{.*{spark.control.deadline " + str(
+        stdout, stderr, status = ssh_client.run("sed -i '35s{.*{spark.control.deadline " + str(
             c.DEADLINE) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+        print("setup_master, spark-defaults.conf 35: " + stdout + stderr)
         #print("MAX_EXECUTOR in setup_master: " + str(c.MAX_EXECUTOR))
         # MAX EXECUTOR LINE 39
-        ssh_client.run("sed -i '39s{.*{spark.control.maxexecutor " + str(
+        stdout, stderr, status = ssh_client.run("sed -i '39s{.*{spark.control.maxexecutor " + str(
             c.MAX_EXECUTOR) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
+        print("setup_master, spark-defaults.conf 39: " + stdout + stderr)
+        
         # CORE FOR VM LINE 40
-        ssh_client.run("sed -i '40s{.*{spark.control.coreforvm " + str(
+        stdout, stderr, status = ssh_client.run("sed -i '40s{.*{spark.control.coreforvm " + str(
             c.CORE_VM) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
+        print("setup_master, spark-defaults.conf 40: " + stdout + stderr)
+        
         # ALPHA LINE 36
-        ssh_client.run("sed -i '36s{.*{spark.control.alpha " + str(
+        stdout, stderr, status = ssh_client.run("sed -i '36s{.*{spark.control.alpha " + str(
             c.ALPHA) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
+        print("setup_master, spark-defaults.conf 40: " + stdout + stderr)
+        
         # BETA line 37
-        ssh_client.run("sed -i '37s{.*{spark.control.beta " + str(
+        stdout, stderr, status = ssh_client.run("sed -i '37s{.*{spark.control.beta " + str(
             c.BETA) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
+        print("setup_master, spark-defaults.conf 37: " + stdout + stderr)
+        
         # OVERSCALE LINE 38
-        ssh_client.run("sed -i '38s{.*{spark.control.overscale " + str(
+        stdout, stderr, status = ssh_client.run("sed -i '38s{.*{spark.control.overscale " + str(
             c.OVER_SCALE) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
+        print("setup_master, spark-defaults.conf 38: " + stdout + stderr)
+        
         # HEURISTIC TYPE LINE 56
-        ssh_client.run("sed -i '56s{.*{spark.control.heuristic " + str(
+        stdout, stderr, status = ssh_client.run("sed -i '56s{.*{spark.control.heuristic " + str(
             c.HEURISTIC.value) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+        print("setup_master, spark-defaults.conf 56: " + stdout + stderr)
         # CORE_ALLOCATION
         if c.CORE_ALLOCATION != None and c.DEADLINE_ALLOCATION != None and c.STAGE_ALLOCATION != None:
-            ssh_client.run("sed -i '57s{.*{spark.control.stage " + str(c.STAGE_ALLOCATION) + "{' "+c.SPARK_HOME+"conf/spark-defaults.conf")
-            ssh_client.run("sed -i '58s{.*{spark.control.stagecores "+ str(c.CORE_ALLOCATION) +"{' "+c.SPARK_HOME + "conf/spark-defaults.conf")
-            ssh_client.run("sed -i '59s{.*{spark.control.stagedeadlines " + str(
+            stdout, stderr, status = ssh_client.run("sed -i '57s{.*{spark.control.stage " + str(c.STAGE_ALLOCATION) + "{' "+c.SPARK_HOME+"conf/spark-defaults.conf")
+            stdout, stderr, status = ssh_client.run("sed -i '58s{.*{spark.control.stagecores "+ str(c.CORE_ALLOCATION) +"{' "+c.SPARK_HOME + "conf/spark-defaults.conf")
+            stdout, stderr, status = ssh_client.run("sed -i '59s{.*{spark.control.stagedeadlines " + str(
                 c.DEADLINE_ALLOCATION) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
         else:
-            ssh_client.run("sed -i '57s{.*{#stage{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-            ssh_client.run("sed -i '58s{.*{#stagecores{' "+c.SPARK_HOME + "conf/spark-defaults.conf")
-            ssh_client.run("sed -i '59s{.*{#stagedeadlines{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+            stdout, stderr, status = ssh_client.run("sed -i '57s{.*{#stage{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+            stdout, stderr, status = ssh_client.run("sed -i '58s{.*{#stagecores{' "+c.SPARK_HOME + "conf/spark-defaults.conf")
+            stdout, stderr, status = ssh_client.run("sed -i '59s{.*{#stagedeadlines{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
 
         # CHANGE ALSO IN MASTER FOR THE LOGS
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             "sed -i '43s{.*{spark.control.tsample " + str(
                 c.T_SAMPLE) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run("sed -i '42s{.*{spark.control.k " + str(
+        print("setup_master, spark-defaults.conf 43: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '42s{.*{spark.control.k " + str(
             c.K ) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run("sed -i '44s{.*{spark.control.ti " + str(
+        print("setup_master, spark-defaults.conf 42: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '44s{.*{spark.control.ti " + str(
             c.TI) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
+        print("setup_master, spark-defaults.conf 44: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
             c.CORE_QUANTUM) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 45: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run(
             "sed -i '46s{.*{spark.locality.wait " + str(
                 c.LOCALITY_WAIT) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 46: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run(
             "sed -i '51s{.*{spark.locality.wait.node " + str(
                 c.LOCALITY_WAIT_NODE) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 51: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run(
             "sed -i '52s{.*{spark.locality.wait.process " + str(
                 c.LOCALITY_WAIT_PROCESS) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 52: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run(
             "sed -i '53s{.*{spark.locality.wait.rack " + str(
                 c.LOCALITY_WAIT_RACK) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 53: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run(
             "sed -i '47s{.*{spark.task.cpus " + str(
                 c.CPU_TASK) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 47: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run(
             "sed -i '48s{.*{spark.control.nominalrate 0.0{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 48: " + stdout + stderr)
+        stdout, stderr, status = ssh_client.run(
             "sed -i '49s{.*{spark.control.nominalratedata 0.0{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run("sed -i '50s{.*{spark.control.coremin " + str(
+        print("setup_master, spark-defaults.conf 49: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("sed -i '50s{.*{spark.control.coremin " + str(
             c.CORE_MIN) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 50: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run(
             "sed -i '54s{.*{spark.control.inputrecord " + str(
                 c.INPUT_RECORD) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        ssh_client.run(
+        print("setup_master, spark-defaults.conf 54: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run(
             "sed -i '55s{.*{spark.control.numtask " + str(
                 c.NUM_TASK) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
-        ssh_client.run("""sed -i '3s{.*{master=""" + master_private_ip +
+        print("setup_master, spark-defaults.conf 55: " + stdout + stderr)
+        
+        stdout, stderr, status = ssh_client.run("""sed -i '3s{.*{master=""" + master_private_ip +
                        """{' ./spark-bench/conf/env.sh""")
-        ssh_client.run("""sed -i '63s{.*{NUM_TRIALS=""" + str(c.BENCH_NUM_TRIALS) +
+        print("setup_master, ./spark-bench/conf/env.sh 3: " + stdout + stderr)
+        stdout, stderr, status = ssh_client.run("""sed -i '63s{.*{NUM_TRIALS=""" + str(c.BENCH_NUM_TRIALS) +
                        """{' ./spark-bench/conf/env.sh""")
-
+        print("setup_master, ./spark-bench/conf/env.sh 63: " + stdout + stderr)
+        
         # CHANGE SPARK HOME DIR
-        ssh_client.run("sed -i '21s{.*{SPARK_HOME_DIR = \"" + c.SPARK_HOME + "\"{' ./spark-perf/config/config.py")
-
+        stdout, stderr, status = ssh_client.run("sed -i '21s{.*{SPARK_HOME_DIR = \"" + c.SPARK_HOME + "\"{' ./spark-perf/config/config.py")
+        #print("setup_master, ./spark-perf/config/config.py 21: " + stdout + stderr)
+        
         # CHANGE MASTER ADDRESS IN BENCHMARK
-        ssh_client.run("""sed -i '30s{.*{SPARK_CLUSTER_URL = "spark://""" + master_private_ip +
+        stdout, stderr, status = ssh_client.run("""sed -i '30s{.*{SPARK_CLUSTER_URL = "spark://""" + master_private_ip +
                        """:7077"{' ./spark-perf/config/config.py""")
-
+        #print("setup_master, ./spark-perf/config/config.py 30: " + stdout + stderr)
+        
         # CHANGE SCALE FACTOR LINE 127
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             "sed -i '127s{.*{SCALE_FACTOR = " + str(c.SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
 
         # NO PROMPT
-        ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./spark-perf/config/config.py")
+        stdout, stderr, status = ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./spark-perf/config/config.py")
         if len(c.BENCHMARK_PERF) > 0:  # and c.SPARK_PERF_FOLDER == "spark-perf-gioenn":
             # print("   Setting up skewed test")
             # ssh_client.run("""sed -i '164s{.*{OptionSet("skew", [""" + str(
@@ -569,17 +608,17 @@ def setup_master(node, slaves_ip, hdfs_master):
                                                                                        "reduce-tasks"]) + """], can_scale=False),{' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
 
         # CHANGE RAM EXEC
-        ssh_client.run(
+        stdout, stderr, status =  ssh_client.run(
             """sed -i '146s{.*{    JavaOptionSet("spark.executor.memory", [""" + c.RAM_EXEC + """]),{' ./spark-perf/config/config.py""")
 
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """sed -i '55s{.*{SPARK_EXECUTOR_MEMORY=""" + c.RAM_EXEC + """{' ./spark-bench/conf/env.sh""")
 
         # CHANGE RAM DRIVER
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             "sed -i '26s{.*{spark.driver.memory " + c.RAM_DRIVER + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
 
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             "sed -i '154s{.*{SPARK_DRIVER_MEMORY = \""+c.RAM_DRIVER+"\"{' ./spark-perf/config/config.py")
 
 
@@ -599,34 +638,34 @@ def setup_master(node, slaves_ip, hdfs_master):
         # ENABLE HDFS
         # if c.HDFS:
         print("   Enabling HDFS in benchmarks")
-        ssh_client.run("sed -i '179s%memory%hdfs%g' ./spark-perf/config/config.py")
+        stdout, stderr, status = ssh_client.run("sed -i '179s%memory%hdfs%g' ./spark-perf/config/config.py")
 
     #if hdfs_master != "":
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """sed -i  '50s%.*%HDFS_URL = "hdfs://{0}:9000/test/"%' ./spark-perf/config/config.py""".format(
                 hdfs_master))
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """sed -i  '10s%.*%HDFS_URL="hdfs://{0}:9000"%' ./spark-bench/conf/env.sh""".format(
                 hdfs_master))
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """sed -i  '14s%.*%DATA_HDFS="hdfs://{0}:9000/SparkBench"%' ./spark-bench/conf/env.sh""".format(
                 hdfs_master))
 
         # TODO: additional settings for spark-bench
         # ssh_client.run("""sed -i '8s/.*//' ./spark-bench/conf/env.sh""")
-        ssh_client.run("""sed -i '8s{.*{[ -z "$HADOOP_HOME" ] \&\&     export HADOOP_HOME="""+c.HADOOP_HOME+"""{' ./spark-bench/conf/env.sh""")
+        stdout, stderr, status = ssh_client.run("""sed -i '8s{.*{[ -z "$HADOOP_HOME" ] \&\&     export HADOOP_HOME="""+c.HADOOP_HOME+"""{' ./spark-bench/conf/env.sh""")
         # slaves = slaves_ip[0]
         # for slave in slaves_ip[1:]:
         #     slaves = slaves + ", " + slave
 
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """sed -i  '5s%.*%MC_LIST=()%' ./spark-bench/conf/env.sh""")
 
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """sed -i  '19s%.*%SPARK_VERSION=2.0%' ./spark-bench/conf/env.sh""")
 
         # ssh_client.run("""sed -i '20s/.*//' ./spark-bench/conf/env.sh""")
-        ssh_client.run("""sed -i '20s{.*{[ -z "$SPARK_HOME" ] \&\&     export SPARK_HOME="""+c.SPARK_HOME+"""{' ./spark-bench/conf/env.sh""")
+        stdout, stderr, status = ssh_client.run("""sed -i '20s{.*{[ -z "$SPARK_HOME" ] \&\&     export SPARK_HOME="""+c.SPARK_HOME+"""{' ./spark-bench/conf/env.sh""")
 
     # START MASTER and HISTORY SERVER
     if current_cluster == 'spark':
@@ -908,10 +947,17 @@ def run_benchmark(nodes):
     profile = False
     profile_fname = ""
     profile_option = False
+    benchmark = ""
     
     with open_cfg(mode='w') as cfg:
         current_cluster = cfg['main']['current_cluster']
         c.CLUSTER_ID = c.CLUSTER_MAP[current_cluster]
+        
+        if 'main' in cfg and 'experiment_file' in cfg['main']:
+            exp_filepath = cfg['main']['experiment_file']
+            print("config_experiment to be executed, exp_filepath= " + exp_filepath)
+            c.config_experiment(exp_filepath, cfg)  
+        
         benchmark = cfg['main']['benchmark'] if 'main' in cfg and 'benchmark' in cfg['main'] else \
                     cfg['experiment']['benchmarkname'] if 'experiment' in cfg and 'benchmarkname' in cfg['experiment'] else ''
         hdfs_master_private_ip = cfg['hdfs']['master_private_ip'] if 'hdfs' in cfg and 'master_private_ip' in cfg['hdfs'] else ''
@@ -930,20 +976,19 @@ def run_benchmark(nodes):
         #c.CONFIG_DICT["Control"]["MaxExecutor"] = c.MAX_EXECUTOR
         #c.cfg_dict["ConfigDict"] = c.CONFIG_DICT
         if 'main' in cfg and 'benchmark' in cfg['main']:
+            print("config_benchmark to be executed, benchmark= " + benchmark)
             c.config_benchmark(benchmark, cfg)
-        if 'main' in cfg and 'experiment_file' in cfg['main']:
-            exp_filepath = cfg['main']['experiment_file']
-            c.config_experiment(exp_filepath, cfg)  
         profile = True if 'profile' in cfg else False
         print("profile mode set to " + str(profile))
         profile_option = cfg.getboolean('main', 'profile') if 'main' in cfg and 'profile' in cfg['main'] else False
         #profile = cfg['main']['profile'] if 'main' in cfg and 'profile' in cfg['main'] else False
+        print("Benchmark: " + benchmark)
         profile_fname = cfg[benchmark]['profile_name'] if profile and \
                                                           benchmark in cfg and \
                                                           'profile_name' in cfg[benchmark] \
                                                        else ""
         print("profile filename set to: " + profile_fname)
-        
+        input("Press a key to continue...")
         #c.SPARK_HOME = c.C_SPARK_HOME
         if profile:
             c.SPARK_HOME = c.SPARK_SEQ_HOME if cfg.getboolean('profile', 'spark_seq') else c.SPARK_2_HOME

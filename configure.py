@@ -82,10 +82,12 @@ class Config(object):
     C_SPARK_HOME = "/usr/local/spark/"      # "controlled" spark home directory
     SPARK_HOME = C_SPARK_HOME               # Location of Spark in the ami"""
     LOG_LEVEL = "INFO"                      # Spark log verbosity level
-    UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
     GIT_BRANCH = "xSpark-1.0"
-    UPDATE_SPARK_MASTER = False             #"""Git pull and build Spark only of the master node"""
+    UPDATE_SPARK = True                     #"""Git pull and build Spark of all the cluster"""
+    UPDATE_SPARK_MASTER = True             #"""Git pull and build Spark only of the master node"""
     UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
+    UPDATE_SPARK_BENCH = True
+    UPDATE_SPARK_PERF = False
     ENABLE_EXTERNAL_SHUFFLE = "true"
     LOCALITY_WAIT = 0
     LOCALITY_WAIT_NODE = 0
@@ -294,8 +296,6 @@ class Config(object):
     PRIVATE_KEY_PATH = None
     PRIVATE_KEY_NAME = None
     TEMPORARY_STORAGE = None
-    UPDATE_SPARK_BENCH = True
-    UPDATE_SPARK_PERF = False
     SPARK_PERF_FOLDER = "spark-perf"
     CLUSTER_MAP = {
         'hdfs': 'CSPARKHDFS',
@@ -475,6 +475,8 @@ class Config(object):
                     "UpdateSpark": UPDATE_SPARK,
                     "UpdateSparkMaster": UPDATE_SPARK_MASTER,
                     "UpdateSparkDocker": UPDATE_SPARK_DOCKER,
+                    "UpdateSparkBench": UPDATE_SPARK_BENCH,
+                    "UpdateSparkPerf": UPDATE_SPARK_PERF,
                     "EnableExternalShuffle": ENABLE_EXTERNAL_SHUFFLE,
                     "LocalityWait": LOCALITY_WAIT,
                     "LocalityWaitNode": LOCALITY_WAIT_NODE,
@@ -520,8 +522,6 @@ class Config(object):
                     "PrivateKeyPath": PRIVATE_KEY_PATH,
                     "PrivateKeyName": PRIVATE_KEY_NAME,
                     "TemporaryStorage": TEMPORARY_STORAGE,
-                    "UpdateSparkBench": UPDATE_SPARK_BENCH,
-                    "UpdateSparkPerf": UPDATE_SPARK_PERF,
                     "SparkPerfFolder": SPARK_PERF_FOLDER,
                     "ClusterMap": CLUSTER_MAP,
                     "VarParMap": VAR_PAR_MAP,
@@ -801,6 +801,16 @@ class Config(object):
                     self.cfg_dict["ProcessOnServer"] = self.PROCESS_ON_SERVER = setup["ProcessOnServer"]
                 if "InstallPython3" in keys:
                     self.cfg_dict["InstallPython3"] = self.INSTALL_PYTHON3 = setup["InstallPython3"]
+                if "UpdateSpark" in keys:
+                    self.cfg_dict["UpdateSpark"] = self.UPDATE_SPARK = setup["UpdateSpark"]
+                if "UpdateSparkMaster" in keys:
+                    self.cfg_dict["UpdateSparkMaster"] = self.UPDATE_SPARK_MASTER = setup["UpdateSparkMaster"]
+                if "UpdateSparkDocker" in keys:
+                    self.cfg_dict["UpdateSparkDocker"] = self.UPDATE_SPARK_DOCKER = setup["UpdateSparkDocker"]
+                if "UpdateSparkBench" in keys:
+                    self.cfg_dict["UpdateSparkBench"] = self.UPDATE_SPARK_BENCH = setup["UpdateSparkBench"]
+                if "UpdateSparkPerf" in keys:
+                    self.cfg_dict["UpdateSparkPerf"] = self.UPDATE_SPARK_PERF = setup["UpdateSparkPerf"]
                 #if "NumInstance" in keys: NUM_INSTANCE = setup["NumInstance"]
                 #if "Reboot" in keys: REBOOT = setup["Reboot"]
                 #if "KillJava" in keys: KILL_JAVA = setup["KillJava"]
@@ -811,13 +821,17 @@ class Config(object):
                 #if "Terminate" in keys: TERMINATE = setup["Terminate"]
                 #if "HadoopConf" in keys: HADOOP_CONF = setup["HadoopConf"]
                 #if "HadoopHome" in keys: HADOOP_HOME = setup["HadoopHome"]
-                #if "UpdateSparkBench" in keys: UPDATE_SPARK_BENCH = setup["UpdateSparkBench"]
-                #if "UpdateSparkPerf" in keys: UPDATE_SPARK_PERF = setup["UpdateSparkPerf"]
                 #if "SparkPerfFolder" in keys: SPARK_PERF_FOLDER = setup["SparkPerfFolder"]
                 #if "ClusterMap" in keys: CLUSTER_MAP = setup["ClusterMap"]
                 #if "VarParMap" in keys: VAR_PAR_MAP = setup["VarParMap"]
                 #if "BenchLines" in keys: BENCH_LINES = setup["BenchLines"]
                 #if "HDFS" in keys: HDFS = setup["HDFS"]
+                #LOG_LEVEL = setup["Spark"]["LogLevel"] if "LogLevel" in keys else LOG_LEVEL
+                #RAM_DRIVER = setup["Spark"]["RamDriver"] if "RamDriver" in keys else RAM_DRIVER
+                #OFF_HEAP = setup["Spark"]["OffHeap"] if "OffHeap" in keys else OFF_HEAP
+                #OFF_HEAP_BYTES = setup["Spark"]["OffHeapBytes"] if "OffHeapBytes" in keys else OFF_HEAP_BYTES
+                #DISABLE_HT = not setup["Spark"]["HyperThreading"] if "HyperThreading" in keys else DISABLE_HT
+                '''
                 if "Credentials" in keys:
                     k_Credentials = setup["Credentials"].keys()
                     if "AzTenantId" in k_Credentials: 
@@ -838,7 +852,7 @@ class Config(object):
                         self.cfg_dict["AwsSecretId"] = self.AWS_SECRET_KEY = setup["Credentials"]["AwsSecretId"]
                     if "KeyPairPath" in k_Credentials:
                         self.cfg_dict["KeyPairPath"] = self.KEY_PAIR_PATH = setup["Credentials"]["KeyPairPath"]
-                
+                '''
                 if "VM" in keys:
                     k_VM = setup["VM"].keys()
                     if "Core" in k_VM:
@@ -912,15 +926,7 @@ class Config(object):
                     #C_SPARK_HOME = setup["Spark"]["CSparkHome"] if "CSparkHome" in keys else C_SPARK_HOME
                     #SPARK_SEQ_HOME = setup["Spark"]["SparkSeqHome"] if "SparkSeqHome" in keys else SPARK_SEQ_HOME
                     #SPARK_2_HOME = setup["Spark"]["Spark2Home"] if "Spark2Home" in keys else SPARK_2_HOME
-                    #LOG_LEVEL = setup["Spark"]["LogLevel"] if "LogLevel" in keys else LOG_LEVEL
-                    #UPDATE_SPARK = setup["Spark"]["UpdateSpark"] if "UpdateSpark" in keys else UPDATE_SPARK
-                    #UPDATE_SPARK_MASTER = setup["Spark"]["UpdateSparkMaster"] if "UpdateSparkMaster" in keys else UPDATE_SPARK_MASTER
-                    #UPDATE_SPARK_DOCKER = setup["Spark"]["UpdateSparkDocker"] if "UpdateSparkDocker" in keys else UPDATE_SPARK_DOCKER
-                    #RAM_DRIVER = setup["Spark"]["RamDriver"] if "RamDriver" in keys else RAM_DRIVER
-                    #OFF_HEAP = setup["Spark"]["OffHeap"] if "OffHeap" in keys else OFF_HEAP
-                    #OFF_HEAP_BYTES = setup["Spark"]["OffHeapBytes"] if "OffHeapBytes" in keys else OFF_HEAP_BYTES
-                    #DISABLE_HT = not setup["Spark"]["HyperThreading"] if "HyperThreading" in keys else DISABLE_HT
-                    
+                                        
                 
                 if "SparkSeq" in keys:
                     k_SparkSeq = setup["SparkSeq"].keys()
