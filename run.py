@@ -299,23 +299,24 @@ def setup_slave(node, master_ip, count):
         stdout, stderr, status = ssh_client.run("sed -i '43s/.*/spark.control.tsample {0}/' {1}conf/spark-defaults.conf".format(
             c.T_SAMPLE, c.SPARK_HOME))
         print("setup_slave, spark-defaults.conf 43: " + stdout + stderr)
-        
-        stdout, stderr, status = ssh_client.run("sed -i '44s/.*/spark.control.ti {0}/' {1}conf/spark-defaults.conf".format(
-            c.TI, c.SPARK_HOME))
-        print("setup_slave, spark-defaults.conf 44: " + stdout + stderr)
-        
-        stdout, stderr, status = ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
-            c.CORE_QUANTUM) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        print("setup_slave, spark-defaults.conf 45: " + stdout + stderr)
-        
-        stdout, stderr, status = ssh_client.run("sed -i '50s{.*{spark.control.coremin " + str(
-            c.CORE_MIN) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        print("setup_slave, spark-defaults.conf 50: " + stdout + stderr)
-        
-        stdout, stderr, status = ssh_client.run("sed -i '41s{.*{spark.control.cpuperiod " + str(
-            c.CPU_PERIOD) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        print("setup_slave, spark-defaults.conf 50: " + stdout + stderr)
-        
+        try:
+            stdout, stderr, status = ssh_client.run("sed -i '44s/.*/spark.control.ti {0}/' {1}conf/spark-defaults.conf".format(
+                c.TI, c.SPARK_HOME))
+            print("setup_slave, spark-defaults.conf 44: " + stdout + stderr)
+            
+            stdout, stderr, status = ssh_client.run("sed -i '45s{.*{spark.control.corequantum " + str(
+                c.CORE_QUANTUM) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+            print("setup_slave, spark-defaults.conf 45: " + stdout + stderr)
+            
+            stdout, stderr, status = ssh_client.run("sed -i '50s{.*{spark.control.coremin " + str(
+                c.CORE_MIN) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+            print("setup_slave, spark-defaults.conf 50 c.CORE_MIN: " + stdout + stderr)
+            
+            stdout, stderr, status = ssh_client.run("sed -i '41s{.*{spark.control.cpuperiod " + str(
+                c.CPU_PERIOD) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+            print("setup_slave, spark-defaults.conf 41: ", stdout + stderr)
+        except Exception as exc:
+            print("ERROREEE", exc)
     if current_cluster == 'spark':
         print("   Starting Spark Slave")
         ssh_client.run(
@@ -497,18 +498,24 @@ def setup_master(node, slaves_ip, hdfs_master):
         # HEURISTIC TYPE LINE 56
         stdout, stderr, status = ssh_client.run("sed -i '56s{.*{spark.control.heuristic " + str(
             c.HEURISTIC.value) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        print("setup_master, spark-defaults.conf 56: " + stdout + stderr)
+        print("setup_master, spark-defaults.conf 56 c.SPARK_HOME str(c.HEURISTIC.value): " + c.SPARK_HOME + str(c.HEURISTIC.value) + stdout + stderr)
         # CORE_ALLOCATION
         if c.CORE_ALLOCATION != None and c.DEADLINE_ALLOCATION != None and c.STAGE_ALLOCATION != None:
             stdout, stderr, status = ssh_client.run("sed -i '57s{.*{spark.control.stage " + str(c.STAGE_ALLOCATION) + "{' "+c.SPARK_HOME+"conf/spark-defaults.conf")
+            print("setup_master, spark-defaults.conf 56 str(c.STAGE_ALLOCATION): " + str(c.STAGE_ALLOCATION) + stdout + stderr)
             stdout, stderr, status = ssh_client.run("sed -i '58s{.*{spark.control.stagecores "+ str(c.CORE_ALLOCATION) +"{' "+c.SPARK_HOME + "conf/spark-defaults.conf")
+            print("setup_master, spark-defaults.conf 58 str(c.CORE_ALLOCATION): " + str(c.CORE_ALLOCATION) + stdout + stderr)
             stdout, stderr, status = ssh_client.run("sed -i '59s{.*{spark.control.stagedeadlines " + str(
                 c.DEADLINE_ALLOCATION) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+            print("setup_master, spark-defaults.conf 59 str(c.DEADLINE_ALLOCATION): " + str(c.DEADLINE_ALLOCATION) + stdout + stderr)
         else:
             stdout, stderr, status = ssh_client.run("sed -i '57s{.*{#stage{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
+            print("setup_master, spark-defaults.conf 57 c.SPARK_HOME: " + c.SPARK_HOME + stdout + stderr)
             stdout, stderr, status = ssh_client.run("sed -i '58s{.*{#stagecores{' "+c.SPARK_HOME + "conf/spark-defaults.conf")
+            print("setup_master, spark-defaults.conf 58 c.SPARK_HOME: " + c.SPARK_HOME + stdout + stderr)
             stdout, stderr, status = ssh_client.run("sed -i '59s{.*{#stagedeadlines{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-
+            print("setup_master, spark-defaults.conf 59 c.SPARK_HOME: " + c.SPARK_HOME + stdout + stderr)
+            
         # CHANGE ALSO IN MASTER FOR THE LOGS
         stdout, stderr, status = ssh_client.run(
             "sed -i '43s{.*{spark.control.tsample " + str(
@@ -535,17 +542,17 @@ def setup_master(node, slaves_ip, hdfs_master):
         stdout, stderr, status = ssh_client.run(
             "sed -i '51s{.*{spark.locality.wait.node " + str(
                 c.LOCALITY_WAIT_NODE) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        print("setup_master, spark-defaults.conf 51: " + stdout + stderr)
+        print("setup_master, spark-defaults.conf 51 str(c.LOCALITY_WAIT_NODE): " + str(c.LOCALITY_WAIT_NODE) + stdout + stderr)
         
         stdout, stderr, status = ssh_client.run(
             "sed -i '52s{.*{spark.locality.wait.process " + str(
                 c.LOCALITY_WAIT_PROCESS) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        print("setup_master, spark-defaults.conf 52: " + stdout + stderr)
+        print("setup_master, spark-defaults.conf 52: str(c.LOCALITY_WAIT_PROCESS)" + str(c.LOCALITY_WAIT_PROCESS) + stdout + stderr)
         
         stdout, stderr, status = ssh_client.run(
             "sed -i '53s{.*{spark.locality.wait.rack " + str(
                 c.LOCALITY_WAIT_RACK) + "{' " + c.SPARK_HOME + "conf/spark-defaults.conf")
-        print("setup_master, spark-defaults.conf 53: " + stdout + stderr)
+        print("setup_master, spark-defaults.conf 53: str(c.LOCALITY_WAIT_RACK)" + str(c.LOCALITY_WAIT_RACK) + stdout + stderr)
         
         stdout, stderr, status = ssh_client.run(
             "sed -i '47s{.*{spark.task.cpus " + str(
