@@ -1,7 +1,7 @@
 {
 	"Provider": "AZURE",
     "VM": {
-		"Core": 10,
+		"Core": 16,
 		"Memory": "100g"
 		},
     "ProcessOnServer": true,
@@ -26,20 +26,20 @@
                               }
     	},
     "Azure": {
-        "ResourceGroup": "spark",
+        "ResourceGroup": "xspark-davide-ap",
         "SecurityGroup": "cspark-securitygroup2",
         "StorageAccount": {
             "Sku": "standard_lrs",
             "Kind": "storage",
-            "Name": "sparkdisks"
+            "Name": "xsparkstoragedavide1"
         },
         "Subnet": "default",
         "NodeSize": "Standard_D14_v2_Promo",
         "Network": "cspark-vnet2",
-        "Location": "westeurope",
+        "Location": "australiaeast",
         "NodeImage": {
             "BlobContainer": "vhd",
-            "StorageAccount": "sparkdisks",
+            "StorageAccount": "xsparkstoragedavide1",
             "Name": "vm-os.vhd"
         }
     },

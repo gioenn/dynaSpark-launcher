@@ -275,6 +275,10 @@ def setup_slave(node, master_ip, count):
         print("   Disabled HyperThreading {}".format(status))
 
     if current_cluster == 'spark':
+        # check that line numbers to be substituted are present in file spark-defaults.conf and if not, add 11 empty comment lines
+        stdout, stderr, status = ssh_client.run(
+                    "if [ $(wc -l /usr/local/spark/conf/spark-defaults.conf | awk '{ print $1 }') -le 60 ]; \
+                    then echo -e '#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n' >> /usr/local/spark/conf/spark-defaults.conf; fi")
     # Modificato questo
         stdout, stderr, status = ssh_client.run(
             "sed -i '31s/.*/spark.shuffle.service.enabled {0}/' {1}conf/spark-defaults.conf".format(
@@ -434,7 +438,11 @@ def setup_master(node, slaves_ip, hdfs_master):
     ssh_client.run("sudo rm " + c.SPARK_HOME + "spark-events/*")
 
     # TODO Check number of lines in spark-defaults.conf
-
+    # check that line numbers to be substituted are present in file spark-defaults.conf and if not, add 11 empty comment lines
+    stdout, stderr, status = ssh_client.run(
+                "if [ $(wc -l /usr/local/spark/conf/spark-defaults.conf | awk '{ print $1 }') -le 60 ]; \
+                then echo -e '#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n' >> /usr/local/spark/conf/spark-defaults.conf; fi")
+    
     # SHUFFLE SERVICE EXTERNAL
     stdout, stderr, status = ssh_client.run(
         "sed -i '31s/.*/spark.shuffle.service.enabled {0}/' {1}conf/spark-defaults.conf".format(
@@ -1141,7 +1149,7 @@ def run_benchmark(nodes):
         '''                
 
         for bench in c.BENCHMARK_BENCH:
-
+            ssh_client.run('rm -r ./spark-bench/num/*')
             for bc in c.BENCH_CONF[bench]:
                 if bc != "NumTrials":
                     ssh_client.run(
@@ -1158,7 +1166,11 @@ def run_benchmark(nodes):
 
             check_slave_connected_master(ssh_client) #vboxvm_removed
             print("Running Benchmark " + bench)
-        
+            ssh_client.run(                                                                                                                                                  #vboxvm_removed
+               'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh') #vboxvm_removed
+            logfolder = "/home/ubuntu/spark-bench/num"
+            output_folder = "home/ubuntu/spark-bench/num/"
+            
         #vboxvm
         '''
         sess_file = Path("session.txt")
@@ -1169,11 +1181,7 @@ def run_benchmark(nodes):
                 session_no = int(fc)
                 f.close()
         '''                
-        logfolder = "/home/ubuntu/spark-bench/num"
-        output_folder = "home/ubuntu/spark-bench/num/"
-        stdout, stderr, status = ssh_client.run("sudo rm -r " + logfolder + "*")
-        ssh_client.run(                                                                                                                                                  #vboxvm_removed
-           'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh') #vboxvm_removed
+        # stdout, stderr, status = ssh_client.run("sudo rm -r " + logfolder + "/*")
         # logfolder = "/home/ubuntu/spark-bench/num"
         # output_folder = "home/ubuntu/spark-bench/num/"
         # ensure there is no directory named 'old' in log folder

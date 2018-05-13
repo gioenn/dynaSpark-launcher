@@ -136,29 +136,47 @@ class Config(object):
     
     BENCH_CONF = {                          #"""Setting of the supported benchmark"""
         "scala-agg-by-key": {
-            "ScaleFactor": 5
+            "ScaleFactor": 5,
+            "num-partitions": 1000,
+            "unique-keys": 1000,
+            "reduce-tasks": 1000
         },
         "scala-agg-by-key-int": {
-            "ScaleFactor": 5
+            "ScaleFactor": 5,
+            "num-partitions": 1000,
+            "unique-keys": 1000,
+            "reduce-tasks": 1000
         },
         "scala-agg-by-key-naive": {
-            "ScaleFactor": 5
+            "ScaleFactor": 5,
+            "num-partitions": 1000,
+            "unique-keys": 1000,
+            "reduce-tasks": 1000
         },
         "scala-sort-by-key": {
             "ScaleFactor": 13,
     #        "skew": 0,
-            "num-partitions": 100,
-            "unique-keys": 100,
-            "reduce-tasks": 100
+            "num-partitions": 1000,
+            "unique-keys": 1000,
+            "reduce-tasks": 1000
         },
         "scala-sort-by-key-int": {
-            "ScaleFactor": 25
+            "ScaleFactor": 25,
+            "num-partitions": 1000,
+            "unique-keys": 1000,
+            "reduce-tasks": 1000
         },
         "scala-count": {
-            "ScaleFactor": 25
+            "ScaleFactor": 25,
+            "num-partitions": 1000,
+            "unique-keys": 1000,
+            "reduce-tasks": 1000
         },
         "scala-count-w-fltr": {
-            "ScaleFactor": 25
+            "ScaleFactor": 25,
+            "num-partitions": 1000,
+            "unique-keys": 1000,
+            "reduce-tasks": 1000
         },
         "PageRank": {
             "NUM_OF_PARTITIONS": 1000,
