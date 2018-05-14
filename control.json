@@ -1,7 +1,7 @@
 {	
     "Alpha": 1.0,
-    "Beta": 0.33,
-    "OverScale": 1,
+    "Beta": 0.0,
+    "OverScale": 100,
     "K": 40,
     "Ti": 13000,
     "TSample": 1000,

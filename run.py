@@ -277,7 +277,7 @@ def setup_slave(node, master_ip, count):
     if current_cluster == 'spark':
         # check that line numbers to be substituted are present in file spark-defaults.conf and if not, add 11 empty comment lines
         stdout, stderr, status = ssh_client.run(
-                    "if [ $(wc -l /usr/local/spark/conf/spark-defaults.conf | awk '{ print $1 }') -le 60 ]; \
+                    "if [ $(wc -l /usr/local/spark/conf/spark-defaults.conf | awk '{ print $1 }') -lt 60 ]; \
                     then echo -e '#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n#\n' >> /usr/local/spark/conf/spark-defaults.conf; fi")
     # Modificato questo
         stdout, stderr, status = ssh_client.run(
@@ -1140,7 +1140,8 @@ def run_benchmark(nodes):
             app_log = between(runout, "2>> ", ".err")
             logfolder = "/home/ubuntu/" + "/".join(app_log.split("/")[:-1])
             print(logfolder)
-            output_folder = logfolder[1:]
+            # output_folder = logfolder[1:] # this is the canonical name
+            output_folder = "home/ubuntu/spark-bench/num/" # this is to match where current version log-processing searches for app logfiles 
         '''    
         if  profile and profile_fname != "" :
             # delete selected benchmark profile file
@@ -1169,6 +1170,7 @@ def run_benchmark(nodes):
             ssh_client.run(                                                                                                                                                  #vboxvm_removed
                'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + '" && ./spark-bench/' + bench + '/bin/run.sh') #vboxvm_removed
             logfolder = "/home/ubuntu/spark-bench/num"
+            
             output_folder = "home/ubuntu/spark-bench/num/"
             
         #vboxvm

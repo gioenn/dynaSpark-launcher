@@ -22,6 +22,10 @@ def make_sure_path_exists(path):
         if exception.errno != errno.EEXIST:
             raise
 
+def contains_generation(file):
+    l = filter(lambda x: "DataGenerator" in x and "ResultStage 0" in x and "saveAs" in x, file)
+    #l = [x for x in file if "DataGenerator" in x and "ResultStage 0" in x and "saveAs" in x]
+    return len(list(l)) > 0
 
 def gather_records_rw(stages):
     not_skipped = {k: v for k, v in stages.items() if v['skipped'] == False}
@@ -67,7 +71,7 @@ def date_time_to_timestamp_ms(date, time):
     millisec = dt_obj.timestamp() * 1000
     # print('Date time ' + date + ' ' + time + 'converted to ' + str(millisec) + ' ms.')
     return millisec
-    
+
 
 def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
     processed_dir = os.path.join(ROOT_DIR, 'processed_logs')
@@ -80,17 +84,27 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                                                                                            json_out_dir))
     for log in glob.glob(os.path.join(input_dir, 'app-*')):
         app_name = ""
+        is_errfile = False
         app_start_time = 0
         app_end_time = 0
         app_act_start_time = 0
         app_act_end_time = 0
         dat_folder = 'home/ubuntu/spark-bench/num/'+ log.split('.')[0].split(os.sep)[-1]
-        dat_files = os.listdir(dat_folder)
-        dat_file = [x for x in dat_files if x.split('.')[-1] == 'dat' and x.split('_')[-2] == 'run'][0]
+        files = os.listdir(dat_folder)
+        print("Files: ", files)
+        dat_file = ""
+        dat_files = [x for x in files if x.split('.')[-1] == 'dat' and x.split('_')[-2] == 'run']
+        dat_file = dat_files[0] if len(dat_files) > 0 else ''
+        if dat_file == '':
+            err_files = [x for x in files if x.split('.')[-1] == 'err' and x.split('.')[-2] != 'scheduling-throughput']
+            dat_file = err_files[0] if len(err_files) > 0 else ''
+            is_errfile = True
+            print("Files .err: ", dat_files)
         dat_filepath = dat_folder + '/' + dat_file
+        print("FilePath: ", dat_filepath)
         stages = []
         last_stage = 0
-        
+
         # Build stage dictionary
         stage_dict = OrderedDict()
         if ".bz" in log:
@@ -100,6 +114,11 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
 
         with file_open as logfile:
             #print(log)
+            if dat_file != '':
+                fdat = open(dat_filepath)
+            with fdat as dat:
+                start_stage = 1 if contains_generation(dat) else 0
+
             for line in logfile:
                 if ".bz" in log:
                     line = line.decode("utf-8")
@@ -108,12 +127,14 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                     if data["Event"] == "SparkListenerApplicationStart":
                         app_name = data["App Name"]
                         app_start_time = data["Timestamp"]
-                    elif data["Event"] == "SparkListenerApplicationEnd":    
+                    elif data["Event"] == "SparkListenerApplicationEnd":
                         app_end_time = data["Timestamp"]
                     elif data["Event"] == "SparkListenerStageSubmitted":
                         # print(data)
                         stage = data["Stage Info"]
-                        stage_id = stage["Stage ID"]
+                        stage_id = int(stage["Stage ID"]) - start_stage
+                        if stage_id < 0:
+                            continue
                         stages.append(stage_id)
                         if stage_id > last_stage:
                             last_stage = stage_id
@@ -125,7 +146,8 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                             stage_dict[stage_id]["actualduration"] = 0
                             stage_dict[stage_id]["name"] = stage['Stage Name']
                             stage_dict[stage_id]["genstage"] = False
-                            stage_dict[stage_id]["parentsIds"] = stage["Parent IDs"]
+                            #print(stage["Parent IDs"])
+                            stage_dict[stage_id]["parentsIds"] = list(map(lambda x: x - start_stage, stage["Parent IDs"]))
                             stage_dict[stage_id]["nominalrate"] = 0.0
                             stage_dict[stage_id]["weight"] = 0
                             stage_dict[stage_id]["RDDIds"] = {
@@ -149,7 +171,9 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                                     stage_dict[stage_id]["cachedRDDs"].append(rdd_info["RDD ID"])
                     elif data["Event"] == "SparkListenerStageCompleted":
                         # print(data)
-                        stage_id = data["Stage Info"]["Stage ID"]
+                        stage_id = data["Stage Info"]["Stage ID"] - start_stage
+                        #print(stage_id)
+                        if stage_id < 0: continue
                         stage_dict[stage_id]["numtask"] = data["Stage Info"]['Number of Tasks']
                         for acc in data["Stage Info"]["Accumulables"]:
                             if acc["Name"] == "internal.metrics.executorRunTime":
@@ -170,10 +194,12 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                             if acc["Name"] == "internal.metrics.output.bytesWrite":
                                 stage_dict[stage_id]["byteswrite"] = acc["Value"]
                             if acc["Name"] == "internal.metrics.shuffle.write.bytesWritten":
-                                stage_dict[stage_id]["shufflebyteswrite"] = acc["Value"]    
-                except KeyError:
-                    print(data)
+                                stage_dict[stage_id]["shufflebyteswrite"] = acc["Value"]
+                except KeyError as e:
+                    print(e)
 
+
+        
         skipped = []
         if ".bz" in log:
             file_open = bz2.BZ2File(log, "r")
@@ -187,14 +213,14 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                 try:
                     if data["Event"] == "SparkListenerJobStart":
                         for stage in data["Stage Infos"]:
-                            stage_id = stage["Stage ID"]
-                            # print(stage)
-                            if stage["Stage ID"] not in stage_dict.keys():
+                            stage_id = stage["Stage ID"] - start_stage
+                            if stage_id < 0: continue
+                            if stage_id not in stage_dict.keys():
                                 stage_dict[stage_id] = {}
                                 stage_dict[stage_id]["actualduration"] = 0
                                 stage_dict[stage_id]["name"] = stage['Stage Name']
                                 stage_dict[stage_id]["genstage"] = False
-                                stage_dict[stage_id]["parentsIds"] = stage["Parent IDs"]
+                                stage_dict[stage_id]["parentsIds"] = list(map(lambda x: x - start_stage, stage["Parent IDs"]))
                                 stage_dict[stage_id]["nominalrate"] = 0.0
                                 stage_dict[stage_id]["weight"] = 0
                                 stage_dict[stage_id]["RDDIds"] = {
@@ -334,38 +360,42 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                     stage_dict[key]["weight"] = np.mean(
                         [old_weight, totalduration / stage_dict[key]["duration"]])
                     totalduration -= stage_dict[key]["duration"]
-            
+
             stages = list(stage_dict.keys())
             stages_not_skipped = [s for s in stages if s not in skipped]
-            fdat = open(dat_filepath)
             stage_act_start_times = [0] * len(stages)
             stage_act_end_times = [0] * len(stages)
-                
-            with fdat as dat:
-                for line in dat:
-                    tokens = line.split(' ')
-                    if len(tokens) > 6:
-                        if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage') and tokens[6] == '0':
-                            date = tokens[0]
-                            time = tokens [1]
-                            app_act_start_time = date_time_to_timestamp_ms(date, time)
-                        if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[5] == str(last_stage) and tokens[9] == 'finished':
-                            date = tokens[0]
-                            time = tokens [1]
-                            app_act_end_time = date_time_to_timestamp_ms(date, time)
-                        if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage'):
-                            date = tokens[0]
-                            time = tokens [1]
-                            stage_act_start_times[int(tokens[6])] = date_time_to_timestamp_ms(date, time)
-                        if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[9] == 'finished':
-                            date = tokens[0]
-                            time = tokens [1]
-                            stage_act_end_times[int(tokens[5])] = date_time_to_timestamp_ms(date, time)
+
+            if dat_file != '':
+                fdat = open(dat_filepath)
+                #print("fdat: ", fdat)
+                with fdat as dat:
+                    #print(dat)
+                    for line in dat:
+                        tokens = line.split(' ')
+                        #print("after line 373")
+                        if len(tokens) > 6:
+                            if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage') and (start_stage == 0 or tokens[6] != '0'):
+                                date = tokens[0]
+                                time = tokens [1]
+                                stage_act_start_times[int(tokens[6]) - start_stage] = date_time_to_timestamp_ms(date, time)
+                                if tokens[6] == str(start_stage):
+                                    app_act_start_time = date_time_to_timestamp_ms(date, time)
+
+                            if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[9] == 'finished' and (start_stage == 0 or tokens[5] != '0'):
+                                date = tokens[0]
+                                time = tokens [1]
+                                stage_act_end_times[int(tokens[5]) - start_stage] = date_time_to_timestamp_ms(date, time)
+                                if tokens[5] == str(last_stage + start_stage):
+                                    app_act_end_time = date_time_to_timestamp_ms(date, time)
+            else:
+                print('_run.dat file not found, no actualdurations calculated')
+
             for i in stages:
                 stage_dict[i]["actualduration"] = stage_act_end_times[i] - stage_act_start_times[i]
 
             stage_dict[0]["actualtotalduration"] = app_act_end_time - app_act_start_time
-            
+
             # create output dir
             log_name = os.path.basename(log)
 
