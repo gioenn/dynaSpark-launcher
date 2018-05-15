@@ -50,7 +50,7 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, profile_name='avgprofile'
                     if pk == "cachedRDDs" or pk == "parentsIds":
                         #print("validprofile: "+str(validprofiles))
                         #print("setcompare:"+str(set(p[ak][pk]) == set(avgprofile[ak][pk])))
-                        validprofiles = validprofiles and (set(p[ak][pk]) == set(avgprofile[ak][pk]))
+                        validprofiles = validprofiles and (set(p[ak][pk]) == set(avgprofile[ak][pk])) or pk == "parentsIds"
                         if not (set(p[ak][pk]) == set(avgprofile[ak][pk])) : 
                             print("profile error, stage#="+ak+", name="+pk+", setavg= "+str(set(avgprofile[ak][pk]))+", setpro= "+str(set(p[ak][pk])))
         except KeyError:
