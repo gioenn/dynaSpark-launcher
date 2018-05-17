@@ -44,13 +44,13 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, profile_name='avgprofile'
                     if pk != "RDDIds" and pk != "name" and pk != "genstage" and pk != "skipped" and pk != "numtask":
                         avgprofile[ak][pk].append(p[ak][pk]) if pk != "cachedRDDs" and pk != "parentsIds" else False
                     else: 
-                        validprofiles = validprofiles and avgprofile[ak][pk] == p[ak][pk]
+                        validprofiles = validprofiles and avgprofile[ak][pk] == p[ak][pk] if pk != "cachedRDDs" and pk != "parentsIds" else validprofiles
                         if not (validprofiles) : 
                             print("profile error, stage#="+ak+", key="+pk+", name="+p[ak]["name"])
                     if pk == "cachedRDDs" or pk == "parentsIds":
                         #print("validprofile: "+str(validprofiles))
                         #print("setcompare:"+str(set(p[ak][pk]) == set(avgprofile[ak][pk])))
-                        validprofiles = validprofiles and (set(p[ak][pk]) == set(avgprofile[ak][pk])) or pk == "parentsIds"
+                        validprofiles = validprofiles and (set(p[ak][pk]) == set(avgprofile[ak][pk]) or pk == "parentsIds")
                         if not (set(p[ak][pk]) == set(avgprofile[ak][pk])) : 
                             print("profile error, stage#="+ak+", name="+pk+", setavg= "+str(set(avgprofile[ak][pk]))+", setpro= "+str(set(p[ak][pk])))
         except KeyError:

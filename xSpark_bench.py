@@ -154,6 +154,10 @@ def setup(args):
     cluster = args.cluster
     num_instances = args.num_instances
     assume_yes = args.assume_yes
+    if cluster == 'all' or cluster == 'hdfs':
+        with utils.open_cfg(mode='w') as cfg:
+            for s in cfg.sections():
+                cfg.remove_section(s)
     if cluster == 'all':
         setup_cluster('hdfs', num_instances, assume_yes)
         setup_cluster('spark', num_instances, assume_yes)
