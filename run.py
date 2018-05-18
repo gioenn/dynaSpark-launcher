@@ -607,13 +607,22 @@ def setup_master(node, slaves_ip, hdfs_master):
         # CHANGE SCALE FACTOR LINE 127
         stdout, stderr, status = ssh_client.run(
             "sed -i '127s{.*{SCALE_FACTOR = " + str(c.SCALE_FACTOR) + "{' ./spark-perf/config/config.py")
-
+        
+        # CHANGE IGNORE_TRIALS LINE 134
+        stdout, stderr, status = ssh_client.run(
+            "sed -i '134s{.*{IGNORED_TRIALS = " + str(c.IGNORED_TRIALS) + "{' ./spark-perf/config/config.py")
+        
+        
         # NO PROMPT
         stdout, stderr, status = ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./spark-perf/config/config.py")
         if len(c.BENCHMARK_PERF) > 0:  # and c.SPARK_PERF_FOLDER == "spark-perf-gioenn":
             # print("   Setting up skewed test")
             # ssh_client.run("""sed -i '164s{.*{OptionSet("skew", [""" + str(
             #     c.BENCH_CONF[c.BENCHMARK_PERF[0]]["skew"]) + """]){' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
+            
+            print("   Setting up num_trials")
+            ssh_client.run("""sed -i '160s{.*{    OptionSet("num-trials", [1]),{' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
+            
             print("   Setting up unique-keys, num-partitions and reduce-tasks")
             ssh_client.run("""sed -i '185s{.*{OptionSet("unique-keys",[""" + str(c.BENCH_CONF[c.BENCHMARK_PERF[0]][
                                                                                      "unique-keys"]) + """], False),{' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
