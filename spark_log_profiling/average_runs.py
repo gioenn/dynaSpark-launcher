@@ -28,7 +28,11 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, profile_name='avgprofile'
                                                                                            json_out_dir))
     # load profiles in 'profiles' list
     for file in glob.glob(os.path.join(INPUT_DIR, "*")):
-        profiles.append(json.load(open(file), object_pairs_hook=OrderedDict)) 
+        profiles.append(json.load(open(file), object_pairs_hook=OrderedDict))
+    if len(profiles) > 1:
+        # remove datagen profile
+        profiles.pop(0)
+    
     avgprofile = copy.deepcopy(profiles[0]) 
     #avgprofile = json.load(open(glob.glob("./output_json/*")[0]))
     #pp.pprint(avgprofile)  
