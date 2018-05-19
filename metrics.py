@@ -123,10 +123,21 @@ def save_deadline_errors(folder, deadline_error, real_deadline_error, stage_erro
             error_f.write("MEDIAN_ERROR: " + str(np.median(stage_errors)) + "\n")
             error_f.write("MAX_ERROR: " + str(max(stage_errors)) + "\n")
             error_f.write("MIN_ERROR: " + str(min(stage_errors)) + "\n")
-        error_f.write("TOTAL DURATION " + str(int(total_duration)) + "\n")
-        error_f.write("REAL DEADLINE ERROR " + str(real_deadline_error) + "\n")
+        error_f.write("TOTAL_DURATION " + str(int(total_duration)) + "\n")
+        error_f.write("REAL_DEADLINE_ERROR " + str(real_deadline_error) + "\n")
 
-
+    # creates a csv file containing a header line and error summaries for easy import into worksheets
+    hdr = ''
+    val = ''
+    with open(folder + 'ERROR.txt') as e:
+        for line in e:
+            line = line.rstrip().split(' ')
+            hdr += line[0] + ';'
+            val += line[-1] + ';'
+    with open(folder + 'ERROR.csv', 'w') as v:
+        v.write(hdr.rstrip(';') + '\n')
+        v.write(val.rstrip(';') + '\n')
+        
 '''
 def save_deadline_errors(folder, deadline_error, stage_errors):
     """Save the error of the application's stages in the folder
