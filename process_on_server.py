@@ -137,11 +137,16 @@ with open_cfg(mode='w') as cfg:
 #    shutil.copy('./dataplot/' + f, output_folder + "/" + f)    # simulate plot
 
 if not profile:
-    # PLOT LOGS
-    plot.plot(output_folder + "/")
-    
-    # COMPUTE METRICS
-    metrics.compute_metrics(output_folder + "/")
+    try:
+        # PLOT LOGS
+        plot.plot(output_folder + "/")
+    except Exception as e:
+        print("Plot failed: ", e)
+    try:    
+        # COMPUTE METRICS
+        metrics.compute_metrics(output_folder + "/")
+    except Exception as e:
+        print("Compute metrics failed: ", e)
 
 print("\nCHECK VALUE OF SCALE FACTOR AND PREV SCALE FACTOR FOR HDFS CASE")
 

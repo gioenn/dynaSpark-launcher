@@ -1284,10 +1284,16 @@ def run_benchmark(nodes):
                 write_cfg(cfg, output_folder)
     
             if not profile:
-                # PLOT LOGS
-                plot.plot(output_folder + "/")
-                # COMPUTE METRICS
-                metrics.compute_metrics(output_folder + "/")
+                try:
+                    # PLOT LOGS
+                    plot.plot(output_folder + "/")
+                except Exception as e:
+                    print("Plot failed: ", e)
+                try:    
+                    # COMPUTE METRICS
+                    metrics.compute_metrics(output_folder + "/")
+                except Exception as e:
+                    print("Compute metrics failed: ", e)
 
         print("\nCHECK VALUE OF SCALE FACTOR AND PREV SCALE FACTOR FOR HDFS CASE")
         
