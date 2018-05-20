@@ -312,7 +312,7 @@ def compute_metrics(folder):
 
     #app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
     app_logs = [x for x in glob.glob(folder + "*.err") if not x.split('.')[-2].endswith('scheduling-throughput')] + glob.glob(folder + "*.dat")
-    print(app_logs)
+    #print(app_logs)
     app_info = {}
     for app_log in sorted(app_logs):
         app_info = load_app_data(app_log)
