@@ -310,7 +310,9 @@ def compute_metrics(folder):
     global PLOT_SID_STAGE
     PLOT_SID_STAGE = 1 if config["HDFS"] else 0
 
-    app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
+    #app_logs = glob.glob(folder + "*.err") + glob.glob(folder + "*.dat")
+    app_logs = [x for x in glob.glob(folder + "*.err") if not x.split('.')[-2].endswith('scheduling-throughput')] + glob.glob(folder + "*.dat")
+    print(app_logs)
     app_info = {}
     for app_log in sorted(app_logs):
         app_info = load_app_data(app_log)
