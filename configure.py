@@ -82,9 +82,9 @@ class Config(object):
     C_SPARK_HOME = "/usr/local/spark/"      # "controlled" spark home directory
     SPARK_HOME = C_SPARK_HOME               # Location of Spark in the ami"""
     LOG_LEVEL = "INFO"                      # Spark log verbosity level
-    GIT_BRANCH = "xSpark-1.0"
-    UPDATE_SPARK = True                    #"""Git pull and build Spark of all the cluster"""
-    UPDATE_SPARK_MASTER = True             #"""Git pull and build Spark only of the master node"""
+    GIT_BRANCH = "exp_2018"                 # was "xSpark-1.0"
+    UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
+    UPDATE_SPARK_MASTER = False             #"""Git pull and build Spark only of the master node"""
     UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
     UPDATE_SPARK_BENCH = False
     UPDATE_SPARK_PERF = False
@@ -98,8 +98,8 @@ class Config(object):
     RAM_EXEC = '"100g"'
     OFF_HEAP = False
     OFF_HEAP_BYTES = 30720000000
-    CORE_VM = 16                            # max 16
-    CORE_HT_VM = 16                         # max 16
+    CORE_VM = 10                            # max 16
+    CORE_HT_VM = 10                         # max 16
     DISABLE_HT = False
     ALPHA = 0.95
     BETA = 0.33
@@ -117,6 +117,7 @@ class Config(object):
     RUN = True
     SYNC_TIME = 1
     PREV_SCALE_FACTOR = 0                   #"""*Important Settings* if it is equals to SCALE_FACTOR no need to generate new data on HDFS"""
+    IGNORED_TRIALS = 0
     BENCH_NUM_TRIALS = 1 
     BENCHMARK_PERF = [                      #"""Spark-perf benchmark to execute"""
             # "scala-agg-by-key",
@@ -221,11 +222,11 @@ class Config(object):
     HEURISTIC = Heuristic.CONTROL_UNLIMITED
     
     # KMEANS
-    STAGE_ALLOCATION = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
-    CORE_ALLOCATION = [14.6552, 1.3668, 4.2932, 3.2259, 5.9839, 3.1770, 5.2449, 2.5064, 6.5889, 2.6935, 5.9204, 2.8042,
-                       9.6728, 1.7509, 3.8915, 0.7313, 12.2620, 3.1288]
-    DEADLINE_ALLOCATION = [18584, 1733, 5444, 4090, 7588, 4028, 6651, 3178, 8355, 3415, 7507, 3556, 12266, 2220, 4934, 927,
-                           15549, 3967]
+    # STAGE_ALLOCATION = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+    # CORE_ALLOCATION = [14.6552, 1.3668, 4.2932, 3.2259, 5.9839, 3.1770, 5.2449, 2.5064, 6.5889, 2.6935, 5.9204, 2.8042,
+    #                    9.6728, 1.7509, 3.8915, 0.7313, 12.2620, 3.1288]
+    # DEADLINE_ALLOCATION = [18584, 1733, 5444, 4090, 7588, 4028, 6651, 3178, 8355, 3415, 7507, 3556, 12266, 2220, 4934, 927,
+    #                        15549, 3967]
     
     # SVM
     # STAGE_ALLOCATION = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 18, 23]
@@ -234,13 +235,13 @@ class Config(object):
     # DEADLINE_ALLOCATION = [953, 21451, 1861, 3575, 1427, 11312, 21329, 17952, 6205, 8103, 8896, 8665, 2267]
     
     # AGG BY KEY
-    # STAGE_ALLOCATION = [0, 1]
-    # CORE_ALLOCATION = [6.3715 , 2.2592]
-    # DEADLINE_ALLOCATION = [84158, 29841]
+    STAGE_ALLOCATION = [0, 1]
+    CORE_ALLOCATION = [6.3715 , 2.2592]
+    DEADLINE_ALLOCATION = [84158, 29841]
     
-    #STAGE_ALLOCATION = None
-    #CORE_ALLOCATION = None
-    #DEADLINE_ALLOCATION = None
+    # STAGE_ALLOCATION = None
+    # CORE_ALLOCATION = None
+    # DEADLINE_ALLOCATION = None
 
     CONFIG_DICT = {
         "Provider": PROVIDER,
@@ -591,7 +592,7 @@ class Config(object):
                         mapped_parm = self.exp_par_map(k_bench_conf)
                         if is_benchmark_bench and k_bench_conf != "NumTrials":
                             self.cfg_dict["BenchConf"][benchmark][mapped_parm] = self.BENCH_CONF[benchmark][mapped_parm] = experiment["BenchmarkConf"][k_bench_conf]
-                        elif is_benchmark_perf or is_benchmark_bench and k_bench_conf == "NumTrials":
+                        elif is_benchmark_perf or (is_benchmark_bench and k_bench_conf == "NumTrials"):
                             self.cfg_dict["BenchConf"][benchmark][mapped_parm] = self.BENCH_CONF[benchmark][mapped_parm] = experiment["BenchmarkConf"][k_bench_conf]
                     keys = self.BENCH_CONF[benchmark].keys()
                     for key in keys:
