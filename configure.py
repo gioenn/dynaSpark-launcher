@@ -83,8 +83,8 @@ class Config(object):
     SPARK_HOME = C_SPARK_HOME               # Location of Spark in the ami"""
     LOG_LEVEL = "INFO"                      # Spark log verbosity level
     GIT_BRANCH = "exp_2018"                 # was "xSpark-1.0"
-    UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
-    UPDATE_SPARK_MASTER = False             #"""Git pull and build Spark only of the master node"""
+    UPDATE_SPARK = True                    #"""Git pull and build Spark of all the cluster"""
+    UPDATE_SPARK_MASTER = True             #"""Git pull and build Spark only of the master node"""
     UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
     UPDATE_SPARK_BENCH = False
     UPDATE_SPARK_PERF = False
@@ -235,13 +235,13 @@ class Config(object):
     # DEADLINE_ALLOCATION = [953, 21451, 1861, 3575, 1427, 11312, 21329, 17952, 6205, 8103, 8896, 8665, 2267]
     
     # AGG BY KEY
-    STAGE_ALLOCATION = [0, 1]
-    CORE_ALLOCATION = [6.3715 , 2.2592]
-    DEADLINE_ALLOCATION = [84158, 29841]
+    # STAGE_ALLOCATION = [0, 1]
+    # CORE_ALLOCATION = [6.3715 , 2.2592]
+    # DEADLINE_ALLOCATION = [84158, 29841]
     
-    # STAGE_ALLOCATION = None
-    # CORE_ALLOCATION = None
-    # DEADLINE_ALLOCATION = None
+    STAGE_ALLOCATION = None
+    CORE_ALLOCATION = None
+    DEADLINE_ALLOCATION = None
 
     CONFIG_DICT = {
         "Provider": PROVIDER,
@@ -399,7 +399,7 @@ class Config(object):
             'deadline_allocation': None
         },
         "scala-sort-by-key-int": {
-            'profile_name': 'TestRunner__aggregate-by-key-int',
+            'profile_name': 'TestRunner__sort-by-key-int',
             'stage_allocation': None,
             'core_allocation': None,
             'deadline_allocation': None
