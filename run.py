@@ -397,7 +397,14 @@ def setup_master(node, slaves_ip, hdfs_master):
             ssh_client.run("git clone https://github.com/databricks/spark-perf.git spark-perf")
             ssh_client.run(
                 "cp $HOME/spark-perf/config/config.py.template $HOME/spark-perf/config/config.py")
-
+    elif c.SKEW_TEST:
+        print("Removing default sparf-perf")
+        ssh_client.run("sudo rm -r ./spark-perf")
+        print("Cloning log_skew branch from https://github.com/gioenn/spark-perf.git")
+        ssh_client.run("git clone -b log_skew --single-branch https://github.com/gioenn/spark-perf.git")
+        ssh_client.run(
+                "cp $HOME/spark-perf/config/config.py.template $HOME/spark-perf/config/config.py")
+    
     if c.UPDATE_SPARK_BENCH:
         if "spark-bench" in files:
             ssh_client.run("""cd $HOME/spark-bench && git status | grep "up-to-date" || eval `git pull && sed -i '7s{.*{mvn package -P spark2.0{' $HOME/spark-bench/bin/build-all.sh && $HOME/spark-bench/bin/build-all.sh && cp $HOME/spark-bench/conf/env.sh.template $HOME/spark-bench/conf/env.sh`""")
