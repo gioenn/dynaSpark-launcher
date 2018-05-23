@@ -88,6 +88,7 @@ class Config(object):
     UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
     UPDATE_SPARK_BENCH = False
     UPDATE_SPARK_PERF = False
+    SKEW_TEST = False
     ENABLE_EXTERNAL_SHUFFLE = "true"
     LOCALITY_WAIT = 0
     LOCALITY_WAIT_NODE = 0
@@ -496,6 +497,7 @@ class Config(object):
                     "UpdateSparkDocker": UPDATE_SPARK_DOCKER,
                     "UpdateSparkBench": UPDATE_SPARK_BENCH,
                     "UpdateSparkPerf": UPDATE_SPARK_PERF,
+                    "SkewTest": SKEW_TEST,
                     "EnableExternalShuffle": ENABLE_EXTERNAL_SHUFFLE,
                     "LocalityWait": LOCALITY_WAIT,
                     "LocalityWaitNode": LOCALITY_WAIT_NODE,
@@ -1123,6 +1125,7 @@ class Config(object):
     def exp_par_map(parm):
         map = {
             "ScaleFactor": "ScaleFactor",
+            "Skew": "skew",
             "NumPartitions": "num-partitions",
             "UniqueKeys": "unique-keys",
             "ReduceTasks": "reduce-tasks",
@@ -1146,6 +1149,7 @@ class Config(object):
     def exp_inverse_par_map(parm):
         map = {
             "ScaleFactor": "ScaleFactor",
+            "skew": "Skew",
             "num-partitions": "NumPartitions",
             "unique-keys": "UniqueKeys",
             "reduce-tasks": "ReduceTasks",
@@ -1170,6 +1174,7 @@ class Config(object):
         map = {
             "scalefactor": "ScaleFactor",
             "scale_factor": "ScaleFactor",
+            "skew": "Skew",
             "numpartitions": "NumPartitions",
             "num_partitions": "NumPartitions",
             "numofpartitions": "NumOfPartitions",
