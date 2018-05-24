@@ -634,11 +634,11 @@ def setup_master(node, slaves_ip, hdfs_master):
         if len(c.BENCHMARK_PERF) > 0:  # and c.SPARK_PERF_FOLDER == "spark-perf-gioenn":
             if c.SKEW_TEST:
                 print("   Setting up skewed test")
-                ssh_client.run("""sed -i '159s{.*{    OptionSet("skew", [""" + str(
-                    c.BENCH_CONF[c.BENCHMARK_PERF[0]]["skew"]) + """]){' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
+                ssh_client.run("""sed -i '169s{.*{    OptionSet("skew", [""" + str(
+                    c.BENCH_CONF[c.BENCHMARK_PERF[0]]["skew"]) + """]),{' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
             else:
-                # Reset previous line content
-                ssh_client.run("""sed -i '159s{.*{# since it doesn't make sense to have multiple values here.{' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
+                # Restore "no-skew test" line content
+                ssh_client.run("""sed -i '169s{.*{# The number of input partitions.{' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
             
             # ssh_client.run("""sed -i '164s{.*{OptionSet("skew", [""" + str(
             #     c.BENCH_CONF[c.BENCHMARK_PERF[0]]["skew"]) + """]){' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
