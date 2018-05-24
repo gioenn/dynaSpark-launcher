@@ -88,7 +88,7 @@ class Config(object):
     UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
     UPDATE_SPARK_BENCH = False
     UPDATE_SPARK_PERF = False
-    SKEW_TEST = False
+    SKEW_TEST = True
     ENABLE_EXTERNAL_SHUFFLE = "true"
     LOCALITY_WAIT = 0
     LOCALITY_WAIT_NODE = 0

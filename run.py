@@ -399,12 +399,21 @@ def setup_master(node, slaves_ip, hdfs_master):
                 "cp $HOME/spark-perf/config/config.py.template $HOME/spark-perf/config/config.py")
     elif c.SKEW_TEST:
         print("Removing default sparf-perf")
-        ssh_client.run("sudo rm -r ./spark-perf")
-        print("Cloning log_skew branch from https://github.com/gioenn/spark-perf.git")
-        ssh_client.run("git clone -b log_skew --single-branch https://github.com/gioenn/spark-perf.git")
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run("sudo rm -r ./spark-perf")
+        print(stdout, stderr)
+        #print("Cloning log_skew branch from https://github.com/gioenn/spark-perf.git")
+        #stdout, stderr, status = ssh_client.run("git clone -b log_skew --single-branch https://github.com/gioenn/spark-perf.git")
+        print("Cloning log_skew branch from https://github.com/DavideB/spark-perf.git")
+        stdout, stderr, status = ssh_client.run("git clone -b log_skew --single-branch https://github.com/DavideB/spark-perf.git")
+        print(stdout, stderr)
+        '''
+        stdout, stderr, status = ssh_client.run(
                 "cp $HOME/spark-perf/config/config.py.template $HOME/spark-perf/config/config.py")
-    
+        print(stdout, stderr)
+        stdout, stderr, status = ssh_client.run(
+                "cd $HOME/spark-perf/config && sed -i '134,137d' config.py")
+        print(stdout, stderr)
+        '''
     if c.UPDATE_SPARK_BENCH:
         if "spark-bench" in files:
             ssh_client.run("""cd $HOME/spark-bench && git status | grep "up-to-date" || eval `git pull && sed -i '7s{.*{mvn package -P spark2.0{' $HOME/spark-bench/bin/build-all.sh && $HOME/spark-bench/bin/build-all.sh && cp $HOME/spark-bench/conf/env.sh.template $HOME/spark-bench/conf/env.sh`""")
@@ -623,7 +632,14 @@ def setup_master(node, slaves_ip, hdfs_master):
         # NO PROMPT
         stdout, stderr, status = ssh_client.run("sed -i '103s{.*{PROMPT_FOR_DELETES = False{' ./spark-perf/config/config.py")
         if len(c.BENCHMARK_PERF) > 0:  # and c.SPARK_PERF_FOLDER == "spark-perf-gioenn":
-            # print("   Setting up skewed test")
+            if c.SKEW_TEST:
+                print("   Setting up skewed test")
+                ssh_client.run("""sed -i '159s{.*{    OptionSet("skew", [""" + str(
+                    c.BENCH_CONF[c.BENCHMARK_PERF[0]]["skew"]) + """]){' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
+            else:
+                # Reset previous line content
+                ssh_client.run("""sed -i '159s{.*{# since it doesn't make sense to have multiple values here.{' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
+            
             # ssh_client.run("""sed -i '164s{.*{OptionSet("skew", [""" + str(
             #     c.BENCH_CONF[c.BENCHMARK_PERF[0]]["skew"]) + """]){' ./""" + c.SPARK_PERF_FOLDER + "/config/config.py")
             
