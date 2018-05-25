@@ -401,10 +401,11 @@ def setup_master(node, slaves_ip, hdfs_master):
         print("Removing default sparf-perf")
         stdout, stderr, status = ssh_client.run("sudo rm -r ./spark-perf")
         print(stdout, stderr)
-        #print("Cloning log_skew branch from https://github.com/gioenn/spark-perf.git")
-        #stdout, stderr, status = ssh_client.run("git clone -b log_skew --single-branch https://github.com/gioenn/spark-perf.git")
-        print("Cloning log_skew branch from https://github.com/DavideB/spark-perf.git")
-        stdout, stderr, status = ssh_client.run("git clone -b log_skew --single-branch https://github.com/DavideB/spark-perf.git")
+        #print("Cloning master branch from https://github.com/gioenn/spark-perf.git")
+        #stdout, stderr, status = ssh_client.run("git clone -b master --single-branch https://github.com/gioenn/spark-perf.git")
+        print("Cloning master branch from https://github.com/DavideB/spark-perf.git")
+        stdout, stderr, status = ssh_client.run("git clone -b master --single-branch https://github.com/DavideB/spark-perf.git")
+        #stdout, stderr, status = ssh_client.run("git clone -b log_skew --single-branch https://github.com/DavideB/spark-perf.git")
         print(stdout, stderr)
         '''
         stdout, stderr, status = ssh_client.run(

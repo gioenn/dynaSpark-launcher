@@ -141,9 +141,9 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                         if stage_id not in stage_dict.keys():
                             stage_dict[stage_id] = {}
                             if stage_id == 0:
+                                stage_dict[0]["monocoretotalduration"] = 0
                                 stage_dict[0]["totalduration"] = 0
-                                stage_dict[0]["actualtotalduration"] = 0
-                            stage_dict[stage_id]["actualduration"] = 0
+                            stage_dict[stage_id]["duration"] = 0
                             stage_dict[stage_id]["name"] = stage['Stage Name']
                             stage_dict[stage_id]["genstage"] = False
                             #print(stage["Parent IDs"])
@@ -177,8 +177,8 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                         stage_dict[stage_id]["numtask"] = data["Stage Info"]['Number of Tasks']
                         for acc in data["Stage Info"]["Accumulables"]:
                             if acc["Name"] == "internal.metrics.executorRunTime":
-                                stage_dict[stage_id]["duration"] = int(acc["Value"])
-                                stage_dict[0]["totalduration"] += int(acc["Value"])
+                                stage_dict[stage_id]["monocoreduration"] = int(acc["Value"])
+                                stage_dict[0]["monocoretotalduration"] += int(acc["Value"])
                             if acc["Name"] == "internal.metrics.input.recordsRead":
                                 stage_dict[stage_id]["recordsread"] = acc["Value"]
                             if acc["Name"] == "internal.metrics.shuffle.read.recordsRead":
@@ -217,7 +217,7 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                             if stage_id < 0: continue
                             if stage_id not in stage_dict.keys():
                                 stage_dict[stage_id] = {}
-                                stage_dict[stage_id]["actualduration"] = 0
+                                stage_dict[stage_id]["duration"] = 0
                                 stage_dict[stage_id]["name"] = stage['Stage Name']
                                 stage_dict[stage_id]["genstage"] = False
                                 stage_dict[stage_id]["parentsIds"] = list(map(lambda x: x - start_stage, stage["Parent IDs"]))
@@ -247,6 +247,41 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                                 skipped.append(stage_id)
                 except KeyError:
                     None
+
+        stages = list(stage_dict.keys())
+        stages_not_skipped = [s for s in stages if s not in skipped]
+        stage_act_start_times = [0] * len(stages)
+        stage_act_end_times = [0] * len(stages)
+
+        if dat_file != '':
+            fdat = open(dat_filepath)
+            #print("fdat: ", fdat)
+            with fdat as dat:
+                #print(dat)
+                for line in dat:
+                    tokens = line.split(' ')
+                    #print("after line 373")
+                    if len(tokens) > 6:
+                        if tokens[4] == 'Submitting' and (tokens[5] == 'ResultStage' or tokens[5] == 'ShuffleMapStage') and (start_stage == 0 or tokens[6] != '0'):
+                            date = tokens[0]
+                            time = tokens [1]
+                            stage_act_start_times[int(tokens[6]) - start_stage] = date_time_to_timestamp_ms(date, time)
+                            if tokens[6] == str(start_stage):
+                                app_act_start_time = date_time_to_timestamp_ms(date, time)
+
+                        if (tokens[4] == 'ResultStage' or tokens[4] == 'ShuffleMapStage') and tokens[9] == 'finished' and (start_stage == 0 or tokens[5] != '0'):
+                            date = tokens[0]
+                            time = tokens [1]
+                            stage_act_end_times[int(tokens[5]) - start_stage] = date_time_to_timestamp_ms(date, time)
+                            if tokens[5] == str(last_stage + start_stage):
+                                app_act_end_time = date_time_to_timestamp_ms(date, time)
+        else:
+            print('_run.dat file not found, no actualdurations calculated')
+        
+        for i in stages:
+            stage_dict[i]["duration"] = stage_act_end_times[i] - stage_act_start_times[i]
+
+        stage_dict[0]["totalduration"] = app_act_end_time - app_act_start_time
 
         # Replace skipped stage id in parents ids based on RDD IDs
         for skipped_id in skipped:
@@ -352,7 +387,7 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                                 stage_dict[stage_id]["duration"] / 1000.0)
                     if stage_dict[stage_id]["nominalrate"] == 0.0:
                         stage_dict[stage_id]["genstage"] = True
-
+            
             totalduration = stage_dict[0]["totalduration"]
             for key in stage_dict.keys():
                 if key not in skipped:
@@ -360,7 +395,7 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                     stage_dict[key]["weight"] = np.mean(
                         [old_weight, totalduration / stage_dict[key]["duration"]])
                     totalduration -= stage_dict[key]["duration"]
-
+            '''
             stages = list(stage_dict.keys())
             stages_not_skipped = [s for s in stages if s not in skipped]
             stage_act_start_times = [0] * len(stages)
@@ -390,12 +425,12 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                                     app_act_end_time = date_time_to_timestamp_ms(date, time)
             else:
                 print('_run.dat file not found, no actualdurations calculated')
-
+            
             for i in stages:
-                stage_dict[i]["actualduration"] = stage_act_end_times[i] - stage_act_start_times[i]
+                stage_dict[i]["duration"] = stage_act_end_times[i] - stage_act_start_times[i]
 
-            stage_dict[0]["actualtotalduration"] = app_act_end_time - app_act_start_time
-
+            stage_dict[0]["totalduration"] = app_act_end_time - app_act_start_time
+            '''
             # create output dir
             log_name = os.path.basename(log)
 
