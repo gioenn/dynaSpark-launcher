@@ -60,7 +60,7 @@ def gather_records_rw(stages):
     for k, v in reads.items():
         stages[k]['actual_records_read'] = v
         stages[k]['actual_records_write'] = writes[k]
-        stages[k]['t_record_ta_executor'] = float(stages[k]['duration']) / float(v) if v > 0 else 0
+        stages[k]['t_record_ta_executor'] = float(stages[k]['monocoreduration']) / float(v) if v > 0 else 0
         stages[k]['io_factor'] = float(writes[k]) / float(v) if v > 0 else 0
 
 def date_time_to_timestamp_ms(date, time):
@@ -358,14 +358,14 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                         parent_input_bytes += stage_dict[parent_id]["shufflebytesread"]
                     if parent_output != 0:
                         stage_dict[stage_id]["nominalrate"] = parent_output / (
-                            stage_dict[stage_id]["duration"] / 1000.0)
+                            stage_dict[stage_id]["monocoreduration"] / 1000.0)
                         stage_dict[stage_id]["nominalrate_bytes"] = parent_input_bytes / (
-                            stage_dict[stage_id]["duration"] / 1000.0)
+                            stage_dict[stage_id]["monocoreduration"] / 1000.0)
                     elif parent_input != 0:
                         stage_dict[stage_id]["nominalrate"] = parent_input / (
-                            stage_dict[stage_id]["duration"] / 1000.0)
+                            stage_dict[stage_id]["monocoreduration"] / 1000.0)
                         stage_dict[stage_id]["nominalrate_bytes"] = parent_input_bytes / (
-                            stage_dict[stage_id]["duration"] / 1000.0)
+                            stage_dict[stage_id]["monocoreduration"] / 1000.0)
                     else:
                         stage_input = stage_dict[stage_id]["recordsread"] + stage_dict[stage_id][
                             "shufflerecordsread"]
@@ -373,28 +373,28 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                             "shufflebytesread"]
                         if stage_input != 0 and stage_input != stage_dict[stage_id]["numtask"]:
                             stage_dict[stage_id]["nominalrate"] = stage_input / (
-                                stage_dict[stage_id]["duration"] / 1000.0)
+                                stage_dict[stage_id]["monocoreduration"] / 1000.0)
                             stage_dict[stage_id]["nominalrate_bytes"] = stage_input_bytes / (
-                                stage_dict[stage_id]["duration"] / 1000.0)
+                                stage_dict[stage_id]["monocoreduration"] / 1000.0)
                         else:
                             stage_output = stage_dict[stage_id]["recordswrite"] + stage_dict[stage_id][
                                 "shufflerecordswrite"]
                             stage_output_bytes = stage_dict[stage_id]["byteswrite"] + stage_dict[stage_id][
                                 "shufflebyteswrite"]
                             stage_dict[stage_id]["nominalrate"] = stage_input / (
-                                stage_dict[stage_id]["duration"] / 1000.0)
+                                stage_dict[stage_id]["monocoreduration"] / 1000.0)
                             stage_dict[stage_id]["nominalrate_bytes"] = stage_input_bytes / (
-                                stage_dict[stage_id]["duration"] / 1000.0)
+                                stage_dict[stage_id]["monocoreduration"] / 1000.0)
                     if stage_dict[stage_id]["nominalrate"] == 0.0:
                         stage_dict[stage_id]["genstage"] = True
             
-            totalduration = stage_dict[0]["totalduration"]
+            totalduration = stage_dict[0]["monocoretotalduration"]
             for key in stage_dict.keys():
                 if key not in skipped:
                     old_weight = stage_dict[key]["weight"]
                     stage_dict[key]["weight"] = np.mean(
-                        [old_weight, totalduration / stage_dict[key]["duration"]])
-                    totalduration -= stage_dict[key]["duration"]
+                        [old_weight, totalduration / stage_dict[key]["monocoreduration"]])
+                    totalduration -= stage_dict[key]["monocoreduration"]
             '''
             stages = list(stage_dict.keys())
             stages_not_skipped = [s for s in stages if s not in skipped]
