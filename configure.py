@@ -83,12 +83,12 @@ class Config(object):
     SPARK_HOME = C_SPARK_HOME               # Location of Spark in the ami"""
     LOG_LEVEL = "INFO"                      # Spark log verbosity level
     GIT_BRANCH = "exp_2018"                 # was "xSpark-1.0"
-    UPDATE_SPARK = True                    #"""Git pull and build Spark of all the cluster"""
-    UPDATE_SPARK_MASTER = True             #"""Git pull and build Spark only of the master node"""
+    UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
+    UPDATE_SPARK_MASTER = False             #"""Git pull and build Spark only of the master node"""
     UPDATE_SPARK_DOCKER = False             #"""Pull the docker image in each node of the cluster"""
     UPDATE_SPARK_BENCH = False
     UPDATE_SPARK_PERF = False
-    SKEW_TEST = True
+    SKEW_TEST = False
     ENABLE_EXTERNAL_SHUFFLE = "true"
     LOCALITY_WAIT = 0
     LOCALITY_WAIT_NODE = 0
@@ -99,8 +99,8 @@ class Config(object):
     RAM_EXEC = '"100g"'
     OFF_HEAP = False
     OFF_HEAP_BYTES = 30720000000
-    CORE_VM = 10                            # max 16
-    CORE_HT_VM = 10                         # max 16
+    CORE_VM = 16                            # max 16
+    CORE_HT_VM = 16                         # max 16
     DISABLE_HT = False
     ALPHA = 0.95
     BETA = 0.33

@@ -67,7 +67,7 @@ def date_time_to_timestamp_ms(date, time):
     '''Converts two strings containing date in format YY/MM/DD and time in format HH:MM:SS to Unix timestamp in milliseconds'''
     # date.replace('/', '')
     dt_obj = datetime.strptime(date + ' ' + time,
-                           '%y/%m/%d %H:%M:%S')
+                           '%y/%m/%d %H:%M:%S.%f')
     millisec = dt_obj.timestamp() * 1000
     # print('Date time ' + date + ' ' + time + 'converted to ' + str(millisec) + ' ms.')
     return millisec
@@ -143,6 +143,7 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
                             if stage_id == 0:
                                 stage_dict[0]["monocoretotalduration"] = 0
                                 stage_dict[0]["totalduration"] = 0
+                                stage_dict[0]["actualtotalduration"] = 0
                             stage_dict[stage_id]["duration"] = 0
                             stage_dict[stage_id]["name"] = stage['Stage Name']
                             stage_dict[stage_id]["genstage"] = False
@@ -278,10 +279,13 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
         else:
             print('_run.dat file not found, no actualdurations calculated')
         
+        sum_of_stages_durations = 0
         for i in stages:
             stage_dict[i]["duration"] = stage_act_end_times[i] - stage_act_start_times[i]
+            sum_of_stages_durations += stage_dict[i]["duration"]
 
-        stage_dict[0]["totalduration"] = app_act_end_time - app_act_start_time
+        stage_dict[0]["totalduration"] = sum_of_stages_durations
+        stage_dict[0]["actualtotalduration"] = app_act_end_time - app_act_start_time
 
         # Replace skipped stage id in parents ids based on RDD IDs
         for skipped_id in skipped:
