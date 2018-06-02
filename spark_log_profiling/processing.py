@@ -66,8 +66,13 @@ def gather_records_rw(stages):
 def date_time_to_timestamp_ms(date, time):
     '''Converts two strings containing date in format YY/MM/DD and time in format HH:MM:SS to Unix timestamp in milliseconds'''
     # date.replace('/', '')
-    dt_obj = datetime.strptime(date + ' ' + time,
-                           '%y/%m/%d %H:%M:%S.%f')
+    if '.' in time: # contains milliseconds
+        dt_obj = datetime.strptime(date + ' ' + time,
+                                   '%y/%m/%d %H:%M:%S.%f')
+    else:   # does not contain milliseconds
+        dt_obj = datetime.strptime(date + ' ' + time,
+                                   '%y/%m/%d %H:%M:%S')
+        
     millisec = dt_obj.timestamp() * 1000
     # print('Date time ' + date + ' ' + time + 'converted to ' + str(millisec) + ' ms.')
     return millisec
