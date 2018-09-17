@@ -98,7 +98,7 @@ def main(input_dir=INPUT_DIR, json_out_dir=OUTPUT_DIR, reprocess=False):
         files = os.listdir(dat_folder)
         print("Files: ", files)
         dat_file = ""
-        dat_files = [x for x in files if x.split('.')[-1] == 'dat' and x.split('_')[-2] == 'run']
+        dat_files = [x for x in files if x.split('.')[-1] == 'dat' and (x.split('.')[-2] == 'app' or x.split('_')[-2] == 'run')]
         dat_file = dat_files[0] if len(dat_files) > 0 else ''
         if dat_file == '':
             err_files = [x for x in files if x.split('.')[-1] == 'err' and x.split('.')[-2] != 'scheduling-throughput']
