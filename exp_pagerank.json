@@ -1,9 +1,9 @@
 {
-    "Deadline": 374334,
+    "Deadline": 123400,
 	"BenchmarkName": "PageRank",
     "BenchmarkConf": {
 	        "NumOfPartitions": 1000,
-	        "NumV": 39000000,
+	        "NumV": 35000000,
 	        "Mu": 3.0,
 	        "Sigma": 0.0,
 	        "MaxIterations": 1,

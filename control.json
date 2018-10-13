@@ -4,9 +4,9 @@
     "OverScale": 2,
     "K": 50,
     "Ti": 12000,
-    "TSample": 1000,
+    "TSample": 500,
     "Heuristic": "CONTROL_UNLIMITED",
     "CoreQuantum": 0.05,
-    "CoreMin": 0.0,
+    "CoreMin": 0,
 	"CpuPeriod": 100000
 }

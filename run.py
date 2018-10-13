@@ -401,10 +401,10 @@ def setup_master(node, slaves_ip, hdfs_master):
         print("Removing default sparf-perf")
         stdout, stderr, status = ssh_client.run("sudo rm -r ./spark-perf")
         print(stdout, stderr)
-        #print("Cloning master branch from https://github.com/gioenn/spark-perf.git")
-        #stdout, stderr, status = ssh_client.run("git clone -b master --single-branch https://github.com/gioenn/spark-perf.git")
-        print("Cloning master branch from https://github.com/DavideB/spark-perf.git")
-        stdout, stderr, status = ssh_client.run("git clone -b master --single-branch https://github.com/DavideB/spark-perf.git")
+        print("Cloning master branch from https://github.com/gioenn/spark-perf.git")
+        stdout, stderr, status = ssh_client.run("git clone -b master --single-branch https://github.com/gioenn/spark-perf.git")
+        #print("Cloning master branch from https://github.com/DavideB/spark-perf.git")
+        #stdout, stderr, status = ssh_client.run("git clone -b master --single-branch https://github.com/DavideB/spark-perf.git")
         #stdout, stderr, status = ssh_client.run("git clone -b log_skew --single-branch https://github.com/DavideB/spark-perf.git")
         print(stdout, stderr)
         '''
@@ -741,11 +741,10 @@ def setup_master(node, slaves_ip, hdfs_master):
                 """Install python3 on cSpark master"""
                 print("Installing Python3 on cspark master:\n" + stdout)
             stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-bench")
-            stdout, stderr, status = ssh_client.run("git clone -b final-cloud --single-branch " +
-                                                    "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
-            #stdout, stderr, status = ssh_client.run("git clone -b process-on-server --single-branch " +
+            #stdout, stderr, status = ssh_client.run("git clone -b exp-2018 --single-branch " +
             #                                        "https://github.com/DavideB/xSpark-bench.git /home/ubuntu/xSpark-bench")
-            #                                        "https://github.com/gioenn/xSpark-bench.git /home/ubuntu/xSpark-bench")
+            stdout, stderr, status = ssh_client.run("git clone -b exp-2018 --single-branch " +
+                                                    "https://github.com/gioenn/xSpark-bench.git /home/ubuntu/xSpark-bench")
             """Clone xSpark-benchmark on cspark master"""
             print("Cloning xSpark-benchmark tool on cspark master:\n" + stdout)
         
