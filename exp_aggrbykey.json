@@ -1,0 +1,7 @@
+{
+    "Deadline": 124000,
+	"BenchmarkName": "scala-agg-by-key",
+    "BenchmarkConf": {
+	        "ScaleFactor": 5
+	        }
+}
