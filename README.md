@@ -8,6 +8,22 @@ The tool is composed by ten principal modules: **xSpark_bench.py**, **launch.py*
 ### Core Functionality
 The **launch.py** module manages the startup of spot request instances on *Amazon EC2* or  virtual machines on *Microsoft Azure* and waits until the instances are created and are reachable from the network via their public ip's. Subsequently the **run.py** module receives as input the instances on which to configure the cluster (*HDFS* or *Spark*), configures and runs the benchmarks to be executed and waits for the benchmarks to complete. The module **log.py** downloads and saves the logs created by the benchmarks run. The **plot.py** and **metrics.py** modules respectively generate graphs and calculate metrics. The **process_on_server.py** module can be called to remotely execute the log analysis, graphs generation and metrics calculation on the xSpark master server, and download the results to the client. This option is very useful to speed-up the processing especially in case of sizeable logfiles.
 
+### Cloud Environment Configuration
+The Cloud environment must be properly initialized in order to allow **xSpark_bench** to access and modify resources in the cloud.
+
+##### Azure
+Follow the instructions to create an identity called [service principal](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal) and assign to it all the required permissions:
+
+1) Check that your account has the [required permissions](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest#required-permissions) to create an identity.
+
+2) Create an [Azure Active Directory application](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest#create-an-azure-active-directory-application)
+
+3) Get the [*Application ID* and an *Authentication Key*](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest#get-application-id-and-authentication-key). The *Application ID* and *Authentication Key* values replace respectively the *< AZ-APP-ID >* and the *< AZ-SECRET >* values in the credentials.json file described in the next paragraph.  
+
+##### AWS
+TBD
+
+
 ### Tool Configuration
 The **configure.py** module contains the Config class used to instantiate configuration objects that are initialized with default values. 
 The **credentials.json** file contains *Amazon EC2* and/or *Microsoft Azure* credential information.
@@ -15,12 +31,12 @@ The **setup.json** contains Cloud environment and *Amazon EC2* and/or *Microsoft
 The **control.json** file contains xSpark controller configuration parameters.
 Information in the **credentials.json**, **setup.json** and **control.json** files are used to customize the configuration object used by other modules during the benchmark execution.
 
--AWS and/or MS-Azure Credentials:
-Open the credentials_template.json file and add the credential for xSpark:
+- AWS and/or MS-Azure Credentials:
+Open the credentials_template.json file and add the credentials for **xSpark_bench** (see instructions below to retrieve missing credentials):
 
 	{
 		"AzTenantId": "< AZ-TENANT-ID >",
-		"AzSubscriptionId": "< AZ-SUBSCIPTION-ID >",
+		"AzSubscriptionId": "< AZ-SUBSCRIPTION-ID >",
 		"AzApplicationId": "< AZ-APP-ID >",
 		"AzSecret": "< AZ-SECRET >",
 		"AzPubKeyPath": "< AZ-PUB-KEY-PATH >",
@@ -32,7 +48,43 @@ Open the credentials_template.json file and add the credential for xSpark:
 
 Save the file as credentials.json.
 
--Setup the xSpark and the Virtual Machine Cloud environment:
+- How to retrieve your Azure credentials (using the Azure Command Line Interface):
+
+Install the [Azure CLI](https://docs.microsoft.com/it-it/cli/azure/install-azure-cli?view=azure-cli-latest).
+Launch the following command from a console terminal:
+
+	$ az login
+	Note, we have launched a browser for you to login. For old experience with device code, use "az login --use-device-code"
+	
+a browser authentication windows is open to allow you to login to the Azure portal.
+If login is successful, you should get an output similar to the following:
+	
+	You have logged in. Now let us find all the subscriptions to which you have access...
+	[
+	  {
+	    "cloudName": "AzureCloud",
+	    "id": "< AZ-SUBSCRIPTION-ID >",
+	    "isDefault": true,
+	    "name": "Microsoft Azure Sponsorship xx",
+	    "state": "Enabled",
+	    "tenantId": "< AZ-TENANT-ID >",
+	    "user": {
+	      "name": "*your_username*",
+	      "type": "user"
+	    }
+	  }
+	]
+	
+where you can pick the *< AZ-SUBSCRIPTION-ID >* and *< AZ-TENANT-ID >* parameters.
+
+Launch the following command from a console terminal to create the RSA keys:
+
+	$ ssh-keygen -t rsa
+	
+Save the files in your favorite folder and replace the values *< AZ-PUB-KEY-PATH >* and *< AZ-PRV-KEY-PATH >* respectively with the fully qualified file name of the public and the private key.
+	
+
+- Setup the xSpark and the Virtual Machine Cloud environment:
 Edit the setup.json file to set the values to your need.
 The following is an example using Microsoft Azure VM Cloud Service:
 
@@ -97,7 +149,7 @@ The following is an example using Microsoft Azure VM Cloud Service:
     	"Home": "/opt/spark-seq/"
 	}
 
--Setup the Spark Controller parameters:
+- Setup the Spark Controller parameters:
 Edit the control.json file to set the values to your need.
 The following is an example:
 
@@ -115,11 +167,11 @@ The following is an example:
 	}
 
 ### Benchmark Profiling
-Profiling is the first logical phase of the performance testing lifecycle. In profiling mode, Benchmarks are run using the "vanilla" Spark version. Then the **processing.py** module is called to analyze the logs and create the "application profile", that is a JSON file containing the annotated DAG of the executed stages plus additional information intended to be used by the controller in the execution phase. The **average_runs.py** module is called to create a JSON profile called *<benchmarkname>*-app.json containing the average values of the "n" profiles obtained by running the same benchmark "n" times. Finally, the file with the average profile is uploaded to the xSpark configuration directory on the master server.
+Profiling is the first logical phase of the performance testing lifecycle. In profiling mode, Benchmarks are run using the "vanilla" Spark version. Then the **processing.py** module is called to analyze the logs and create the "application profile", that is a JSON file containing the annotated DAG of the executed stages plus additional information intended to be used by the controller in the execution phase. The **average_runs.py** module is called to create a JSON profile called *benchmarkname>-app.json containing the average values of the "n" profiles obtained by running the same benchmark "n" times. Finally, the file with the average profile is uploaded to the xSpark configuration directory on the master server.
 
 ### Benchmark Execution 
-Benchmarks are executed using [xSpark](https://github.com/gioenn/xSpark.git), and require the application profile *<benchmarkname>*-app.json to be present in the xSpark configuration directory. The name of the benchmark and the parameters to modify its default configuration can either be specified as commandline arguments to the *submit* command, or can be inserted into JSON format "experiment files" and passed as commandline arguments to the *launch_exp* command. 
-As an example, an experiment files for Pagerank , one for KMeans and one for AggregateByKey has the following format:
+Benchmarks are executed using [xSpark](https://github.com/gioenn/xSpark.git), and require the application profile *benchmarkname*-app.json to be present in the xSpark configuration directory. The name of the benchmark and the parameters to modify its default configuration can either be specified as commandline arguments to the *submit* command, or can be inserted into JSON format "experiment files" and passed as commandline arguments to the *launch_exp* command. 
+As an example, an experiment files for Pagerank , one for KMeans and one for AggregateByKey are shown here below:
 
 PageRank experiment file example:
 
@@ -166,11 +218,11 @@ AggregateByKey experiment file example:
 
 	$ git clone https://github.com/gioenn/xSpark-bench.git
 	$ cd xSpark-bench
-	$ pip instal -r requirements.txt"
+	$ pip3 install -r requirements.txt"
 
 
 ## xSpark-bench commands
-[xSpark](https://github.com/gioenn/xSpark.git) run command syntax:
+[xSpark-bench](https://github.com/gioenn/xSpark-bench) run command syntax:
 
 	$ cd xSpark-bench
 	$ python3 xSpark_bench.py *command [args]*
