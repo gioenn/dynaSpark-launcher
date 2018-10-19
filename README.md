@@ -21,7 +21,7 @@ Follow the instructions to create an identity called [service principal](https:/
 3) Get the [*Application ID* and an *Authentication Key*](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal?view=azure-cli-latest#get-application-id-and-authentication-key). The *Application ID* and *Authentication Key* values replace respectively the *< AZ-APP-ID >* and the *< AZ-SECRET >* values in the credentials.json file described in the next paragraph.  
 
 ##### AWS
-TBD
+Tbd.
 
 
 ### Tool Configuration
@@ -32,7 +32,7 @@ The **control.json** file contains xSpark controller configuration parameters.
 Information in the **credentials.json**, **setup.json** and **control.json** files are used to customize the configuration object used by other modules during the benchmark execution.
 
 - AWS and/or MS-Azure Credentials:
-Open the credentials_template.json file and add the credentials for **xSpark_bench** (see instructions below to retrieve missing credentials):
+Open the *credentials_template.json* file and add the credentials for **xSpark_bench** (see instructions below to retrieve missing credentials):
 
 	{
 		"AzTenantId": "< AZ-TENANT-ID >",
@@ -46,7 +46,7 @@ Open the credentials_template.json file and add the credentials for **xSpark_ben
 		"KeyPairPath": "< KEY-PAIR-PATH >"
 	}
 
-Save the file as credentials.json.
+Save the file as *credentials.json*.
 
 - How to retrieve your Azure credentials (using the Azure Command Line Interface):
 
@@ -75,13 +75,13 @@ If login is successful, you should get an output similar to the following:
 	  }
 	]
 	
-where you can pick the *< AZ-SUBSCRIPTION-ID >* and *< AZ-TENANT-ID >* parameters.
+where you can pick the *< AZ-SUBSCRIPTION-ID >* and *< AZ-TENANT-ID >* parameters to be written in the *credentials.json* file.
 
-Launch the following command from a console terminal to create the RSA keys:
+Launch the following command from a console terminal to create the private and public RSA cryptography keys:
 
 	$ ssh-keygen -t rsa
 	
-Save the files in your favorite folder and replace the values *< AZ-PUB-KEY-PATH >* and *< AZ-PRV-KEY-PATH >* respectively with the fully qualified file name of the public and the private key.
+Save the generated files in your favorite folder and replace the values *< AZ-PUB-KEY-PATH >* and *< AZ-PRV-KEY-PATH >* in the *credentials.json* file respectively with the fully qualified file name of the public and the private key.
 	
 
 - Setup the xSpark and the Virtual Machine Cloud environment:
@@ -225,9 +225,9 @@ AggregateByKey experiment file example:
 [xSpark-bench](https://github.com/gioenn/xSpark-bench) run command syntax:
 
 	$ cd xSpark-bench
-	$ python3 xSpark_bench.py *command [args]*
+	$ python3 xSpark_bench.py *command [*args*]*
 
-##### *command [args]* syntax:
+##### \*command [\*args\*]\* syntax:
 
 	[setup | reboot | terminate | log | profiling | time_analysis | check | 
 	 profile | submit | launch_exp] [*args*]
@@ -248,11 +248,11 @@ where \*numinstances\* is the number of nodes to add to the specified cluster (d
 
 reboots all nodes in the specified cluster.
 
-##### terminate* command syntax:
+##### *terminate* command syntax:
 
 	terminate [hdfs | spark | all | generic]
 
-terminates (deletes/destroyes) all nodes in the specified cluster.
+deletes (destroyes) all nodes and their connected resources in the specified cluster.
 
 ##### *check* command syntax:
 
@@ -281,7 +281,7 @@ where \*exp_file_paths\* is a non-empty space separated list of experiment file 
 				 {[-n | --num-instances] *numinstances*} 
    
 where \*numexecutors\* is an integer specifying the maximum number of executors to be used in the experiments, 
-\*bpar*\ is a variable parameter representing num_v for pagerank, num_of_points for kmeans,                                         scale_factor for sort_by_key, *-r* or *--num-runs* is the number of times the specified benchmark is run, *-p* or *--num-partitions* is the number of partitions for each task, *-P* or *--profile* instructs xSpark to perform the profiling at the end of the experiments, *-R* or *--reuse-dataset* option instructs xSpark to reuse (do not delete) benchmark data in hdfs master node. 
+\*bpar\* is a variable parameter representing num_v for pagerank, num_of_points for kmeans,                                         scale_factor for sort_by_key, *-r* or *--num-runs* is the number of times the specified benchmark is run, *-p* or *--num-partitions* is the number of partitions for each task, *-P* or *--profile* instructs xSpark to perform the profiling at the end of the experiments, *-R* or *--reuse-dataset* option instructs xSpark to reuse (do not delete) benchmark data in hdfs master node. 
 
 ##### *log_profiling* command syntax:
 
@@ -334,4 +334,5 @@ where *dir* is the directory where the log files are located.
 
 
 ### TODO
+- [ ] complete this file with installation instructions for AWS 
 - [ ] clean-up code
