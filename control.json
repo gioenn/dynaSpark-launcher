@@ -1,0 +1,12 @@
+{	
+    "Alpha": 1.0,
+    "Beta": 0.0,
+    "OverScale": 2,
+    "K": 50,
+    "Ti": 12000,
+    "TSample": 500,
+    "Heuristic": "SYMEX_CONTROL_UNLIMITED",
+    "CoreQuantum": 0.05,
+    "CoreMin": 0,
+	"CpuPeriod": 100000
+}

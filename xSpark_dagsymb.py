@@ -251,6 +251,7 @@ def profile_symex(args):
                 app_arg_value = '{}'.format(app_args[key_app_arg]["Value"])
                 cfg['app_args']['arg'+key_app_arg+': ' + app_arg_name] = app_arg_value 
                 arg_string += ' {}'.format(app_arg_value)
+            arg_string += ' {}'.format(str(num_partitions))
             cfg['main']['child_args_string'] = '{}'.format(arg_string)
             cfg['main']['num_partitions'] = str(num_partitions)
             cfg['main']['iter_num'] = str(1) #vboxvm
@@ -367,6 +368,7 @@ def submit_symex(args):
                 app_arg_value = '{}'.format(app_args[key_app_arg]["Value"])
                 cfg['app_args']['arg'+key_app_arg+': ' + app_arg_name] = app_arg_value 
                 arg_string += ' {}'.format(app_arg_value)
+            arg_string += ' {}'.format(str(num_partitions))
             cfg['main']['child_args_string'] = '{}'.format(arg_string)
             cfg['main']['num_partitions'] = str(num_partitions)
             cfg['main']['iter_num'] = str(1) #vboxvm
