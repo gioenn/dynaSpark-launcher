@@ -12,6 +12,7 @@ from spark_time_analysis import run as run_ta
 from colors import header, okblue, okgreen, warning, underline, bold, fail
 #from join_jsons import join_dags
 import util.utils as utils
+from spark_log_profiling.average_runs import OUTPUT_DIR
 
 from factory_methods import BenchInstanceFactory
 import argcomplete
@@ -66,7 +67,7 @@ def deploy_profile(bench, cluster_id=c.CLUSTER_ID):
     #bench_instance.upload_profile(profile_fname)
     bench_instance.upload_profile()
 
-def deploy_meta_profile(meta_profile_name, cluster_id=c.CLUSTER_ID):
+def deploy_meta_profile(meta_profile_name, cluster_id=c.CLUSTER_ID, overwrite=False ):
     """ Main function;
     * Uploads profile to xSpark 
     * configuration directory
@@ -77,7 +78,7 @@ def deploy_meta_profile(meta_profile_name, cluster_id=c.CLUSTER_ID):
     #profile_fname = cfg[bench][profile_name] + 'json'
     bench_instance = BenchInstanceFactory.get_bench_instance(c.PROVIDER, cluster_id)
     #bench_instance.upload_profile(profile_fname)
-    bench_instance.upload_meta_profile(meta_profile_name)
+    bench_instance.upload_meta_profile(meta_profile_name, overwrite=False)
 
 def setup_cluster(cluster, num_instances, assume_yes):
     # termporary structure to save run configuration
@@ -274,9 +275,17 @@ def profile_symex(args):
         if not c.PROCESS_ON_SERVER:
             average_runs.main(profile_name=utils.get_cfg()['experiment']['profile_name'])
             
-    join_jsons.join_dags("spark_log_profiling"+os.sep+"avg_json")
-    #join_jsons.join_dags("spark_log_profiling/avg_json")
-    deploy_meta_profile(meta_profile_name, cluster_id)
+    join_jsons.join_dags(OUTPUT_DIR)
+    #join_jsons.join_dags("spark_log_profiling"+os.sep+"avg_json")
+    
+    deploy_meta_profile(meta_profile_name, cluster_id, True)
+    
+    #upload all the normal (non-meta) profiles
+    for filename in os.listdir(OUTPUT_DIR):
+        profilename = filename.split(os.sep)[-1].split(".")[0]
+        if profilename != meta_profile_name and not "collection" in profilename and filename.split(".")[-1] == "json":
+           deploy_meta_profile(profilename, cluster_id) 
+    
     # raise NotImplementedError()
 
 

@@ -153,13 +153,13 @@ class BenchInstance(object):
         except (OSError, IOError) as exc:
             print('ERROR: {}\n\nCould not upload profile)'.format(exc))
 
-    def upload_meta_profile(self, meta_profile_name):
+    def upload_meta_profile(self, meta_profile_name, overwrite=False):
         profile_fname = meta_profile_name + '.json'
         filedir = OUTPUT_DIR
         filepath = filedir + os.sep + profile_fname
         try:
             self.retrieve_nodes()
-            x_run.upload_profile_to_master(self.nodes, profile_fname, filepath)
+            x_run.upload_profile_to_master(self.nodes, profile_fname, filepath, overwrite)
         except (OSError, IOError) as exc:
             print('ERROR: {}\n\nCould not upload profile)'.format(exc))
 

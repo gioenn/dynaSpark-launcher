@@ -5,7 +5,7 @@
     "K": 50,
     "Ti": 12000,
     "TSample": 500,
-    "Heuristic": "SYMEX_CONTROL_UNLIMITED",
+    "Heuristic": "CONTROL_UNLIMITED",
     "CoreQuantum": 0.05,
     "CoreMin": 0,
 	"CpuPeriod": 100000

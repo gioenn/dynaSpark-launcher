@@ -267,8 +267,10 @@ def setup_master(node, slaves_ip, hdfs_master):
     with open_cfg(mode='w') as cfg:
         current_cluster = cfg['main']['current_cluster'] 
         app_name = cfg['main']['app_name'] if 'main' in cfg and 'app_name' in cfg['main'] else 'app'
+        app_dir = cfg['main']['app_jar'].split("/")[0] if 'main' in cfg and 'app_jar' in cfg['main'] else "application"
         cfg[current_cluster] = {}
         print("Setup Master: app_name =", app_name)
+        print("Setup Master: app_dir =", app_dir)
         print("Setup Master: PublicIp=" + node.public_ips[0] + " PrivateIp=" + node.private_ips[0])
         master_private_ip = get_ip(node)
         master_public_ip = node.public_ips[0]
@@ -309,6 +311,20 @@ def setup_master(node, slaves_ip, hdfs_master):
     ssh_client.run("sudo rm " + c.SPARK_HOME + "spark-events/* && sudo rm " + c.SPARK_HOME + "logs/*")
         
     if current_cluster == 'spark':
+        if app_dir in files:
+                ssh_client.run("""cd $HOME/""" + app_dir + """ && git status | grep "up-to-date" || eval `git pull && git checkout """ + c.GIT_APPLICATION_BRANCH + """ && mvn clean && mvn package `""") # update application
+                ssh_client.run("cd $HOME")
+        else:
+            ssh_client.run("git clone " + c.GIT_APPLICATION_REPO + " " +  app_dir)
+            ssh_client.run("cd $HOME/" + app_dir + " && git pull && git checkout " + c.GIT_APPLICATION_BRANCH + " && mvn package && cd $HOME")  # install application
+        
+        if c.UPDATE_APPLICATION:
+            print("   Updating Application ", app_dir, " ...")
+            stdout, stderr, status = ssh_client.run("cd $HOME/" + app_dir + " && git pull && git checkout " + c.GIT_APPLICATION_BRANCH + " && mvn clean && mvn package ") # update application
+            print(stdout + stderr)
+            stdout, stderr, status = ssh_client.run("cd $HOME/" + app_dir + " && mvn clean && mvn package")  # install application
+            print(stdout + stderr)
+        
         '''
         # check that line numbers to be substituted are present in file spark-defaults.conf and if not, add 11 empty comment lines
         stdout, stderr, status = ssh_client.run(
@@ -676,24 +692,27 @@ def check_slave_connected_master(ssh_client):
     """
     pass
 
-def upload_profile_to_master(nodes, profile_fname, localfilepath):
+def upload_profile_to_master(nodes, profile_fname, localfilepath, overwrite=False):
     """
 
     :param nodes, profile_fname, localfilepath:
     :return:
     """
-    ssh_client = sshclient_from_node(nodes[0], ssh_key_file=c.PRIVATE_KEY_PATH, user_name='ubuntu')  #vboxvm_removed
-    #master_public_ip = socket.gethostbyname("XSPARKWORK0") #vboxvm
-    #ssh_client = sshclient_from_ip(master_public_ip, c.PRIVATE_KEY_PATH, user_name='ubuntu') #vboxvm
-    print("Uploading app_name profile: " + profile_fname + "\n")
+    ssh_client = sshclient_from_node(nodes[0], ssh_key_file=c.PRIVATE_KEY_PATH, user_name='ubuntu')
+    print("Uploading profile: " + profile_fname + "\n")
+    
+    if overwrite: 
+        print("Removing existing profile: " + profile_fname + "\n")
+        ssh_client.run("sudo rm " + c.C_SPARK_HOME + "conf/" + profile_fname)
+        
     if not profile_fname in ssh_client.listdir(c.C_SPARK_HOME + "conf/"):
         ssh_client.put(localpath=localfilepath, remotepath=c.C_SPARK_HOME + "conf/" + profile_fname)
         ssh_client.run("chmod 664 " + c.C_SPARK_HOME + "conf/" + profile_fname)
         ssh_client.run("sudo chown ubuntu:ubuntu " + c.C_SPARK_HOME + "conf/" + profile_fname)
-        print("app_name profile successfully uploaded\n") 
+        print("Profile  " + profile_fname + "successfully uploaded\n") 
         """upload profile to spark conf directory"""
     else:
-        print("Not uploaded: a app_name profile with the same name already exists\n")
+        print("Profile  " + profile_fname + " not uploaded: a profile with the same name already exists\n")
 
 @timing
 def run_symexapp(nodes):
@@ -711,6 +730,7 @@ def run_symexapp(nodes):
     app_name = ""
     app_jar = ""
     app_class = ""
+    gen_data_option = "-no_data_gen";
     
     with open_cfg(mode='w') as cfg:
         current_cluster = cfg['main']['current_cluster']
@@ -866,16 +886,20 @@ def run_symexapp(nodes):
             logfolder = "/home/ubuntu/spark-bench/num"
             
             output_folder = "home/ubuntu/spark-bench/num/"
-        '''    
+        '''
+        if delete_hdfs:
+            gen_data_option = "-gendata"   
         check_slave_connected_master(ssh_client)
-        print("Running application " + app_name)
+        print("Running application " + app_name + " with gen_data_option = '" + gen_data_option + "'")
         stdout, stderr, status = ssh_client.run(                                                                                                                                                  
            'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + 
            '" && /usr/local/spark/bin/spark-submit --master spark://' + master_ip + ':7077' +
                                           ' --class ' + app_class + #it.polimi.deepse.dagsymb.launchers.Launcher ' +
                                           ' --conf spark.eventLog.enabled=true ' + app_jar + #./dagsymb/target/dagsymb-1.0-jar-with-dependencies.jar ' +
                                           ' ' + guard_evaluator_class + #'it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile' + 
-                                          ' ' + child_args_string + ' > ' + c.SPARK_HOME + 'logs/app.dat 2>&1 ') #it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile 2003 2003 1610 1614 2990 3000 1006 1006 1006 2') 
+                                          ' ' + child_args_string + 
+                                          ' ' + gen_data_option +  
+                                          ' ' + app_name + ' > ' + c.SPARK_HOME + 'logs/app.dat 2>&1 ') #it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile 2003 2003 1610 1614 2990 3000 1006 1006 1006 2') 
                                           #' it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile 2003 2003 1610 1614 2990 3000 1006 1006 1006 2') 
         print(stderr + stdout)
         #logfolder = "/home/ubuntu/dagsymb/num"
@@ -941,7 +965,7 @@ def run_symexapp(nodes):
             #for dir in ["avg_json", "input_logs", "output_json", "processed_logs", "processed_profiles"]: 
             with open_cfg() as cfg:
                 if profile and 'main' in cfg and 'iter_num' in cfg['main'] \
-                           and 'num_run' in cfg['main'] and 'app_namename' in cfg['experiment'] \
+                           and 'num_run' in cfg['main'] and 'app_name' in cfg['experiment'] \
                            and 'experiment_num' in cfg['main'] and 'num_experiments' in cfg['main'] \
                            and int(cfg['main']['iter_num']) == int(cfg['main']['num_run']) \
                            or profile_option:
