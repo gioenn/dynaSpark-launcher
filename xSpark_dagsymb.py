@@ -78,7 +78,7 @@ def deploy_meta_profile(meta_profile_name, cluster_id=c.CLUSTER_ID, overwrite=Fa
     #profile_fname = cfg[bench][profile_name] + 'json'
     bench_instance = BenchInstanceFactory.get_bench_instance(c.PROVIDER, cluster_id)
     #bench_instance.upload_profile(profile_fname)
-    bench_instance.upload_meta_profile(meta_profile_name, overwrite=False)
+    bench_instance.upload_meta_profile(meta_profile_name, overwrite=True)
 
 def setup_cluster(cluster, num_instances, assume_yes):
     # termporary structure to save run configuration
@@ -226,6 +226,7 @@ def profile_symex(args):
                 guard_evaluator_class = experiment["GuardEvaluatorClass"]
                 num_partitions = experiment["NumPartitions"]
                 app_args = experiment["AppConf"]
+                data_multiplier = experiment["DataMultiplier"] if experiment["DataMultiplier"] else 1
                 meta_profile_name = experiment["MetaProfileName"] if experiment["MetaProfileName"] else meta_profile_name
             except KeyError as error:
                 print("ERROR:  {} in experiment file: {}".format(error, exp_filepath))
@@ -245,11 +246,13 @@ def profile_symex(args):
             cfg['experiment'] = {}
             cfg['experiment']['app_name'] = app_name
             cfg['experiment']['profile_name'] = app_name
+            cfg['experiment']['meta_profile_name'] = meta_profile_name
             cfg['app_args'] = {}
             arg_string = ''
             for key_app_arg in sorted(app_args.keys(), key=lambda k: int(k)):
                 app_arg_name = '{}'.format(app_args[key_app_arg]["Name"])
-                app_arg_value = '{}'.format(app_args[key_app_arg]["Value"])
+                app_arg_val = '{}'.format(app_args[key_app_arg]["Value"]) 
+                app_arg_value = app_arg_val if app_arg_name == "pastMonths" else '{}'.format(int(app_arg_val) * int(data_multiplier)) 
                 cfg['app_args']['arg'+key_app_arg+': ' + app_arg_name] = app_arg_value 
                 arg_string += ' {}'.format(app_arg_value)
             arg_string += ' {}'.format(str(num_partitions))
@@ -283,7 +286,8 @@ def profile_symex(args):
     #upload all the normal (non-meta) profiles
     for filename in os.listdir(OUTPUT_DIR):
         profilename = filename.split(os.sep)[-1].split(".")[0]
-        if profilename != meta_profile_name and not "collection" in profilename and filename.split(".")[-1] == "json":
+        profile_fname = filename.split(os.sep)[-1]
+        if profilename != meta_profile_name and not "collection" in profilename and profile_fname.split(".")[-1] == "json":
            deploy_meta_profile(profilename, cluster_id) 
     
     # raise NotImplementedError()
@@ -351,6 +355,7 @@ def submit_symex(args):
                 guard_evaluator_class = experiment["GuardEvaluatorClass"]
                 num_partitions = experiment["NumPartitions"]
                 app_args = experiment["AppConf"]
+                data_multiplier = experiment["DataMultiplier"] if experiment["DataMultiplier"] else 1
                 meta_profile_name = experiment["MetaProfileName"] if experiment["MetaProfileName"] else meta_profile_name
             except KeyError as error:
                 print("ERROR:  {} in experiment file: {}".format(error, exp_filepath))
@@ -370,11 +375,13 @@ def submit_symex(args):
             cfg['experiment'] = {}
             cfg['experiment']['app_name'] = app_name
             cfg['experiment']['profile_name'] = app_name
+            cfg['experiment']['meta_profile_name'] = meta_profile_name
             cfg['app_args'] = {}
             arg_string = ''
             for key_app_arg in sorted(app_args.keys(), key=lambda k: int(k)):
                 app_arg_name = '{}'.format(app_args[key_app_arg]["Name"])
-                app_arg_value = '{}'.format(app_args[key_app_arg]["Value"])
+                app_arg_val = '{}'.format(app_args[key_app_arg]["Value"]) 
+                app_arg_value = app_arg_val if app_arg_name == "pastMonths" else '{}'.format(int(app_arg_val) * int(data_multiplier)) 
                 cfg['app_args']['arg'+key_app_arg+': ' + app_arg_name] = app_arg_value 
                 arg_string += ' {}'.format(app_arg_value)
             arg_string += ' {}'.format(str(num_partitions))

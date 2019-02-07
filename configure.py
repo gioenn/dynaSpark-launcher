@@ -65,8 +65,8 @@ class Config(object):
     GIT_XSPARK_DAGSYMB_REPO = "https://github.com/DavideB/xSpark-dagsymb.git"   # "https://github.com/gioenn/xSpark-dagsymb.git"
     GIT_XSPARK_DAGSYMB_BRANCH = "master"    # new"
     GIT_APPLICATION_REPO = "https://github.com/DavideB/dagsymb.git"             # "https://github.com/gioenn/dagsymb.git"
-    GIT_APPLICATION_BRANCH = "dev-0.4"      #"dev-0.3"
-    UPDATE_SPARK = False                     #"""Git pull and build Spark of all the cluster"""
+    GIT_APPLICATION_BRANCH = "dev-0.5"      #"dev-0.3"
+    UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
     UPDATE_SPARK_MASTER = False              #"""Git pull and build Spark only of the master node"""
     UPDATE_SPARK_DOCKER = False              #"""Pull the docker image in each node of the cluster"""
     UPDATE_SPARK_BENCH = False
@@ -572,8 +572,8 @@ class Config(object):
                     if 'delete_hdfs' in cfg['main']:
                         cfg['main']['delete_hdfs'] = str(not cfg.getboolean('experiment', 'reusedataset'))
                 if "Deadline" in keys:
-                    self.cfg_dict["Deadline"] = self.DEADLINE = experiment["Deadline"]
-                    cfg["experiment"]["deadline"] = str(experiment["Deadline"])
+                    self.cfg_dict["Deadline"] = self.DEADLINE = round(float(experiment["Deadline"]) * float(experiment["DeadlineMultiplier"])) if "DeadlineMultiplier" in keys else round(float(experiment["Deadline"]))
+                    cfg["experiment"]["deadline"] = str(self.DEADLINE) # str(experiment["Deadline"])
                 if "BenchmarkConf" in keys and "BenchmarkName" in keys:
                     cfg["BenchmarkConf"] = {}
                     benchmark = experiment["BenchmarkName"]

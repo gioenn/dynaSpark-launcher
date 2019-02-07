@@ -168,9 +168,10 @@ def setup_slave(node, master_ip, count):
         print(stdout + stderr)
         # CLEAN UP EXECUTORS APP LOGS
         ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
-        ssh_client.run(
+        stdout, stderr, status = ssh_client.run(
             """cd /usr/local/spark && git pull && build/mvn clean && build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
-
+        # print(stdout + stderr)
+        
     # CLEAN UP EXECUTORS APP LOGS
     ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
 
@@ -304,9 +305,11 @@ def setup_master(node, slaves_ip, hdfs_master):
         stdout, stderr, status = ssh_client.run(
             """cd /usr/local/spark && git pull && git checkout """ + c.GIT_XSPARK_BRANCH)
         print(stdout + stderr)
-        ssh_client.run(
-            """cd /usr/local/spark && git pull && build/mvn clean &&  build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
-
+        ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+        stdout, stderr, status = ssh_client.run(
+            """cd /usr/local/spark && git pull && build/mvn clean && build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
+        #print(stdout + stderr)
+        
     print("   Remove Logs")
     ssh_client.run("sudo rm " + c.SPARK_HOME + "spark-events/* && sudo rm " + c.SPARK_HOME + "logs/*")
         
@@ -709,7 +712,7 @@ def upload_profile_to_master(nodes, profile_fname, localfilepath, overwrite=Fals
         ssh_client.put(localpath=localfilepath, remotepath=c.C_SPARK_HOME + "conf/" + profile_fname)
         ssh_client.run("chmod 664 " + c.C_SPARK_HOME + "conf/" + profile_fname)
         ssh_client.run("sudo chown ubuntu:ubuntu " + c.C_SPARK_HOME + "conf/" + profile_fname)
-        print("Profile  " + profile_fname + "successfully uploaded\n") 
+        print("Profile  " + profile_fname + " successfully uploaded\n") 
         """upload profile to spark conf directory"""
     else:
         print("Profile  " + profile_fname + " not uploaded: a profile with the same name already exists\n")
@@ -730,6 +733,7 @@ def run_symexapp(nodes):
     app_name = ""
     app_jar = ""
     app_class = ""
+    meta_profile_name = ""
     gen_data_option = "-no_data_gen";
     
     with open_cfg(mode='w') as cfg:
@@ -741,6 +745,7 @@ def run_symexapp(nodes):
             c.config_experiment(exp_filepath, cfg)  
         
         app_name = cfg['main']['app_name'] if 'main' in cfg and 'app_name' in cfg['main'] else "app"
+        meta_profile_name = cfg['experiment']['meta_profile_name'] if 'experiment' in cfg and 'meta_profile_name' in cfg['experiment'] else ""
         app_jar = cfg['main']['app_jar'] if 'main' in cfg and 'app_jar' in cfg['main'] else "app.jar"
         app_class = cfg['main']['app_class'] if 'main' in cfg and 'app_class' in cfg['main'] else "Main"
         guard_evaluator_class = cfg['main']['guard_evaluator_class'] if 'main' in cfg and \
@@ -891,6 +896,7 @@ def run_symexapp(nodes):
             gen_data_option = "-gendata"   
         check_slave_connected_master(ssh_client)
         print("Running application " + app_name + " with gen_data_option = '" + gen_data_option + "'")
+        sc_app_name = meta_profile_name if c.HEURISTIC.value == 3 else app_name
         stdout, stderr, status = ssh_client.run(                                                                                                                                                  
            'eval `ssh-agent -s` && ssh-add ' + "$HOME/" + c.PRIVATE_KEY_NAME + ' && export SPARK_HOME="' + c.SPARK_HOME + 
            '" && /usr/local/spark/bin/spark-submit --master spark://' + master_ip + ':7077' +
@@ -899,7 +905,7 @@ def run_symexapp(nodes):
                                           ' ' + guard_evaluator_class + #'it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile' + 
                                           ' ' + child_args_string + 
                                           ' ' + gen_data_option +  
-                                          ' ' + app_name + ' > ' + c.SPARK_HOME + 'logs/app.dat 2>&1 ') #it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile 2003 2003 1610 1614 2990 3000 1006 1006 1006 2') 
+                                          ' ' + sc_app_name + ' > ' + c.SPARK_HOME + 'logs/app.dat 2>&1 ') #it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile 2003 2003 1610 1614 2990 3000 1006 1006 1006 2') 
                                           #' it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile 2003 2003 1610 1614 2990 3000 1006 1006 1006 2') 
         print(stderr + stdout)
         #logfolder = "/home/ubuntu/dagsymb/num"
