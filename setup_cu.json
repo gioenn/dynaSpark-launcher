@@ -1,0 +1,61 @@
+{
+	"Provider": "AZURE",
+    "VM": {
+		"Core": 16,
+		"Memory": "100g"
+		},
+    "ProcessOnServer": false,
+	"InstallPython3": false,
+	"Aws": {
+        "SecurityGroup": "spark-cluster",
+        "Region": "us-west-2",
+        "EbsOptimized": true,
+        "Price": "0.015",
+        "InstanceType": "m3.medium",
+        "AwsRegions": {
+				"eu-west-1": {"ami":"ami-bf61fbc8",
+                              "az": "eu-west-1c",
+                              "keypair": "simone",
+                              "price": "0.0035"
+                              },
+                "us-west-2": {"ami": "ami-7f5ff81f",
+                              "snapid": "snap-4f38bf1c",
+                              "az": "us-west-2c",
+                              "keypair": "simone2",
+                              "price": "0.015"}
+                              }
+    	},
+    "Azure": {
+        "ResourceGroup": "xspark-davide",
+        "SecurityGroup": "cspark-securitygroup2",
+        "StorageAccount": {
+            "Sku": "standard_lrs",
+            "Kind": "storage",
+            "Name": "xsparkstoragedavide"
+        },
+        "Subnet": "default",
+        "NodeSize": "Standard_D14_v2_Promo",
+        "Network": "cspark-vnet2",
+        "Location": "centralus",
+        "NodeImage": {
+            "BlobContainer": "vhd",
+            "StorageAccount": "xsparkstoragedavide",
+            "Name": "vm3-os.vhd"
+        }
+    },
+    "Spark": {
+        "ExternalShuffle": "true",
+        "Home": "/opt/spark/",
+        "LocalityWaitRack": 0,
+        "CpuTask": 1,
+        "LocalityWaitProcess": 1,
+        "LocalityWait": 0,
+        "LocalityWaitNode": 0
+    },
+    "xSpark": {
+    	"Home": "/usr/local/spark/"
+	},
+	"SparkSeq": {
+    	"Home": "/opt/spark-seq/"
+	}
+}

@@ -249,13 +249,14 @@ def profile_symex(args):
             cfg['experiment']['meta_profile_name'] = meta_profile_name
             cfg['app_args'] = {}
             arg_string = ''
+            not_to_scale_args = ["pastMonths", "inputFile", "outputFile", "delimiter", "parallelism", "minimumCompressionProgress", "progressCounter"]
             for key_app_arg in sorted(app_args.keys(), key=lambda k: int(k)):
                 app_arg_name = '{}'.format(app_args[key_app_arg]["Name"])
                 app_arg_val = '{}'.format(app_args[key_app_arg]["Value"]) 
-                app_arg_value = app_arg_val if app_arg_name == "pastMonths" else '{}'.format(int(app_arg_val) * int(data_multiplier)) 
+                app_arg_value = app_arg_val if app_arg_name in not_to_scale_args else '{}'.format(int(app_arg_val) * int(data_multiplier)) 
                 cfg['app_args']['arg'+key_app_arg+': ' + app_arg_name] = app_arg_value 
                 arg_string += ' {}'.format(app_arg_value)
-            arg_string += ' {}'.format(str(num_partitions))
+            #arg_string += ' {}'.format(str(num_partitions))
             cfg['main']['child_args_string'] = '{}'.format(arg_string)
             cfg['main']['num_partitions'] = str(num_partitions)
             cfg['main']['iter_num'] = str(1) #vboxvm
@@ -378,13 +379,14 @@ def submit_symex(args):
             cfg['experiment']['meta_profile_name'] = meta_profile_name
             cfg['app_args'] = {}
             arg_string = ''
+            not_to_scale_args = ["pastMonths", "inputFile", "outputFile", "delimiter", "parallelism", "minimumCompressionProgress", "progressCounter"]
             for key_app_arg in sorted(app_args.keys(), key=lambda k: int(k)):
                 app_arg_name = '{}'.format(app_args[key_app_arg]["Name"])
                 app_arg_val = '{}'.format(app_args[key_app_arg]["Value"]) 
-                app_arg_value = app_arg_val if app_arg_name == "pastMonths" else '{}'.format(int(app_arg_val) * int(data_multiplier)) 
+                app_arg_value = app_arg_val if app_arg_name in not_to_scale_args else '{}'.format(int(app_arg_val) * int(data_multiplier)) 
                 cfg['app_args']['arg'+key_app_arg+': ' + app_arg_name] = app_arg_value 
                 arg_string += ' {}'.format(app_arg_value)
-            arg_string += ' {}'.format(str(num_partitions))
+            #arg_string += ' {}'.format(str(num_partitions))
             cfg['main']['child_args_string'] = '{}'.format(arg_string)
             cfg['main']['num_partitions'] = str(num_partitions)
             cfg['main']['iter_num'] = str(1) #vboxvm
