@@ -84,7 +84,7 @@ def setup_cluster(cluster, num_instances, assume_yes):
     # termporary structure to save run configuration
     # TODO: IMPROVE THIS
     run_on_setup = {
-        'spark': 0,
+        'spark': 1,
         'hdfs' : 1,
         'generic': 0
     }
@@ -138,6 +138,25 @@ def setup(args):
     cluster = args.cluster
     num_instances = args.num_instances
     assume_yes = args.assume_yes
+    with utils.open_cfg(mode='w') as cfg:
+        if cluster == 'all' or cluster == 'hdfs':
+            for s in cfg.sections():
+                cfg.remove_section(s)
+        if 'main' not in cfg:
+            cfg['main'] = {}
+        cfg.set('main', 'setup', 'true')
+        if args.app_dir:
+            cfg.set('main', 'appdir', args.app_dir)
+    if cluster == 'all':
+        setup_cluster('hdfs', num_instances, assume_yes)
+        setup_cluster('spark', num_instances, assume_yes)
+    else:
+        setup_cluster(cluster, num_instances, assume_yes)
+
+def setup_application_agnostic(args):
+    cluster = args.cluster
+    num_instances = args.num_instances
+    assume_yes = args.assume_yes
     if cluster == 'all' or cluster == 'hdfs':
         with utils.open_cfg(mode='w') as cfg:
             for s in cfg.sections():
@@ -147,7 +166,6 @@ def setup(args):
         setup_cluster('spark', num_instances, assume_yes)
     else:
         setup_cluster(cluster, num_instances, assume_yes)
-
 
 def profile(args):
     cluster_id = c.CLUSTER_MAP['spark']
@@ -564,7 +582,9 @@ def main():
                               help='Number of instances to be created per cluster')
     parser_setup.add_argument('-y', '--yes', dest='assume_yes', action='store_true',
                               help='Assume yes to the confirmation queries')
-
+    parser_setup.add_argument('-a', '--appdir', type=str, dest='app_dir',
+                                   help='the directory where the application will be installed')
+    
     parser_reboot.add_argument('cluster', choices=['hdfs', 'spark', 'all', 'generic'], help='The specified cluster')
 
     parser_terminate.add_argument('cluster', choices=['hdfs', 'spark', 'all', 'generic'], help='The specified cluster')

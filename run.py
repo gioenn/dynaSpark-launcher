@@ -164,16 +164,32 @@ def setup_slave(node, master_ip, count):
     if c.UPDATE_SPARK:
         print("   Updating Spark...")
         stdout, stderr, status = ssh_client.run(
-            """cd /usr/local/spark && git pull && git checkout """ + c.GIT_XSPARK_BRANCH)
+            """cd /usr/local/spark && git remote set-url origin  """ + c.GIT_XSPARK_REPO +
+            """ && git pull && git checkout """ + c.GIT_XSPARK_BRANCH) 
+        #    """cd /usr/local/spark && git pull && git checkout """ + c.GIT_XSPARK_BRANCH)
+        #    """ && git remote prune origin && git branch --unset-upstream && git pull && git checkout """ + c.GIT_XSPARK_BRANCH)
         print(stdout + stderr)
         # CLEAN UP EXECUTORS APP LOGS
-        ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+        # print("   Cleaning up slave executor app logs...")
+        # stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+        # print(stdout + stderr)
         stdout, stderr, status = ssh_client.run(
             """cd /usr/local/spark && git pull && build/mvn clean && build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
         # print(stdout + stderr)
         
     # CLEAN UP EXECUTORS APP LOGS
-    ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+    print("   Cleaning up slave executor app logs...")
+    stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+    # print(stdout + stderr)   
+    stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_2_HOME + "work/*")
+    # print(stdout + stderr)   
+    stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_HOME + "logs/*")
+    # print(stdout + stderr)   
+    stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_2_HOME + "logs/*")
+    #print("   Remove Logs")
+    ssh_client.run("sudo rm " + c.SPARK_HOME + "spark-events/*")
+    # print(stdout + stderr)   
+    # ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
 
     if c.DISABLE_HT:
         # DISABLE HT
@@ -268,7 +284,9 @@ def setup_master(node, slaves_ip, hdfs_master):
     with open_cfg(mode='w') as cfg:
         current_cluster = cfg['main']['current_cluster'] 
         app_name = cfg['main']['app_name'] if 'main' in cfg and 'app_name' in cfg['main'] else 'app'
-        app_dir = cfg['main']['app_jar'].split("/")[0] if 'main' in cfg and 'app_jar' in cfg['main'] else "application"
+        app_dir = cfg['main']['app_jar'].split("/")[0] if 'main' in cfg and 'app_jar' in cfg['main'] else \
+                        cfg['main']['appdir'] if 'main' in cfg and 'appdir' in cfg['main'] else "application"
+        # app_dir = cfg['main']['app_jar'].split("/")[0] if 'main' in cfg and 'app_jar' in cfg['main'] else "application"
         cfg[current_cluster] = {}
         print("Setup Master: app_name =", app_name)
         print("Setup Master: app_dir =", app_dir)
@@ -303,15 +321,30 @@ def setup_master(node, slaves_ip, hdfs_master):
     if c.UPDATE_SPARK_MASTER:
         print("   Updating Spark...")
         stdout, stderr, status = ssh_client.run(
-            """cd /usr/local/spark && git pull && git checkout """ + c.GIT_XSPARK_BRANCH)
+            """cd /usr/local/spark && git remote set-url origin  """ + c.GIT_XSPARK_REPO +
+            """ && git pull && git checkout """ + c.GIT_XSPARK_BRANCH) 
+        #    """cd /usr/local/spark && git pull && git checkout """ + c.GIT_XSPARK_BRANCH)
+        #    """&& git remote prune origin && git branch --unset-upstream && git pull && git checkout """ + c.GIT_XSPARK_BRANCH)    
+        
         print(stdout + stderr)
-        ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+        # print("   Cleaning up executor app logs...")
+        # stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+        # print(stdout + stderr)
+        # stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_2_HOME + "work/*")
+        # print(stdout + stderr)   
+        # ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
         stdout, stderr, status = ssh_client.run(
             """cd /usr/local/spark && git pull && build/mvn clean && build/mvn -T 1C -Phive -Pnetlib-lgpl -Pyarn -Phadoop-2.7 -Dhadoop.version=2.7.2 -Dscala-2.11 -DskipTests -Dmaven.test.skip=true package""")
         #print(stdout + stderr)
-        
+    
+    print("   Cleaning up executor app logs...")
+    stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_HOME + "work/*")
+    # print(stdout + stderr)   
+    stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_2_HOME + "work/*")
+    # print(stdout + stderr)   
     print("   Remove Logs")
     ssh_client.run("sudo rm " + c.SPARK_HOME + "spark-events/* && sudo rm " + c.SPARK_HOME + "logs/*")
+    stdout, stderr, status = ssh_client.run("sudo rm -r " + c.SPARK_2_HOME + "logs/*")
         
     if current_cluster == 'spark':
         if app_dir in files:
@@ -705,7 +738,7 @@ def upload_profile_to_master(nodes, profile_fname, localfilepath, overwrite=Fals
     print("Uploading profile: " + profile_fname + "\n")
     
     if overwrite: 
-        print("Removing existing profile: " + profile_fname + "\n")
+        print("Removing existing : " + profile_fname + "\n")
         ssh_client.run("sudo rm " + c.C_SPARK_HOME + "conf/" + profile_fname)
         
     if not profile_fname in ssh_client.listdir(c.C_SPARK_HOME + "conf/"):
@@ -744,12 +777,14 @@ def run_symexapp(nodes):
             exp_filepath = cfg['main']['experiment_file']
             c.config_experiment(exp_filepath, cfg)  
         
+        setup = True if 'main' in cfg and 'setup' in cfg['main'] else False
         app_name = cfg['main']['app_name'] if 'main' in cfg and 'app_name' in cfg['main'] else "app"
         meta_profile_name = cfg['experiment']['meta_profile_name'] if 'experiment' in cfg and 'meta_profile_name' in cfg['experiment'] else ""
         app_jar = cfg['main']['app_jar'] if 'main' in cfg and 'app_jar' in cfg['main'] else "app.jar"
         app_class = cfg['main']['app_class'] if 'main' in cfg and 'app_class' in cfg['main'] else "Main"
         guard_evaluator_class = cfg['main']['guard_evaluator_class'] if 'main' in cfg and \
-            'guard_evaluator_class' in cfg['main'] else "it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile"
+            'guard_evaluator_class' in cfg['main'] else "GuardEvaluator"
+        #    'guard_evaluator_class' in cfg['main'] else "it.polimi.deepse.dagsymb.examples.GuardEvaluatorPromoCallsFile"
         child_args_string = cfg['main']['child_args_string'] if 'main' in cfg and 'child_args_string' in cfg['main'] else ""
         hdfs_master_private_ip = cfg['hdfs']['master_private_ip'] if 'hdfs' in cfg and 'master_private_ip' in cfg['hdfs'] else ''
         c.HDFS_MASTER = hdfs_master_private_ip
@@ -761,7 +796,8 @@ def run_symexapp(nodes):
         cfg['main']['max_executors'] = str(end_index - 1)
         # TODO: pass slaves ip
         slaves_ip = [get_ip(i) for i in nodes[1:end_index]]
-        iter_num = cfg['main']['iter_num'] #vboxvm
+        iter_num = cfg['main']['iter_num'] if 'main' in cfg and 'iter_num' in cfg['main'] else str(0)
+        # iter_num = cfg['main']['iter_num'] #vboxvm
         c.MAX_EXECUTOR = end_index - 1
         c.cfg_dict["MaxExecutor"] = c.CONFIG_DICT["Control"]["MaxExecutor"] = c.MAX_EXECUTOR
         #c.CONFIG_DICT["Control"]["MaxExecutor"] = c.MAX_EXECUTOR
@@ -795,7 +831,7 @@ def run_symexapp(nodes):
         # delete selected app_name profile file
         print("Deleting " + app_name + " app_name reference profile: " + profile_fname + ".json\n")
         stdout, stderr, status = ssh_client.run("sudo rm " + c.C_SPARK_HOME + "conf/" + profile_fname + ".json")
-        print(stdout + stderr) 
+        # print(stdout + stderr) 
           
     if c.SPARK_HOME == c.SPARK_2_HOME:
         print("Check Effectively Executor Running")
@@ -838,7 +874,7 @@ def run_symexapp(nodes):
 
     # LANCIARE app_name
     
-    if current_cluster == 'spark':
+    if current_cluster == 'spark' and not setup :
         ''' 
         if len(c.app_name_PERF) > 0:
             if delete_hdfs:
