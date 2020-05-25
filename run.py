@@ -54,8 +54,16 @@ def common_setup(ssh_client):
 
             # join docker group
             ssh_client.run("sudo usermod -aG docker $USER")
+            
+            # Ensure Maven is globally set to access Maven Central repositories using https protocol (mandatory since January 15, 2020)
+            ssh_client.run("sudo rm  /home/ubuntu/maven_settings.xml")
+            ssh_client.put(localpath="./maven_settings.xml", remotepath="/home/ubuntu/maven_settings.xml")
+            ssh_client.run("sudo mv /etc/maven/settings.xml /etc/maven/settings.xml.backup")
+            ssh_client.run("sudo rm /etc/maven/settings.xml")
+            ssh_client.run("sudo mv /home/ubuntu/maven_settings.xml /etc/maven/settings.xml")
 
-            ssh_client.run("mkdir /usr/local/spark/spark-events")
+
+            # ssh_client.run("mkdir /usr/local/spark/spark-events")
 
             # ssh_client.run("sudo chmod -R 777 /mnt")
 
@@ -533,7 +541,8 @@ def setup_master(node, slaves_ip, hdfs_master):
                                                         "sudo apt-get install -y build-essential libssl-dev libffi-dev python-dev python3-dev && "+
                                                         #"sudo apt-get install pkg-config" +             #vboxvm? (double-check)
                                                         #"sudo apt-get install libfreetype6-dev" +       #vboxvm? (double-check)
-                                                        "sudo pip3 install --upgrade setuptools")
+                                                        "" # "sudo pip3 install --upgrade setuptools"    # do not run this as it makes pip3 to require python 3.5 
+                                                        )
                 """Install python3 on cSpark master"""
                 print("Installing Python3 on cspark master:\n" + stdout)
             stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-dagsymb")
