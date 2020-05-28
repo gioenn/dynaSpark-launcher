@@ -66,8 +66,8 @@ def download_master(node, output_folder, log_folder, config):
         input_file = config["Spark"]["SparkHome"] + "spark-events/" + file
         output_bz = file + ".bz"
         print("Bzipping event log...")
-        ssh_client.run("pbzip2 -9 -p" + str( #vboxvm_removed
-            config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz) #vboxvm_removed
+        ssh_client.run("pbzip2 -9 -p" + str(
+            config["Control"]["CoreVM"]) + " -c " + input_file + " > " + output_bz)
         #stdout, stderr, status = ssh_client.run("pbzip2 -9 -p1 -c " + input_file + " > " + "/home/ubuntu/" + output_bz) #vboxvm
         #print('ssh_client.run("pbzip2 -9 -p1 -c ' + input_file + ' > ' + '/home/ubuntu/' +  output_bz + '"): ' + stdout + stderr) #vboxvm
         #ssh_client.get(remotepath=output_bz, localpath=most_recent_events_logfile_folder + "/" + output_bz)
@@ -88,7 +88,7 @@ def download_master(node, output_folder, log_folder, config):
                 shutil.copyfile(most_recent_events_logfile_folder + "/" + output_bz, "spark_log_profiling/input_logs/" + output_bz)
             #previous_file = output_folder + "/" + file + ".bz"
         # Removing unneeded copy of .bz logfile
-        stdout, stderr, status = ssh_client.run("sudo rm /home/ubuntu/" + output_bz) #vboxvm
+        stdout, stderr, status = ssh_client.run("sudo rm /home/ubuntu/" + output_bz)
     ###if not c.PROCESS_ON_SERVER:
     ###    most_recent_events_logfile += ".bz"
     print("most_recent_events_logfile: " + most_recent_events_logfile_folder + "/" + most_recent_events_logfile)

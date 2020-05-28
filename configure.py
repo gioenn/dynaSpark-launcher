@@ -48,7 +48,7 @@ class Config(object):
     KILL_JAVA = True                        #"""Kill every java application on the cluster"""
     NUM_RUN = 1                             #"""Number of run to repeat the benchmark"""                          
     PROCESS_ON_SERVER = False               #"""Download benchmark logs and generate profiles and plots on server """
-    INSTALL_PYTHON3 = True                  #"""Install Python3 on cspark master"""
+    INSTALL_PYTHON3 = False                  #"""Install Python3 on cspark master"""
     CLUSTER_ID = "CSPARKWORK"                         #"""Id of the cluster with the launched instances"""
     TAG = [{
             "Key": "ClusterId",
@@ -60,14 +60,14 @@ class Config(object):
     C_SPARK_HOME = "/usr/local/spark/"      # "controlled" spark home directory
     SPARK_HOME = C_SPARK_HOME               # Location of Spark in the ami"""
     LOG_LEVEL = "INFO"                      # Spark log verbosity level
-    GIT_XSPARK_REPO = "https://github.com/gioenn/dynaSpark.git" # "https://github.com/DavideB/xSpark.git"                   # "https://github.com/gioenn/xSpark.git"
-    GIT_XSPARK_BRANCH = "symb"# "symex_0.6"        #"symex_0.5"         # was "xSpark-1.0"
-    GIT_XSPARK_DAGSYMB_REPO =  "https://github.com/gioenn/dynaSpark-launcher.git" # "https://github.com/DavideB/xSpark-dagsymb.git"   # "https://github.com/gioenn/xSpark-dagsymb.git"
-    GIT_XSPARK_DAGSYMB_BRANCH = "symb" # "stable" # "master"
+    GIT_XSPARK_REPO = "https://github.com/DavideB/xSpark.git" # "https://github.com/DavideB/xSpark.git" # "https://github.com/gioenn/xSpark.git"
+    GIT_XSPARK_BRANCH = "exp_2018" # " was symb symex_0.6" #"symex_0.5"   #  "exp_2018"     # "xSpark-1.0"
+    GIT_XSPARK_DAGSYMB_REPO = "https://github.com/DavideB/xSpark-dagsymb.git" # "https://github.com/gioenn/dynaSpark-launcher.git" # "https://github.com/DavideB/xSpark-dagsymb.git"   # "https://github.com/gioenn/xSpark-dagsymb.git"
+    GIT_XSPARK_DAGSYMB_BRANCH = "symb+bench" # "symb" # "stable" # "master"
     GIT_APPLICATION_REPO = "https://github.com/gioenn/louvain-modularity-spark.git" #"https://github.com/DavideB/dagsymb.git"             # "https://github.com/gioenn/dagsymb.git"
     GIT_APPLICATION_BRANCH = "master"       #"dev-0.5"      #"dev-0.3"
-    UPDATE_SPARK = False                    #"""Git pull and build Spark of all the cluster"""
-    UPDATE_SPARK_MASTER = False              #"""Git pull and build Spark only of the master node"""
+    UPDATE_SPARK = True                    #"""Git pull and build Spark of all the cluster"""
+    UPDATE_SPARK_MASTER = True                                            #"""Git pull and build Spark only of the master node"""
     UPDATE_SPARK_DOCKER = False              #"""Pull the docker image in each node of the cluster"""
     UPDATE_SPARK_BENCH = False
     UPDATE_SPARK_PERF = False
@@ -970,6 +970,29 @@ class Config(object):
         if self.DISABLE_HT:
             self.CORE_HT_VM = self.CORE_VM
         self.cfg_dict["CoreHTVM"] = self.CORE_HT_VM    
+        
+        if len(self.BENCHMARK_PERF) + len(self.BENCHMARK_BENCH) > 1 or len(self.BENCHMARK_PERF) + len(
+                self.BENCHMARK_BENCH) == 0:
+            print("ERROR BENCHMARK SELECTION")
+            exit(1)
+        
+        if len(self.BENCHMARK_PERF) > 0:
+            self.cfg_dict["ScaleFactor"] = self.SCALE_FACTOR = self.BENCH_CONF[self.BENCHMARK_PERF[0]]["ScaleFactor"]
+            self.cfg_dict["InputRecord"] = self.INPUT_RECORD = 200 * 1000 * 1000 * self.SCALE_FACTOR
+            self.cfg_dict["NumTask"] = self.NUM_TASK = self.SCALE_FACTOR
+        else:
+            self.cfg_dict["ScaleFactor"] = self.SCALE_FACTOR = self.BENCH_CONF[self.BENCHMARK_BENCH[0]]["NUM_OF_PARTITIONS"]
+            self.cfg_dict["NumTask"] = self.NUM_TASK = self.SCALE_FACTOR
+            try:
+                self.cfg_dict["InputRecord"] = self.INPUT_RECORD = self.BENCH_CONF[self.BENCHMARK_BENCH[0]]["NUM_OF_EXAMPLES"]
+            except KeyError:
+                try:
+                    self.cfg_dict["InputRecord"] = self.BENCH_CONF[self.BENCHMARK_BENCH[0]]["NUM_OF_POINTS"]
+                except KeyError:
+                    self.cfg_dict["InputRecord"] = self.INPUT_RECORD = self.BENCH_CONF[self.BENCHMARK_BENCH[0]]["numV"]
+        self.cfg_dict["BenchConf"][self.cfg_dict["BenchmarkPerf"][0] if len(self.cfg_dict["BenchmarkPerf"]) > 0 else self.cfg_dict["BenchmarkBench"][0]]["NumTrials"] = \
+            self.BENCH_CONF[self.BENCHMARK_PERF[0] if len(self.BENCHMARK_PERF) > 0 else self.BENCHMARK_BENCH[0]]["NumTrials"] = self.BENCH_NUM_TRIALS
+    
         self.cfg_dict["Hdfs"] = self.HDFS = 1 if self.HDFS_MASTER == "" else 0
         self.cfg_dict["DeleteHdfs"] = self.DELETE_HDFS
         
@@ -985,6 +1008,10 @@ class Config(object):
         
         self.cfg_dict["ConfigDict"] = self.CONFIG_DICT = {
                                         "Provider": self.PROVIDER,
+                                        "Benchmark": {
+                                            "Name": self.BENCHMARK_PERF[0] if len(self.BENCHMARK_PERF) > 0 else self.BENCHMARK_BENCH[0],
+                                            "Config": self.BENCH_CONF[self.BENCHMARK_PERF[0] if len(self.BENCHMARK_PERF) > 0 else self.BENCHMARK_BENCH[0]]
+                                        },
                                         "Deadline": self.DEADLINE,
                                         "Control": {
                                             "Alpha": self.ALPHA,
