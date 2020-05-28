@@ -8,7 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from ast import literal_eval
 import log
-from spark_log_profiling import processing
+from spark_log_profiling import processing#, average_runs
 import metrics
 import plot
 import pickle
@@ -777,7 +777,11 @@ def setup_master(node, slaves_ip, hdfs_master):
             #                                        "https://github.com/gioenn/xSpark-dagsymb.git /home/ubuntu/xSpark-dagsymb")
             """Clone xSpark-dagsymb on cspark master"""
             print("Cloning xSpark-dagsymb tool on cspark master:\n" + stdout)
-        
+            
+            stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-dagsymb/spark_log_profiling " + 
+                                                    "&& mkdir input_logs && mkdir avg_json && mkdir output_json " + 
+                                                    "&& mkdir processed_logs && mkdir processed_profiles")
+            
             if not c.PRIVATE_KEY_NAME in ssh_client.listdir("/home/ubuntu/"):
                 ssh_client.put(localpath=c.PRIVATE_KEY_PATH, remotepath="/home/ubuntu/" + c.PRIVATE_KEY_NAME)
                 ssh_client.run("chmod 400 /home/ubuntu/" + c.PRIVATE_KEY_NAME)
@@ -1180,7 +1184,7 @@ def run_symexapp(nodes):
         print(stderr + stdout)
         #logfolder = "/home/ubuntu/dagsymb/num"
         logfolder = c.SPARK_HOME + "logs"
-        output_folder = "home/ubuntu/dagsymb/num"
+        output_folder = "home/ubuntu/dagsymb/num/"
         # stdout, stderr, status = ssh_client.run("sudo rm -r " + logfolder + "/*")
         # logfolder = "/home/ubuntu/spark-bench/num"
         # output_folder = "home/ubuntu/spark-bench/num/"
@@ -1563,11 +1567,11 @@ def run_benchmark(nodes):
             print("Processing on server:\n" + stdout + stderr)
             master_node = [i for i in nodes if get_ip(i) == master_ip][0] #vboxvm remove
             print("Downloading results from server...")
-            for dir in ssh_client.listdir("xSpark-dagsymb/home/ubuntu/spark-bench/num/"):
+            for dir in ssh_client.listdir("xSpark-dagsymb/home/ubuntu/dagsymb/num/"):
                 print("folder: " + str(dir))
                 try:
                     os.makedirs(output_folder + dir)
-                    for file in ssh_client.listdir("xSpark-dagsymb/home/ubuntu/spark-bench/num/" + dir + "/"):
+                    for file in ssh_client.listdir("xSpark-dagsymb/home/ubuntu/dagsymb/num/" + dir + "/"):
                         output_file = (output_folder + dir + "/" + file)
                         print("file: " + output_file)
                         ssh_client.get(remotepath="xSpark-dagsymb/" + output_file, localpath=output_file)

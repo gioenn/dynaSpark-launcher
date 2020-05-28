@@ -4,7 +4,7 @@
 		"Core": 16,
 		"Memory": "100g"
 		},
-    "ProcessOnServer": false,
+    "ProcessOnServer": true,
 	"InstallPython3": false,
 	"Aws": {
         "SecurityGroup": "spark-cluster",
@@ -40,7 +40,7 @@
         "NodeImage": {
             "BlobContainer": "vhd",
             "StorageAccount": "sparkdisks",
-            "Name": "vm5-os.vhd"
+            "Name": "vm2-os.vhd"
         }
     },
     "Spark": {

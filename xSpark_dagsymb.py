@@ -294,8 +294,8 @@ def profile_symex(args):
                                                                                                    cluster_id,)))
         run_xspark(current_cluster='spark', num_instance=0, num_run=num_run,
                    cluster_id=cluster_id, run=1, terminate=0, reboot=0)
-        if not c.PROCESS_ON_SERVER:
-            average_runs.main(profile_name=utils.get_cfg()['experiment']['profile_name'])
+        # if not c.PROCESS_ON_SERVER:
+        average_runs.main(profile_name=utils.get_cfg()['experiment']['profile_name'])
             
     join_jsons.join_dags(OUTPUT_DIR)
     #join_jsons.join_dags("spark_log_profiling"+os.sep+"avg_json")
