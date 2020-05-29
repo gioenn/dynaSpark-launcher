@@ -8,7 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from ast import literal_eval
 import log
-from spark_log_profiling import processing#, average_runs
+from spark_log_profiling import processing
 import metrics
 import plot
 import pickle
@@ -761,6 +761,15 @@ def setup_master(node, slaves_ip, hdfs_master):
     if current_cluster == 'spark' and c.PROCESS_ON_SERVER:
         if not tool_on_master:
             if c.INSTALL_PYTHON3 == 1:
+                """Install python3 on cSpark master"""
+                stdout, stderr, status = ssh_client.run("sudo apt-get update")
+                stdout, stderr, status = ssh_client.run("sudo apt-get install -y python3-pip")
+                print("Installing Python3-pip on cspark master:\n" + stdout + stderr)
+                stdout, stderr, status = ssh_client.run("sudo apt-get build-dep -y matplotlib")
+                print("Installing matplotlib on cspark master:\n" + stdout + stderr)
+                stdout, stderr, status = ssh_client.run("sudo apt-get install -y build-essential libssl-dev libffi-dev python-dev python3-dev")
+                print("Installing Python3 build-essential libssl-dev libffi-dev python-dev python3-dev on cspark master:\n" + stdout + stderr)
+                '''
                 stdout, stderr, status = ssh_client.run("sudo apt-get update && sudo apt-get install -y python3-pip && " +
                                                         "sudo apt-get build-dep -y matplotlib && "+
                                                         "sudo apt-get install -y build-essential libssl-dev libffi-dev python-dev python3-dev && "+
@@ -768,15 +777,15 @@ def setup_master(node, slaves_ip, hdfs_master):
                                                         #"sudo apt-get install libfreetype6-dev" +       #vboxvm? (double-check)
                                                         "" # "sudo pip3 install --upgrade setuptools"    # do not run this as it makes pip3 to require python 3.5 
                                                         )
-                """Install python3 on cSpark master"""
                 print("Installing Python3 on cspark master:\n" + stdout)
+                '''
             stdout, stderr, status = ssh_client.run("sudo rm -r /home/ubuntu/xSpark-dagsymb")
             stdout, stderr, status = ssh_client.run("git clone -b " + c.GIT_XSPARK_DAGSYMB_BRANCH + " --single-branch " +
                                                     c.GIT_XSPARK_DAGSYMB_REPO + " /home/ubuntu/xSpark-dagsymb")
             #stdout, stderr, status = ssh_client.run("git clone -b master --single-branch " +
             #                                        "https://github.com/gioenn/xSpark-dagsymb.git /home/ubuntu/xSpark-dagsymb")
             """Clone xSpark-dagsymb on cspark master"""
-            print("Cloning xSpark-dagsymb tool on cspark master:\n" + stdout)
+            print("Cloning xSpark-dagsymb tool on cspark master:\n" + stdout + stderr)
             
             stdout, stderr, status = ssh_client.run("cd /home/ubuntu/xSpark-dagsymb/spark_log_profiling " + 
                                                     "&& mkdir input_logs && mkdir avg_json && mkdir output_json " + 
