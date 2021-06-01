@@ -28,4 +28,4 @@ readline==6.2.4.1
 requests==2.18.4
 six==1.10.0
 traitlets==4.3.2
-urllib3==1.22
+urllib3==1.26.5
