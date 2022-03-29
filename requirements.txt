@@ -16,7 +16,7 @@ matplotlib==2.0.2
 nbformat==4.4.0
 numpy==1.13.0
 pandas==0.20.2
-paramiko==2.2.1
+paramiko==2.10.1
 plotly==2.1.0
 pyasn1==0.2.3
 pycparser==2.17
